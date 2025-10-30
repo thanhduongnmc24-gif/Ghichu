@@ -1,0 +1,6 @@
+# Bỏ qua thư mục chứa các gói đã cài đặt
+node_modules/
+
+# Bỏ qua các tệp log và biến môi trường
+.env
+npm-debug.log
