@@ -34,15 +34,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const noteForm = document.getElementById('note-form');
     const noteInput = document.getElementById('note-input');
     const deleteNoteBtn = document.getElementById('delete-note-btn');
+    const modalShiftInfo = document.getElementById('modal-shift-info'); // Dòng hiển thị Ca
 
     // --- 3. Dữ liệu (CẤU TRÚC MỚI) ---
-    // Dữ liệu TKB giờ là: { "YYYY-MM-DD": { "shift": "...", "note": "..." } }
-    let scheduleData = JSON.parse(localStorage.getItem('myScheduleData')) || {};
+    // Dữ liệu TKB giờ CHỈ LÀ GHI CHÚ
+    // { "YYYY-MM-DD": "ghi chú..." }
+    let noteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
     let currentViewDate = new Date();
 
-    // --- Hàm Lưu TKB (Như cũ) ---
-    function saveScheduleData() {
-        localStorage.setItem('myScheduleData', JSON.stringify(scheduleData));
+    // --- CÀI ĐẶT CHU KỲ (PATTERN) TỰ ĐỘNG ---
+    // Dựa theo ảnh của bạn: 26/10 là "ngày", 27/10 là "đêm", 28/10 là "giãn ca"
+    // Đây là chu kỳ 3 ngày.
+    
+    // 1. Chọn ngày gốc (Epoch). Chúng ta chọn 26/10/2025 làm mốc 0.
+    const EPOCH_DATE = new Date('2025-10-26T00:00:00+07:00'); // Ngày 26/10/2025
+    // 2. Định nghĩa chu kỳ
+    const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
+
+    // --- Hàm Lưu TKB (MỚI) ---
+    function saveNoteData() {
+        localStorage.setItem('myScheduleNotes', JSON.stringify(noteData));
+    }
+    
+    // --- HÀM MỚI: Tính Ca (Shift) Tự động ---
+    function getShiftForDate(dateStr) {
+        const date = new Date(dateStr + 'T00:00:00+07:00');
+        
+        // Tính số mili-giây chênh lệch
+        const diffTime = date.getTime() - EPOCH_DATE.getTime();
+        
+        // Chuyển sang ngày (làm tròn)
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        
+        // Tính toán index trong chu kỳ
+        // (diffDays % 3 + 3) % 3 đảm bảo kết quả luôn dương (0, 1, 2)
+        const patternIndex = (diffDays % SHIFT_PATTERN.length + SHIFT_PATTERN.length) % SHIFT_PATTERN.length;
+        
+        return SHIFT_PATTERN[patternIndex];
     }
 
     // --- 4. Logic Đồng hồ (Như cũ) ---
@@ -125,33 +153,33 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentDate.getMonth() !== month) {
                 dayCell.classList.add('other-month');
             } else {
-                // Chỉ thêm sự kiện cho ngày trong tháng
-                const dayData = scheduleData[dateStr];
                 
-                if (dayData) {
-                    // Xử lý Ca (Shift)
-                    if (dayData.shift) {
-                        // Logic đặc biệt: "giãn ca" chỉ tô màu, không ghi chữ
-                        if (dayData.shift === 'giãn ca') {
-                            dayCell.classList.add('shift-gian-ca'); // Tô vàng
-                        } else if (dayData.shift === 'off') {
-                            dayCell.classList.add('shift-off'); // Tô xám
-                        } else {
-                            // "ngày", "đêm" -> hiển thị chữ
-                            const shiftEl = document.createElement('span');
-                            shiftEl.className = 'day-shift';
-                            shiftEl.textContent = dayData.shift;
-                            dayCell.appendChild(shiftEl);
-                        }
-                    }
-                    
-                    // Xử lý Ghi chú (Note)
-                    if (dayData.note) {
-                        const noteEl = document.createElement('span');
-                        noteEl.className = 'day-note';
-                        noteEl.textContent = dayData.note;
-                        dayCell.appendChild(noteEl);
-                    }
+                // --- LOGIC MỚI ---
+                // 1. Tính toán Ca (Shift) tự động
+                const shift = getShiftForDate(dateStr);
+                
+                // 2. Lấy Ghi chú (Note) do người dùng nhập
+                const note = noteData[dateStr] || "";
+
+                // 3. Hiển thị Ca (Shift)
+                if (shift === 'giãn ca') {
+                    dayCell.classList.add('shift-gian-ca'); // Tô vàng
+                } else if (shift === 'off') {
+                    dayCell.classList.add('shift-off'); // Tô xám
+                } else {
+                    // "ngày", "đêm" -> hiển thị chữ
+                    const shiftEl = document.createElement('span');
+                    shiftEl.className = 'day-shift';
+                    shiftEl.textContent = shift;
+                    dayCell.appendChild(shiftEl);
+                }
+                
+                // 4. Hiển thị Ghi chú (Note)
+                if (note) {
+                    const noteEl = document.createElement('span');
+                    noteEl.className = 'day-note';
+                    noteEl.textContent = note;
+                    dayCell.appendChild(noteEl);
                 }
                 
                 if (dateStr === todayStr) {
@@ -187,21 +215,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         noteForm.dataset.date = dateStr;
         
-        // Tải dữ liệu cũ (nếu có)
-        const dayData = scheduleData[dateStr] || {};
-        const savedShift = dayData.shift || ""; // Mặc định là "" (Trống)
-        const savedNote = dayData.note || "";
-
-        // Check radio button tương ứng
-        const radio = noteForm.querySelector(`input[name="shift"][value="${savedShift}"]`);
-        if (radio) {
-            radio.checked = true;
-        } else {
-            // Nếu lưu shift lạ (ví dụ "ABC" từ AI), check vào "Trống"
-            noteForm.querySelector(`input[name="shift"][value=""]`).checked = true;
-        }
-
-        // Điền ghi chú
+        // Hiển thị Ca (Shift) tự động (KHÔNG cho sửa)
+        const shift = getShiftForDate(dateStr);
+        modalShiftInfo.innerHTML = `Ca tự động: <strong>${shift.toUpperCase()}</strong>`;
+        
+        // Tải Ghi chú (Note) cũ (nếu có)
+        const savedNote = noteData[dateStr] || "";
         noteInput.value = savedNote;
     }
 
@@ -215,43 +234,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Xử lý khi Lưu form ghi chú
+    // Xử lý khi Lưu form ghi chú (CHỈ LƯU NOTE)
     noteForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const dateStr = noteForm.dataset.date;
         
-        // Lấy Ca (Shift) đã chọn
-        const selectedShift = noteForm.querySelector('input[name="shift"]:checked').value;
-        
         // Lấy Ghi chú (Note)
         const noteText = noteInput.value.trim();
 
-        // Nếu cả Ca và Ghi chú đều rỗng -> Xóa ngày này
-        if (!selectedShift && !noteText) {
-            delete scheduleData[dateStr];
+        if (noteText) {
+            noteData[dateStr] = noteText;
         } else {
-            // Nếu có ít nhất 1 cái, lưu lại
-            scheduleData[dateStr] = {
-                shift: selectedShift,
-                note: noteText
-            };
+            // Nếu input rỗng, coi như xóa Ghi chú
+            delete noteData[dateStr];
         }
 
-        saveScheduleData();
+        saveNoteData();
         renderCalendar(currentViewDate); // Vẽ lại lịch
         noteModal.style.display = 'none'; // Đóng modal
     });
 
-    // Xử lý nút Xóa Hết
+    // Xử lý nút Xóa Ghi Chú
     deleteNoteBtn.addEventListener('click', () => {
         const dateStr = noteForm.dataset.date;
-        delete scheduleData[dateStr]; // Xóa dữ liệu ngày này
-        saveScheduleData();
+        delete noteData[dateStr]; // Chỉ xóa Ghi chú
+        saveNoteData();
         renderCalendar(currentViewDate);
         noteModal.style.display = 'none';
     });
 
-    // --- 9. Xử lý Form AI (CẬP NHẬT) ---
+    // --- 9. Xử lý Form AI (CẬP NHẬT - CHỈ LƯU NOTE) ---
     aiForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const text = aiInput.value;
@@ -268,32 +280,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ text: text })
             });
             
-            const updates = await response.json(); // Mong đợi một MẢNG
+            const updates = await response.json(); // Mong đợi một MẢNG (chỉ chứa 'note')
 
             if (Array.isArray(updates)) {
                 // Lặp qua mảng kết quả AI trả về
                 updates.forEach(update => {
-                    if (update.date) {
-                        // Lấy dữ liệu hiện có (nếu có)
-                        const existingData = scheduleData[update.date] || {};
-
-                        // Ghi đè Ca (Shift) (nếu AI có)
-                        const newShift = update.shift || existingData.shift;
-                        // Ghi đè Ghi chú (Note) (nếu AI có)
-                        const newNote = update.note || existingData.note;
-
-                        if (newShift || newNote) {
-                            scheduleData[update.date] = {
-                                shift: newShift,
-                                note: newNote
-                            };
-                        } else {
-                            delete scheduleData[update.date]; // Nếu AI bảo xóa
-                        }
+                    if (update.date && update.note) {
+                        // Ghi đè Ghi chú (Note)
+                        noteData[update.date] = update.note;
                     }
                 });
                 
-                saveScheduleData(); // Lưu 1 lần sau khi cập nhật hết
+                saveNoteData(); // Lưu 1 lần sau khi cập nhật hết
                 renderCalendar(currentViewDate); // Vẽ lại lịch
                 aiInput.value = ''; // Xóa input
             } else {
