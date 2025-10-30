@@ -1,4 +1,4 @@
-/* Thiết lập cơ bản */
+/* Thiết lập cơ bản (Như cũ) */
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     line-height: 1.6;
@@ -22,25 +22,13 @@ header {
     font-weight: bold;
     margin-left: 10px;
 }
-#notify-button {
-    background-color: #2980b9;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-    margin-top: 15px;
-}
-#notify-button:hover {
-    background-color: #2471a3;
-}
 main {
     max-width: 800px;
     margin: 20px auto;
     padding: 0 15px;
 }
-/* Các form */
+
+/* Form AI (Như cũ) */
 .form-section {
     background-color: white;
     border-radius: 8px;
@@ -58,9 +46,7 @@ form {
     gap: 10px;
     align-items: center;
 }
-form input[type="text"],
-form input[type="time"],
-form select {
+form input[type="text"] {
     flex-grow: 1;
     padding: 10px;
     border: 1px solid #ddd;
@@ -80,172 +66,129 @@ form button {
     background-color: #e67e22;
 }
 
-/* --- CSS CẬP NHẬT CHO BẢNG TKB --- */
 
-/* Bọc bảng để cho phép cuộn ngang trên di động */
-#schedule-grid-wrapper {
-    width: 100%;
-    overflow-x: auto; /* Cho phép cuộn ngang */
-    margin-top: 20px;
+/* --- CSS MỚI CHO LỊCH THÁNG --- */
+#calendar-container {
     background-color: white;
     border-radius: 8px;
+    padding: 20px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-#schedule-table {
-    width: 100%;
-    min-width: 800px; /* Đảm bảo bảng đủ rộng để xem */
-    border-collapse: collapse; /* Gộp viền */
-    table-layout: fixed; /* Các cột có độ rộng bằng nhau */
-}
-
-#schedule-table th,
-#schedule-table td {
-    border: 1px solid #ddd;
-    padding: 6px;
-    text-align: center;
-    vertical-align: top; /* Căn nội dung lên trên */
-    height: 70px; /* Chiều cao tối thiểu cho mỗi ô giờ */
-    font-size: 1em; /* Reset font-size */
-}
-
-#schedule-table thead th {
-    background-color: #f4f7f6;
-    color: #3498db;
-    position: sticky; /* Giữ tiêu đề ngày khi cuộn dọc */
-    top: 0;
-    font-size: 0.9em;
-    z-index: 10;
-}
-
-/* Cột Giờ (cột đầu tiên) */
-#schedule-table .time-header,
-#schedule-table .time-slot {
-    width: 70px; /* Cố định độ rộng cột Giờ */
-    font-weight: bold;
-    color: #555;
-    background-color: #f9f9f9;
-    vertical-align: middle;
-    font-size: 0.9em;
-    padding: 4px;
-    position: sticky; /* Giữ cột giờ khi cuộn ngang */
-    left: 0;
-    z-index: 5;
-}
-
-/* Đảm bảo cột Giờ (header) đè lên trên */
-#schedule-table thead th.time-header {
-    z-index: 11;
-}
-
-/* Ô chứa sự kiện */
-.event-cell {
-    background-color: #eaf5ff;
-    text-align: left;
-    vertical-align: top;
-    line-height: 1.4;
-    padding: 0; /* Xóa padding của <td> */
-}
-
-/* CSS cho item sự kiện bên trong <td> */
-.event-item {
-    padding: 6px;
-    height: 100%; /* Lấp đầy ô */
+#calendar-header {
     display: flex;
-    flex-direction: column;
-    justify-content: flex-start; /* Bắt đầu từ trên xuống */
-    overflow: hidden; /* Ẩn bớt nếu nội dung quá dài */
-}
-
-.event-item .event-title {
-    font-weight: bold;
-    font-size: 0.95em;
-    color: #2c3e50;
-    display: block;
-}
-
-.event-item .event-time {
-    font-size: 0.85em;
-    color: #3498db;
-    display: block;
-    margin-bottom: 5px;
-}
-
-/* CSS cho các nút điều khiển trong bảng */
-.event-item .notify-select {
-    width: 100%;
-    font-size: 0.8em;
-    padding: 3px;
-    margin-top: auto; /* Đẩy xuống dưới cùng */
-    margin-bottom: 4px;
-    border-radius: 4px;
-}
-
-.event-item .delete-btn {
-    width: 100%;
-    font-size: 0.8em;
-    padding: 4px;
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-.event-item .delete-btn:hover {
-    background-color: #c0392b;
-}
-
-/* --- CSS CŨ CỦA LIST (đã được thay thế) --- */
-/*
-#schedule-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-#schedule-list li {
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 15px;
-    margin-bottom: 10px;
-    display: flex;
-    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
 }
-#schedule-list li .time {
-    font-weight: bold;
-    color: #3498db;
-    flex-shrink: 0;
-    margin-right: 15px;
-}
-#schedule-list li .event {
-    flex-grow: 1;
-    min-width: 150px;
-}
-#schedule-list li button {
-    background-color: #e74c3c;
-    color: white;
+#calendar-header button {
+    background: none;
     border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
+    font-size: 2em;
+    color: #3498db;
     cursor: pointer;
-    font-size: 0.8em;
 }
-.notify-select {
-    padding: 5px;
-    font-size: 0.9em;
-    border: 1px solid #ddd;
+#current-month-year {
+    font-size: 1.5em;
+    color: #2c3e50;
+}
+
+/* Lưới các Thứ (T2-CN) */
+#calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: bold;
+    color: #7f8c8d;
+    margin-bottom: 10px;
+}
+
+/* Lưới các Ngày */
+#calendar-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+}
+
+.calendar-day {
+    border: 1px solid #ecf0f1;
     border-radius: 5px;
+    min-height: 80px;
+    padding: 6px;
+    cursor: pointer;
+    position: relative;
+    font-size: 1.1em;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+.calendar-day:hover {
     background-color: #f9f9f9;
 }
-*/
 
-/* --- CSS MỚI CHO MODAL & CÀI ĐẶT --- */
+/* Ghi chú ("đêm", "ngày") ở góc trái */
+.day-note {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: 0.7em; /* Chữ nhỏ */
+    font-weight: 600;
+    color: #2980b9;
+    background-color: rgba(236, 240, 241, 0.8);
+    padding: 2px 4px;
+    border-radius: 3px;
+}
 
-/* 1. Nút Cài đặt (Icon) */
+/* Ô có kiểu "giãn ca" */
+.type-gian-ca {
+    background-color: #fef9e7; /* Màu vàng nhạt */
+}
+
+/* Ô ngày hôm nay */
+.calendar-day.today {
+    background-color: #eaf5ff;
+    border-color: #3498db;
+}
+
+/* Ô ngày của tháng khác */
+.calendar-day.other-month {
+    color: #bdc3c7;
+    background-color: #fdfdfd;
+    cursor: default;
+}
+
+
+/* --- CSS MỚI CHO MODAL NHẬP GHI CHÚ --- */
+#note-modal h2 {
+    margin-top: 0;
+    font-size: 1.2em;
+    color: #333;
+}
+#note-modal #note-input {
+    width: 100%;
+    box-sizing: border-box; /* Đảm bảo padding không làm vỡ layout */
+}
+.quick-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+.quick-btn {
+    flex-grow: 1;
+    background-color: #ecf0f1;
+    color: #34495e;
+    border: 1px solid #bdc3c7;
+    font-size: 0.9em;
+}
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+#delete-note-btn {
+    background-color: #e74c3c; /* Màu đỏ */
+}
+
+/* --- CSS Cũ (Modal Cài đặt) - Giữ nguyên --- */
 .icon-btn {
     background: none;
     border: none;
@@ -258,10 +201,6 @@ form button {
     padding: 5px;
     line-height: 1;
 }
-
-/* 2. Dropdown "Báo trước" (đã chuyển vào .event-item .notify-select) */
-
-/* 3. Modal Cài đặt */
 .modal-overlay {
     position: fixed;
     top: 0;
