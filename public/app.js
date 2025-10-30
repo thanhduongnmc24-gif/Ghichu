@@ -6,68 +6,72 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(reg => console.log('Service Worker đã đăng ký!', reg))
             .catch(err => console.log('Đăng ký Service Worker lỗi:', err));
     }
+    
+    // --- HÀM MỚI: SỬA LỖI MÚI GIỜ (Lấy YYYY-MM-DD theo giờ địa phương) ---
+    function getLocalDateString(date) {
+        const year = date.getFullYear();
+        // getMonth() trả về 0-11, nên +1
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    
+    // --- HÀM MỚI: Tính toán số ngày (An toàn, không bị lỗi DST/timezone) ---
+    function dateToDays(dateStr) {
+        // Tách chuỗi YYYY-MM-DD
+        const [year, month, day] = dateStr.split('-').map(Number);
+        // JS Date(year, month-1, day) coi là ngày địa phương
+        const date = new Date(year, month - 1, day);
+        // Chia cho số mili-giây trong 1 ngày
+        return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
+    }
 
-    // --- 2. Lấy các phần tử DOM (CẬP NHẬT) ---
+
+    // --- 2. Lấy các phần tử DOM (Như cũ) ---
     const dateEl = document.getElementById('date');
     const timeEl = document.getElementById('time');
-    
-    // Form AI (Như cũ)
     const aiForm = document.getElementById('ai-form');
     const aiInput = document.getElementById('ai-input');
-    
-    // Cài đặt (Như cũ)
     const settingsBtn = document.getElementById('settings-btn');
     const settingsModal = document.getElementById('settings-modal');
     const closeModalBtn = document.getElementById('close-modal');
     const notifyButton = document.getElementById('notify-button');
-
-    // DOM Lịch Mới (Như cũ)
     const calendarBody = document.getElementById('calendar-body');
     const currentMonthYearEl = document.getElementById('current-month-year');
     const prevMonthBtn = document.getElementById('prev-month-btn');
     const nextMonthBtn = document.getElementById('next-month-btn');
-
-    // DOM Modal Ghi Chú MỚI (Cập nhật)
     const noteModal = document.getElementById('note-modal');
     const closeNoteModalBtn = document.getElementById('close-note-modal');
     const noteModalTitle = document.getElementById('note-modal-title');
     const noteForm = document.getElementById('note-form');
     const noteInput = document.getElementById('note-input');
     const deleteNoteBtn = document.getElementById('delete-note-btn');
-    const modalShiftInfo = document.getElementById('modal-shift-info'); // Dòng hiển thị Ca
+    const modalShiftInfo = document.getElementById('modal-shift-info');
 
-    // --- 3. Dữ liệu (CẤU TRÚC MỚI) ---
-    // Dữ liệu TKB giờ CHỈ LÀ GHI CHÚ
-    // { "YYYY-MM-DD": "ghi chú..." }
+    // --- 3. Dữ liệu (Như cũ) ---
     let noteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
     let currentViewDate = new Date();
 
-    // --- CÀI ĐẶT CHU KỲ (PATTERN) TỰ ĐỘNG ---
-    // Dựa theo ảnh của bạn: 26/10 là "ngày", 27/10 là "đêm", 28/10 là "giãn ca"
-    // Đây là chu kỳ 3 ngày.
-    
-    // 1. Chọn ngày gốc (Epoch). Chúng ta chọn 26/10/2025 làm mốc 0.
-    const EPOCH_DATE = new Date('2025-10-26T00:00:00+07:00'); // Ngày 26/10/2025
+    // --- CÀI ĐẶT CHU KỲ (CẬP NHẬT) ---
+    // 1. Ngày gốc (Epoch). Chúng ta chọn 26/10/2025 làm mốc 0.
+    const EPOCH_DAYS = dateToDays('2025-10-26');
     // 2. Định nghĩa chu kỳ
-    const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
+    const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca']; // 3 ngày
 
-    // --- Hàm Lưu TKB (MỚI) ---
+    // --- Hàm Lưu TKB (Như cũ) ---
     function saveNoteData() {
         localStorage.setItem('myScheduleNotes', JSON.stringify(noteData));
     }
     
-    // --- HÀM MỚI: Tính Ca (Shift) Tự động ---
+    // --- HÀM TÍNH CA (CẬP NHẬT - An toàn hơn) ---
     function getShiftForDate(dateStr) {
-        const date = new Date(dateStr + 'T00:00:00+07:00');
+        // Chuyển ngày cần tính sang "số ngày"
+        const currentDays = dateToDays(dateStr);
         
-        // Tính số mili-giây chênh lệch
-        const diffTime = date.getTime() - EPOCH_DATE.getTime();
-        
-        // Chuyển sang ngày (làm tròn)
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        // Tính số ngày chênh lệch
+        const diffDays = currentDays - EPOCH_DAYS;
         
         // Tính toán index trong chu kỳ
-        // (diffDays % 3 + 3) % 3 đảm bảo kết quả luôn dương (0, 1, 2)
         const patternIndex = (diffDays % SHIFT_PATTERN.length + SHIFT_PATTERN.length) % SHIFT_PATTERN.length;
         
         return SHIFT_PATTERN[patternIndex];
@@ -98,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
             settingsModal.style.display = 'none';
         }
     });
-    // Nút Bật thông báo (Như cũ)
     notifyButton.addEventListener('click', () => {
         if (!("Notification" in window)) {
             alert("Trình duyệt này không hỗ trợ thông báo.");
@@ -114,22 +117,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // --- 6. LOGIC MỚI: Vẽ Lịch Tháng (CẬP NHẬT) ---
+    // --- 6. LOGIC MỚI: Vẽ Lịch Tháng (CẬP NHẬT - Sửa lỗi ngày hiện tại) ---
     function renderCalendar(date) {
-        calendarBody.innerHTML = ''; // Xóa lịch cũ
+        calendarBody.innerHTML = '';
         const year = date.getFullYear();
         const month = date.getMonth(); 
 
         currentMonthYearEl.textContent = `Tháng ${month + 1} ${year}`;
         const firstDayOfMonth = new Date(year, month, 1);
-        const lastDayOfMonth = new Date(year, month + 1, 0);
+        
         let firstDayOfWeek = firstDayOfMonth.getDay();
         if (firstDayOfWeek === 0) firstDayOfWeek = 7; // CN = 7
 
         const startDate = new Date(firstDayOfMonth);
         startDate.setDate(firstDayOfMonth.getDate() - (firstDayOfWeek - 1));
 
-        const todayStr = new Date().toISOString().split('T')[0];
+        // CẬP NHẬT: Dùng hàm mới để lấy ngày hôm nay (YYYY-MM-DD) theo giờ địa phương
+        const todayStr = getLocalDateString(new Date());
 
         for (let i = 0; i < 42; i++) {
             const dayCell = document.createElement('div');
@@ -138,10 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentDate = new Date(startDate);
             currentDate.setDate(startDate.getDate() + i);
             
-            const day = currentDate.getDate();
-            const dateStr = currentDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
+            // CẬP NHẬT: Dùng hàm mới để lấy YYYY-MM-DD
+            const dateStr = getLocalDateString(currentDate);
             
-            // Thêm số ngày
+            const day = currentDate.getDate();
+            
             const dayNumberEl = document.createElement('span');
             dayNumberEl.className = 'day-number';
             dayNumberEl.textContent = day;
@@ -149,32 +154,25 @@ document.addEventListener('DOMContentLoaded', () => {
             
             dayCell.dataset.date = dateStr; 
 
-            // Kiểm tra xem có phải ngày của tháng khác không
             if (currentDate.getMonth() !== month) {
                 dayCell.classList.add('other-month');
             } else {
                 
-                // --- LOGIC MỚI ---
-                // 1. Tính toán Ca (Shift) tự động
+                // --- LOGIC (Như cũ) ---
                 const shift = getShiftForDate(dateStr);
-                
-                // 2. Lấy Ghi chú (Note) do người dùng nhập
                 const note = noteData[dateStr] || "";
 
-                // 3. Hiển thị Ca (Shift)
                 if (shift === 'giãn ca') {
-                    dayCell.classList.add('shift-gian-ca'); // Tô vàng
+                    dayCell.classList.add('shift-gian-ca');
                 } else if (shift === 'off') {
-                    dayCell.classList.add('shift-off'); // Tô xám
+                    dayCell.classList.add('shift-off');
                 } else {
-                    // "ngày", "đêm" -> hiển thị chữ
                     const shiftEl = document.createElement('span');
                     shiftEl.className = 'day-shift';
                     shiftEl.textContent = shift;
                     dayCell.appendChild(shiftEl);
                 }
                 
-                // 4. Hiển thị Ghi chú (Note)
                 if (note) {
                     const noteEl = document.createElement('span');
                     noteEl.className = 'day-note';
@@ -182,11 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     dayCell.appendChild(noteEl);
                 }
                 
+                // So sánh với todayStr đã được sửa lỗi
                 if (dateStr === todayStr) {
                     dayCell.classList.add('today');
                 }
 
-                // Thêm sự kiện click
                 dayCell.addEventListener('click', () => {
                     openNoteModal(dateStr);
                 });
@@ -207,19 +205,20 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCalendar(currentViewDate);
     });
 
-    // --- 8. LOGIC MỚI: Xử lý Modal Ghi Chú (CẬP NHẬT) ---
+    // --- 8. LOGIC MỚI: Xử lý Modal Ghi Chú (Như cũ) ---
     function openNoteModal(dateStr) {
-        const date = new Date(dateStr + 'T00:00:00'); 
+        // CẬP NHẬT: Sửa lỗi T00:00:00 (chỉ cần YYYY-MM-DD)
+        const dateParts = dateStr.split('-').map(Number);
+        const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+        
         noteModal.style.display = 'flex';
         noteModalTitle.textContent = `Cập nhật (${date.toLocaleDateString('vi-VN')})`;
         
         noteForm.dataset.date = dateStr;
         
-        // Hiển thị Ca (Shift) tự động (KHÔNG cho sửa)
         const shift = getShiftForDate(dateStr);
         modalShiftInfo.innerHTML = `Ca tự động: <strong>${shift.toUpperCase()}</strong>`;
         
-        // Tải Ghi chú (Note) cũ (nếu có)
         const savedNote = noteData[dateStr] || "";
         noteInput.value = savedNote;
     }
@@ -238,32 +237,29 @@ document.addEventListener('DOMContentLoaded', () => {
     noteForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const dateStr = noteForm.dataset.date;
-        
-        // Lấy Ghi chú (Note)
         const noteText = noteInput.value.trim();
 
         if (noteText) {
             noteData[dateStr] = noteText;
         } else {
-            // Nếu input rỗng, coi như xóa Ghi chú
             delete noteData[dateStr];
         }
 
-        saveNoteData();
-        renderCalendar(currentViewDate); // Vẽ lại lịch
-        noteModal.style.display = 'none'; // Đóng modal
-    });
-
-    // Xử lý nút Xóa Ghi Chú
-    deleteNoteBtn.addEventListener('click', () => {
-        const dateStr = noteForm.dataset.date;
-        delete noteData[dateStr]; // Chỉ xóa Ghi chú
         saveNoteData();
         renderCalendar(currentViewDate);
         noteModal.style.display = 'none';
     });
 
-    // --- 9. Xử lý Form AI (CẬP NHẬT - CHỈ LƯU NOTE) ---
+    // Xử lý nút Xóa Ghi Chú
+    deleteNoteBtn.addEventListener('click', () => {
+        const dateStr = noteForm.dataset.date;
+        delete noteData[dateStr];
+        saveNoteData();
+        renderCalendar(currentViewDate);
+        noteModal.style.display = 'none';
+    });
+
+    // --- 9. Xử lý Form AI (Như cũ) ---
     aiForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const text = aiInput.value;
@@ -280,20 +276,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ text: text })
             });
             
-            const updates = await response.json(); // Mong đợi một MẢNG (chỉ chứa 'note')
+            const updates = await response.json(); 
 
             if (Array.isArray(updates)) {
-                // Lặp qua mảng kết quả AI trả về
                 updates.forEach(update => {
                     if (update.date && update.note) {
-                        // Ghi đè Ghi chú (Note)
                         noteData[update.date] = update.note;
                     }
                 });
                 
-                saveNoteData(); // Lưu 1 lần sau khi cập nhật hết
-                renderCalendar(currentViewDate); // Vẽ lại lịch
-                aiInput.value = ''; // Xóa input
+                saveNoteData(); 
+                renderCalendar(currentViewDate); 
+                aiInput.value = ''; 
             } else {
                 throw new Error("AI không trả về định dạng mảng.");
             }
@@ -309,6 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Khởi động
-    renderCalendar(currentViewDate); // Vẽ lịch tháng hiện tại
-    updateClock(); // Khởi động đồng hồ
+    renderCalendar(currentViewDate);
+    updateClock();
 });
