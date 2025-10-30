@@ -1,44 +1,55 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. Đăng ký Service Worker ---
+    // --- 1. Đăng ký Service Worker (Như cũ) ---
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/service-worker.js')
             .then(reg => console.log('Service Worker đã đăng ký!', reg))
             .catch(err => console.log('Đăng ký Service Worker lỗi:', err));
     }
 
-    // --- 2. Lấy các phần tử DOM ---
+    // --- 2. Lấy các phần tử DOM (CẬP NHẬT) ---
     const dateEl = document.getElementById('date');
     const timeEl = document.getElementById('time');
-    const notifyButton = document.getElementById('notify-button'); 
+    
+    // Form AI (Như cũ)
     const aiForm = document.getElementById('ai-form');
     const aiInput = document.getElementById('ai-input');
-    const manualForm = document.getElementById('manual-form');
-    const manualDay = document.getElementById('manual-day');
-    const manualTimeStart = document.getElementById('manual-time-start');
-    const manualTimeEnd = document.getElementById('manual-time-end');
-    const manualEvent = document.getElementById('manual-event');
     
-    // Lấy phần tử mới cho bảng
-    const tableBody = document.getElementById('schedule-table-body');
-
-    // CÁC PHẦN TỬ CHO MODAL CÀI ĐẶT
+    // Cài đặt (Như cũ)
     const settingsBtn = document.getElementById('settings-btn');
     const settingsModal = document.getElementById('settings-modal');
     const closeModalBtn = document.getElementById('close-modal');
+    const notifyButton = document.getElementById('notify-button');
 
-    // --- 3. Dữ liệu ---
-    let schedule = JSON.parse(localStorage.getItem('mySchedule')) || [];
-    const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+    // DOM Lịch Mới
+    const calendarBody = document.getElementById('calendar-body');
+    const currentMonthYearEl = document.getElementById('current-month-year');
+    const prevMonthBtn = document.getElementById('prev-month-btn');
+    const nextMonthBtn = document.getElementById('next-month-btn');
 
-    // --- Hàm Lưu TKB ---
-    function saveSchedule() {
-        localStorage.setItem('mySchedule', JSON.stringify(schedule));
+    // DOM Modal Ghi Chú Mới
+    const noteModal = document.getElementById('note-modal');
+    const closeNoteModalBtn = document.getElementById('close-note-modal');
+    const noteModalTitle = document.getElementById('note-modal-title');
+    const noteForm = document.getElementById('note-form');
+    const noteInput = document.getElementById('note-input');
+    const deleteNoteBtn = document.getElementById('delete-note-btn');
+
+    // --- 3. Dữ liệu (CẤU TRÚC MỚI) ---
+    // Dữ liệu TKB giờ là một Object, key là "YYYY-MM-DD"
+    let scheduleData = JSON.parse(localStorage.getItem('myScheduleData')) || {};
+    // Biến toàn cục để theo dõi tháng/năm đang xem
+    let currentViewDate = new Date();
+
+    // --- Hàm Lưu TKB (MỚI) ---
+    function saveScheduleData() {
+        localStorage.setItem('myScheduleData', JSON.stringify(scheduleData));
     }
 
-    // --- 4. Logic Đồng hồ ---
+    // --- 4. Logic Đồng hồ (Như cũ) ---
     function updateClock() {
         const now = new Date();
+        const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
         const dayName = days[now.getDay()];
         const dateStr = `${dayName}, ${now.toLocaleDateString('vi-VN')}`;
         const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
@@ -48,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateClock();
     setInterval(updateClock, 1000);
 
-    // --- 5. LOGIC: Xử lý Modal Cài đặt ---
+    // --- 5. LOGIC Modal Cài đặt (Như cũ) ---
     settingsBtn.addEventListener('click', () => {
         settingsModal.style.display = 'flex';
     });
@@ -60,195 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
             settingsModal.style.display = 'none';
         }
     });
-
-    // --- 6. Logic Hiển thị TKB (CẬP NHẬT LỚN - ẨN GIỜ TRỐNG) ---
-    function renderSchedule() {
-        tableBody.innerHTML = ''; // Xóa bảng cũ
-
-        // --- BƯỚC 1: TÍNH TOÁN TRƯỚC ---
-        const occupied = {}; // Map các ô bị rowspan chiếm
-        const startHours = {}; // Map các giờ có sự kiện *bắt đầu*
-        days.forEach(day => { occupied[day] = {}; });
-
-        schedule.forEach((event, index) => {
-            if (!event.day || !event.time || !event.time_end) return; 
-
-            const [startHour, startMin] = event.time.split(':').map(Number);
-            const [endHour, endMin] = event.time_end.split(':').map(Number);
-            let effectiveEndHour = endHour;
-            
-            // Nếu 08:00 -> 09:30 (endMin > 0), nó chiếm cả slot 8 và 9.
-            if (endMin > 0) {
-                effectiveEndHour += 1;
-            }
-            
-            const duration = Math.max(1, effectiveEndHour - startHour);
-
-            // Lưu các giá trị tính toán vào lại mảng schedule
-            event.startHour = startHour;
-            event.duration = duration;
-            event.originalIndex = index;
-
-            // Đánh dấu giờ này CÓ sự kiện bắt đầu
-            startHours[startHour] = true;
-
-            // Đánh dấu các ô bị chiếm (TRỪ ô bắt đầu)
-            for (let i = 1; i < duration; i++) {
-                if (occupied[event.day]) {
-                    occupied[event.day][startHour + i] = true;
-                }
-            }
-        });
-        
-        // Sắp xếp thứ tự hiển thị các ngày (T2 -> CN)
-        const weekDaysSorted = days.slice(1).concat(days[0]);
-
-        // --- BƯỚC 2: VẼ BẢNG ---
-        for (let hour = 0; hour < 24; hour++) {
-
-            // CẬP NHẬT: KIỂM TRA GIỜ NÀY CÓ SỰ KIỆN KHÔNG
-            const hasStartingEvent = startHours[hour];
-            const isOccupied = weekDaysSorted.some(day => occupied[day] && occupied[day][hour]);
-
-            // Nếu không có sự kiện nào bắt đầu, và cũng không bị rowspan chiếm
-            // thì BỎ QUA, không vẽ hàng (row) này
-            if (!hasStartingEvent && !isOccupied) {
-                continue; 
-            }
-            
-            // Nếu vượt qua: Vẽ hàng (row)
-            const tr = document.createElement('tr');
-            
-            // Cột 1: Giờ
-            const thTime = document.createElement('td');
-            thTime.className = 'time-slot';
-            thTime.textContent = `${String(hour).padStart(2, '0')}:00`;
-            tr.appendChild(thTime);
-
-            // Cột 2-8: Các ngày trong tuần
-            weekDaysSorted.forEach(day => {
-                
-                // Nếu ô này đã bị 1 event ở trên chiếm, bỏ qua
-                if (occupied[day] && occupied[day][hour]) {
-                    return; // Không tạo <td>
-                }
-
-                // Tìm sự kiện (đã tính toán) bắt đầu vào (day, hour) này
-                const event = schedule.find(e => e.day === day && e.startHour === hour);
-
-                if (event) {
-                    // Nếu có sự kiện, tạo ô với rowspan
-                    const tdEvent = document.createElement('td');
-                    tdEvent.className = 'event-cell';
-                    tdEvent.rowSpan = event.duration;
-                    
-                    const offset = event.notify_offset || 0;
-
-                    // Nội dung của ô sự kiện
-                    tdEvent.innerHTML = `
-                        <div class="event-item">
-                            <div>
-                                <strong class="event-title">${event.event}</strong>
-                                <span class="event-time">${event.time} - ${event.time_end}</span>
-                            </div>
-                            <div>
-                                <select class="notify-select" data-index="${event.originalIndex}">
-                                    <option value="0" ${offset == 0 ? 'selected' : ''}>Báo đúng giờ</option>
-                                    <option value="5" ${offset == 5 ? 'selected' : ''}>Báo trước 5 phút</option>
-                                    <option value="10" ${offset == 10 ? 'selected' : ''}>Báo trước 10 phút</option>
-                                    <option value="15" ${offset == 15 ? 'selected' : ''}>Báo trước 15 phút</option>
-                                    <option value="30" ${offset == 30 ? 'selected' : ''}>Báo trước 30 phút</option>
-                                </select>
-                                <button class="delete-btn" data-index="${event.originalIndex}">Xóa</button>
-                            </div>
-                        </div>
-                    `;
-                    tr.appendChild(tdEvent);
-
-                } else {
-                    // Nếu không có sự kiện (nhưng hàng vẫn được vẽ
-                    // do 1 ngày khác có sự kiện), tạo ô trống
-                    const tdEmpty = document.createElement('td');
-                    tdEmpty.dataset.day = day;
-                    tdEmpty.dataset.hour = hour;
-                    tr.appendChild(tdEmpty);
-                }
-            });
-
-            tableBody.appendChild(tr);
-        }
-    }
-
-    // --- 7. Xử lý Form Thủ Công ---
-    manualForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        const newEvent = {
-            day: manualDay.value,
-            time: manualTimeStart.value,
-            time_end: manualTimeEnd.value,
-            event: manualEvent.value,
-            notify_offset: 0 
-        };
-
-        schedule.push(newEvent);
-        saveSchedule(); 
-        renderSchedule(); 
-
-        manualEvent.value = '';
-        manualTimeStart.value = '';
-        manualTimeEnd.value = '';
-    });
-
-    // --- 8. Xử lý Form AI ---
-    aiForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const text = aiInput.value;
-        if (!text) return;
-
-        try {
-            const response = await fetch('/api/ai-parse', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: text })
-            });
-            const data = await response.json(); 
-
-            manualDay.value = data.day;
-            manualTimeStart.value = data.time;
-            manualTimeEnd.value = data.time_end;
-            manualEvent.value = data.event;
-
-            aiInput.value = '';
-        } catch (err) {
-            console.error('Lỗi gọi AI API:', err);
-            alert('Không thể phân tích. Vui lòng kiểm tra lại prompt.');
-        }
-    });
-
-    // --- 9. Xử lý Nút Xóa TKB ---
-    tableBody.addEventListener('click', (e) => {
-        if (e.target.classList.contains('delete-btn')) {
-            const index = e.target.getAttribute('data-index');
-            schedule.splice(index, 1); 
-            saveSchedule();
-            renderSchedule(); 
-        }
-    });
-
-    // --- 10. LOGIC: Lưu khi thay đổi Báo trước ---
-    tableBody.addEventListener('change', (e) => {
-        if (e.target.classList.contains('notify-select')) {
-            const index = e.target.getAttribute('data-index');
-            const newOffset = e.target.value;
-            
-            schedule[index].notify_offset = parseInt(newOffset);
-            saveSchedule();
-            console.log(`Đã lưu báo trước: ${newOffset} phút cho mục ${index}`);
-        }
-    });
-
-    // --- 11. Logic Thông báo (toàn cục - trong modal) ---
+    // Nút Bật thông báo (Hiện tại chỉ là giao diện, logic cũ đã bị xóa)
     notifyButton.addEventListener('click', () => {
         if (!("Notification" in window)) {
             alert("Trình duyệt này không hỗ trợ thông báo.");
@@ -263,37 +86,216 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 12. Kiểm tra TKB để gửi Thông báo ---
-    function checkNotifications() {
-        if (Notification.permission !== "granted") return;
 
-        const now = new Date();
-        const currentDay = days[now.getDay()];
-        const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    // --- 6. LOGIC MỚI: Vẽ Lịch Tháng ---
+    function renderCalendar(date) {
+        calendarBody.innerHTML = ''; // Xóa lịch cũ
+        const year = date.getFullYear();
+        const month = date.getMonth(); // 0-11
 
-        schedule.forEach(event => {
-            const offset = parseInt(event.notify_offset || 0);
+        // Cập nhật tiêu đề (ví dụ: "Tháng 10 2025")
+        currentMonthYearEl.textContent = `Tháng ${month + 1} ${year}`;
+
+        // Tìm ngày đầu tiên của tháng
+        const firstDayOfMonth = new Date(year, month, 1);
+        // Tìm ngày cuối cùng của tháng
+        const lastDayOfMonth = new Date(year, month + 1, 0);
+
+        // Lấy thứ của ngày đầu tiên (0=CN, 1=T2, ..., 6=T7)
+        // Chúng ta muốn tuần bắt đầu từ T2 (index 1)
+        let firstDayOfWeek = firstDayOfMonth.getDay(); // 0-6
+        if (firstDayOfWeek === 0) firstDayOfWeek = 7; // Chuyển Chủ Nhật (0) thành 7
+
+        // Tìm ngày bắt đầu vẽ trên lịch (có thể là T2 của tuần trước)
+        const startDate = new Date(firstDayOfMonth);
+        startDate.setDate(firstDayOfMonth.getDate() - (firstDayOfWeek - 1)); // Lùi lại (firstDayOfWeek - 1) ngày
+
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        // Vẽ 42 ô (6 tuần x 7 ngày)
+        for (let i = 0; i < 42; i++) {
+            const dayCell = document.createElement('div');
+            dayCell.className = 'calendar-day';
+
+            const currentDate = new Date(startDate);
+            currentDate.setDate(startDate.getDate() + i);
             
-            // Tránh lỗi nếu event.time không tồn tại
-            if (!event.time) return; 
+            const day = currentDate.getDate();
+            const dateStr = currentDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
             
-            const [hours, minutes] = event.time.split(':').map(Number);
-            const eventDate = new Date();
-            eventDate.setHours(hours, minutes, 0, 0); 
-            eventDate.setMinutes(eventDate.getMinutes() - offset);
-            const notifyTimeStr = `${String(eventDate.getHours()).padStart(2, '0')}:${String(eventDate.getMinutes()).padStart(2, '0')}`;
+            dayCell.textContent = day;
+            dayCell.dataset.date = dateStr; // Lưu YYYY-MM-DD vào ô
 
-            if (event.day === currentDay && notifyTimeStr === currentTimeStr) {
-                new Notification("Sắp đến giờ!", {
-                    body: `${event.event} (lúc ${event.time})`,
-                    icon: "icons/icon-192x192.png"
+            // Kiểm tra xem có phải ngày của tháng khác không
+            if (currentDate.getMonth() !== month) {
+                dayCell.classList.add('other-month');
+            } else {
+                // Chỉ thêm sự kiện cho ngày trong tháng
+                const dayData = scheduleData[dateStr];
+                if (dayData) {
+                    if (dayData.note) {
+                        const noteEl = document.createElement('span');
+                        noteEl.className = 'day-note';
+                        noteEl.textContent = dayData.note;
+                        dayCell.appendChild(noteEl);
+                    }
+                    if (dayData.type === 'giãn ca') {
+                        dayCell.classList.add('type-gian-ca');
+                    }
+                }
+                
+                // Đánh dấu ngày hôm nay
+                if (dateStr === todayStr) {
+                    dayCell.classList.add('today');
+                }
+
+                // Thêm sự kiện click
+                dayCell.addEventListener('click', () => {
+                    openNoteModal(dateStr);
                 });
             }
-        });
+            
+            calendarBody.appendChild(dayCell);
+        }
     }
+
+    // --- 7. LOGIC MỚI: Điều khiển Lịch ---
+    prevMonthBtn.addEventListener('click', () => {
+        currentViewDate.setMonth(currentViewDate.getMonth() - 1);
+        renderCalendar(currentViewDate);
+    });
+
+    nextMonthBtn.addEventListener('click', () => {
+        currentViewDate.setMonth(currentViewDate.getMonth() + 1);
+        renderCalendar(currentViewDate);
+    });
+
+    // --- 8. LOGIC MỚI: Xử lý Modal Ghi Chú ---
+    function openNoteModal(dateStr) {
+        const date = new Date(dateStr + 'T00:00:00'); // Đảm bảo đúng múi giờ
+        noteModal.style.display = 'flex';
+        // Đặt tiêu đề (ví dụ: "Ghi chú (30/10/2025)")
+        noteModalTitle.textContent = `Ghi chú (${date.toLocaleDateString('vi-VN')})`;
+        
+        // Lưu ngày đang sửa vào form
+        noteForm.dataset.date = dateStr;
+        
+        // Tải ghi chú cũ (nếu có)
+        const dayData = scheduleData[dateStr];
+        if (dayData) {
+            noteInput.value = dayData.note || '';
+        } else {
+            noteInput.value = '';
+        }
+    }
+
+    // Đóng modal
+    closeNoteModalBtn.addEventListener('click', () => {
+        noteModal.style.display = 'none';
+    });
+    noteModal.addEventListener('click', (e) => {
+        if (e.target === noteModal) {
+            noteModal.style.display = 'none';
+        }
+    });
+
+    // Xử lý khi Lưu form ghi chú
+    noteForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const dateStr = noteForm.dataset.date;
+        const noteText = noteInput.value.trim();
+
+        if (noteText) {
+            // Kiểm tra xem có từ khóa đặc biệt không
+            if (noteText === 'giãn ca') {
+                scheduleData[dateStr] = { type: 'giãn ca' };
+            } else {
+                scheduleData[dateStr] = { note: noteText };
+            }
+        } else {
+            // Nếu input rỗng, coi như xóa
+            delete scheduleData[dateStr];
+        }
+
+        saveScheduleData();
+        renderCalendar(currentViewDate); // Vẽ lại lịch
+        noteModal.style.display = 'none'; // Đóng modal
+    });
+
+    // Xử lý nút Xóa
+    deleteNoteBtn.addEventListener('click', () => {
+        const dateStr = noteForm.dataset.date;
+        delete scheduleData[dateStr];
+        saveScheduleData();
+        renderCalendar(currentViewDate);
+        noteModal.style.display = 'none';
+    });
     
-    setInterval(checkNotifications, 30000);
+    // Xử lý các nút nhanh (Đêm, Ngày, Giãn Ca)
+    noteModal.querySelectorAll('.quick-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            noteInput.value = e.target.dataset.value;
+            // Tự động submit form
+            noteForm.dispatchEvent(new Event('submit'));
+        });
+    });
+
+
+    // --- 9. Xử lý Form AI (CẬP NHẬT) ---
+    aiForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = aiInput.value;
+        if (!text) return;
+
+        aiInput.disabled = true;
+        aiForm.querySelector('button').disabled = true;
+        aiForm.querySelector('button').textContent = "Đang xử lý...";
+
+        try {
+            const response = await fetch('/api/ai-parse', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            });
+            
+            const updates = await response.json(); // Mong đợi một MẢNG
+
+            if (Array.isArray(updates)) {
+                // Lặp qua mảng kết quả AI trả về
+                updates.forEach(update => {
+                    if (update.date) {
+                        if (update.clear) {
+                            delete scheduleData[update.date];
+                        } else if (update.type) {
+                            scheduleData[update.date] = { type: update.type };
+                        } else if (update.note) {
+                            scheduleData[update.date] = { note: update.note };
+                        }
+                    }
+                });
+                
+                saveScheduleData(); // Lưu 1 lần sau khi cập nhật hết
+                renderCalendar(currentViewDate); // Vẽ lại lịch
+                aiInput.value = ''; // Xóa input
+            } else {
+                throw new Error("AI không trả về định dạng mảng.");
+            }
+
+        } catch (err) {
+            console.error('Lỗi gọi AI API:', err);
+            alert('Không thể phân tích. Vui lòng kiểm tra lại prompt và API key.');
+        }
+
+        aiInput.disabled = false;
+        aiForm.querySelector('button').disabled = false;
+        aiForm.querySelector('button').textContent = "Phân tích";
+    });
+    
+    // --- 10. LOGIC CŨ (ĐÃ XÓA) ---
+    // (Xóa hàm checkNotifications và setInterval của nó)
+    // (Xóa hàm renderSchedule (bảng) và các listener của nó)
 
     // Khởi động
-    renderSchedule();
+    renderCalendar(currentViewDate); // Vẽ lịch tháng hiện tại
+    updateClock(); // Khởi động đồng hồ
 });
