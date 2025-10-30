@@ -1,7 +1,7 @@
 {
   "name": "pwa-thoikhoabieu",
   "version": "1.0.0",
-  "description": "Một PWA thời khóa biểu đơn giản",
+  "description": "Một PWA lịch làm việc",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
