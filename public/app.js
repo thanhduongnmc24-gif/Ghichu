@@ -19,11 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const manualTimeEnd = document.getElementById('manual-time-end');
     const manualEvent = document.getElementById('manual-event');
     
-    // CẬP NHẬT: Lấy phần tử mới cho bảng
+    // Lấy phần tử mới cho bảng
     const tableBody = document.getElementById('schedule-table-body');
-    // const scheduleList = document.getElementById('schedule-list'); // Tham chiếu cũ
 
-    // CÁC PHẦN TỬ MỚI CHO MODAL CÀI ĐẶT
+    // CÁC PHẦN TỬ CHO MODAL CÀI ĐẶT
     const settingsBtn = document.getElementById('settings-btn');
     const settingsModal = document.getElementById('settings-modal');
     const closeModalBtn = document.getElementById('close-modal');
@@ -49,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateClock();
     setInterval(updateClock, 1000);
 
-    // --- 5. LOGIC MỚI: Xử lý Modal Cài đặt ---
+    // --- 5. LOGIC: Xử lý Modal Cài đặt ---
     settingsBtn.addEventListener('click', () => {
         settingsModal.style.display = 'flex';
     });
@@ -62,39 +61,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 6. Logic Hiển thị TKB (CẬP NHẬT LỚN - DẠNG LƯỚI) ---
+    // --- 6. Logic Hiển thị TKB (CẬP NHẬT LỚN - ẨN GIỜ TRỐNG) ---
     function renderSchedule() {
         tableBody.innerHTML = ''; // Xóa bảng cũ
 
-        // Tạo một 2D map để theo dõi các ô đã bị "rowspan" chiếm
-        const occupied = {};
+        // --- BƯỚC 1: TÍNH TOÁN TRƯỚC ---
+        const occupied = {}; // Map các ô bị rowspan chiếm
+        const startHours = {}; // Map các giờ có sự kiện *bắt đầu*
         days.forEach(day => { occupied[day] = {}; });
 
-        // Lọc và đánh dấu các ô bị chiếm
         schedule.forEach((event, index) => {
             if (!event.day || !event.time || !event.time_end) return; 
 
             const [startHour, startMin] = event.time.split(':').map(Number);
             const [endHour, endMin] = event.time_end.split(':').map(Number);
-
-            // Tính số giờ "hiệu dụng" mà sự kiện chiếm
             let effectiveEndHour = endHour;
             
             // Nếu 08:00 -> 09:30 (endMin > 0), nó chiếm cả slot 8 và 9.
-            // effectiveEndHour = 9 + 1 = 10.
             if (endMin > 0) {
                 effectiveEndHour += 1;
             }
-            // Nếu 08:00 -> 09:00 (endMin = 0), nó chỉ chiếm slot 8.
-            // effectiveEndHour = 9.
             
-            // duration = 10 - 8 = 2. (Chiếm slot 8, 9)
-            // duration = 9 - 8 = 1. (Chiếm slot 8)
             const duration = Math.max(1, effectiveEndHour - startHour);
 
-            event.startHour = startHour; // Chỉ quan tâm giờ bắt đầu
+            // Lưu các giá trị tính toán vào lại mảng schedule
+            event.startHour = startHour;
             event.duration = duration;
-            event.originalIndex = index; // Lưu index gốc để Xóa/Sửa
+            event.originalIndex = index;
+
+            // Đánh dấu giờ này CÓ sự kiện bắt đầu
+            startHours[startHour] = true;
 
             // Đánh dấu các ô bị chiếm (TRỪ ô bắt đầu)
             for (let i = 1; i < duration; i++) {
@@ -103,9 +99,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+        
+        // Sắp xếp thứ tự hiển thị các ngày (T2 -> CN)
+        const weekDaysSorted = days.slice(1).concat(days[0]);
 
-        // Vẽ 24 hàng (00:00 -> 23:00)
+        // --- BƯỚC 2: VẼ BẢNG ---
         for (let hour = 0; hour < 24; hour++) {
+
+            // CẬP NHẬT: KIỂM TRA GIỜ NÀY CÓ SỰ KIỆN KHÔNG
+            const hasStartingEvent = startHours[hour];
+            const isOccupied = weekDaysSorted.some(day => occupied[day] && occupied[day][hour]);
+
+            // Nếu không có sự kiện nào bắt đầu, và cũng không bị rowspan chiếm
+            // thì BỎ QUA, không vẽ hàng (row) này
+            if (!hasStartingEvent && !isOccupied) {
+                continue; 
+            }
+            
+            // Nếu vượt qua: Vẽ hàng (row)
             const tr = document.createElement('tr');
             
             // Cột 1: Giờ
@@ -114,17 +125,15 @@ document.addEventListener('DOMContentLoaded', () => {
             thTime.textContent = `${String(hour).padStart(2, '0')}:00`;
             tr.appendChild(thTime);
 
-            // Cột 2-8: Các ngày trong tuần (T2 -> CN)
-            const weekDaysSorted = days.slice(1).concat(days[0]); // T2, T3, ..., CN
-            
+            // Cột 2-8: Các ngày trong tuần
             weekDaysSorted.forEach(day => {
                 
-                // Nếu ô này đã bị 1 event ở trên chiếm (do rowspan), bỏ qua
+                // Nếu ô này đã bị 1 event ở trên chiếm, bỏ qua
                 if (occupied[day] && occupied[day][hour]) {
                     return; // Không tạo <td>
                 }
 
-                // Tìm sự kiện bắt đầu vào (day, hour) này
+                // Tìm sự kiện (đã tính toán) bắt đầu vào (day, hour) này
                 const event = schedule.find(e => e.day === day && e.startHour === hour);
 
                 if (event) {
@@ -157,7 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     tr.appendChild(tdEvent);
 
                 } else {
-                    // Nếu không có sự kiện, tạo ô trống
+                    // Nếu không có sự kiện (nhưng hàng vẫn được vẽ
+                    // do 1 ngày khác có sự kiện), tạo ô trống
                     const tdEmpty = document.createElement('td');
                     tdEmpty.dataset.day = day;
                     tdEmpty.dataset.hour = hour;
@@ -216,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 9. Xử lý Nút Xóa TKB (CẬP NHẬT) ---
+    // --- 9. Xử lý Nút Xóa TKB ---
     tableBody.addEventListener('click', (e) => {
         if (e.target.classList.contains('delete-btn')) {
             const index = e.target.getAttribute('data-index');
@@ -226,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 10. LOGIC: Lưu khi thay đổi Báo trước (CẬP NHẬT) ---
+    // --- 10. LOGIC: Lưu khi thay đổi Báo trước ---
     tableBody.addEventListener('change', (e) => {
         if (e.target.classList.contains('notify-select')) {
             const index = e.target.getAttribute('data-index');
@@ -263,6 +273,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         schedule.forEach(event => {
             const offset = parseInt(event.notify_offset || 0);
+            
+            // Tránh lỗi nếu event.time không tồn tại
+            if (!event.time) return; 
+            
             const [hours, minutes] = event.time.split(':').map(Number);
             const eventDate = new Date();
             eventDate.setHours(hours, minutes, 0, 0); 
