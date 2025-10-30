@@ -31,7 +31,7 @@
         <section class="form-section">
             <h2>Thêm bằng AI</h2>
             <form id="ai-form">
-                <input type="text" id="ai-input" placeholder="Ví dụ: Học Lý lúc 14:30 Thứ Năm...">
+                <input type="text" id="ai-input" placeholder="Ví dụ: Học Lý từ 14:30 đến 16:00 Thứ Năm...">
                 <button type="submit">Phân tích</button>
             </form>
         </section>
@@ -48,7 +48,12 @@
                     <option value="Thứ Bảy">Thứ Bảy</option>
                     <option value="Chủ Nhật">Chủ Nhật</option>
                 </select>
-                <input type="time" id="manual-time" required>
+                
+                <label for="manual-time-start">Từ:</label>
+                <input type="time" id="manual-time-start" required>
+                <label for="manual-time-end">Đến:</label>
+                <input type="time" id="manual-time-end" required>
+                
                 <input type="text" id="manual-event" placeholder="Nội dung sự kiện..." required>
                 <button type="submit">Thêm vào TKB</button>
             </form>
