@@ -31,7 +31,7 @@
         <section class="form-section">
             <h2>Thêm Nhanh (AI)</h2>
             <form id="ai-form">
-                <input type="text" id="ai-input" placeholder="Ví dụ: 30/10 đêm, 31/10 giãn ca, 1/11 ngày...">
+                <input type="text" id="ai-input" placeholder="Ví dụ: Quang 30/10, Họp 15/11...">
                 <button type="submit">Phân tích</button>
             </form>
         </section>
@@ -72,20 +72,13 @@
             <h2 id="note-modal-title">Cập nhật (Ngày...)</h2>
             <form id="note-form">
                 
-                <fieldset class="shift-select-group">
-                    <legend>Chọn ca (Shift)</legend>
-                    <label><input type="radio" name="shift" value=""> Trống</label>
-                    <label><input type="radio" name="shift" value="ngày"> Ngày</label>
-                    <label><input type="radio" name="shift" value="đêm"> Đêm</label>
-                    <label><input type="radio" name="shift" value="giãn ca"> Giãn Ca</label>
-                    <label><input type="radio" name="shift" value="off"> Nghỉ (Off)</label>
-                </fieldset>
+                <p id="modal-shift-info">Ca hôm nay: <strong>...</strong></p>
 
                 <label for="note-input" class="note-label">Ghi chú (Note)</label>
                 <input type="text" id="note-input" placeholder="Nhập ghi chú (ví dụ: Quang, họp...)" autocomplete="off">
 
                 <div class="modal-actions">
-                    <button type="button" id="delete-note-btn">Xóa Hết</button>
+                    <button type="button" id="delete-note-btn">Xóa Ghi Chú</button>
                     <button type="submit">Lưu</button>
                 </div>
             </form>
