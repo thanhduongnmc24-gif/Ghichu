@@ -92,19 +92,22 @@ form button {
     color: #2c3e50;
 }
 
-/* Tiêu đề các Thứ (T2-CN) */
+/* CẬP NHẬT: Tiêu đề các Thứ (T2-CN) */
 #calendar-weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    margin-bottom: 10px;
-    background-color: #f4f7f6; /* Nền xám nhạt */
+    margin-bottom: 5px; /* Giảm margin để khớp gap */
+    /* background-color: #f4f7f6; */ /* Xóa nền container */
     border-radius: 5px;
+    gap: 5px; /* <-- ĐÃ THÊM GAP ĐỂ KHỚP VỚI LƯỚI NGÀY */
 }
 .weekday {
     text-align: center;
     font-weight: bold;
     color: #34495e; /* Đổi màu chữ */
     padding: 8px 0;
+    background-color: #f4f7f6; /* <-- Chuyển nền vào ô */
+    border-radius: 5px; /* <-- Thêm bo góc cho ô */
 }
 /* Màu đỏ cho Chủ Nhật */
 .weekday.sunday {
@@ -116,7 +119,7 @@ form button {
 #calendar-body {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
+    gap: 5px; /* <-- Khoảng cách 5px */
 }
 
 .calendar-day {
