@@ -66,8 +66,7 @@ form button {
     background-color: #e67e22;
 }
 
-
-/* --- CSS MỚI CHO LỊCH THÁNG --- */
+/* --- CSS LỊCH THÁNG (CẬP NHẬT) --- */
 #calendar-container {
     background-color: white;
     border-radius: 8px;
@@ -93,7 +92,6 @@ form button {
     color: #2c3e50;
 }
 
-/* Lưới các Thứ (T2-CN) */
 #calendar-weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -103,7 +101,6 @@ form button {
     margin-bottom: 10px;
 }
 
-/* Lưới các Ngày */
 #calendar-body {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -117,39 +114,67 @@ form button {
     padding: 6px;
     cursor: pointer;
     position: relative;
-    font-size: 1.1em;
-    font-weight: 500;
     transition: background-color 0.2s;
+    /* CẬP NHẬT: Cho phép nội dung xếp chồng */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
 }
 .calendar-day:hover {
     background-color: #f9f9f9;
 }
 
-/* Ghi chú ("đêm", "ngày") ở góc trái */
-.day-note {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    font-size: 0.7em; /* Chữ nhỏ */
+/* Số ngày (ví dụ: 30, 31) */
+.day-number {
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+/* Ca (Shift) - (ví dụ: "đêm") */
+.day-shift {
+    font-size: 0.7em;
     font-weight: 600;
     color: #2980b9;
     background-color: rgba(236, 240, 241, 0.8);
     padding: 2px 4px;
     border-radius: 3px;
+    /* Căn góc trái trên, bên dưới số ngày */
 }
 
-/* Ô có kiểu "giãn ca" */
-.type-gian-ca {
-    background-color: #fef9e7; /* Màu vàng nhạt */
+/* Ghi chú (Note) - (ví dụ: "Quang") */
+.day-note {
+    font-size: 0.85em;
+    font-weight: 500;
+    color: #c0392b; /* Màu khác để phân biệt */
+    width: 100%;
+    text-align: center; /* Căn giữa */
+    /* Căn ở giữa ô */
+    align-self: center;
+    margin-top: auto;
+    margin-bottom: auto;
+    padding-top: 5px;
 }
 
-/* Ô ngày hôm nay */
+
+/* CẬP NHẬT: Các kiểu đặc biệt cho Ca (Shift) */
+.shift-gian-ca {
+    background-color: #fef9e7; /* Màu vàng nhạt (như bạn yêu cầu) */
+}
+.shift-off {
+    background-color: #f1f1f1; /* Màu xám nhạt */
+}
+
+/* Ô ngày hôm nay (Như cũ) */
 .calendar-day.today {
-    background-color: #eaf5ff;
     border-color: #3498db;
 }
+.today .day-number {
+    color: #3498db;
+    font-weight: bold;
+}
 
-/* Ô ngày của tháng khác */
+/* Ô ngày của tháng khác (Như cũ) */
 .calendar-day.other-month {
     color: #bdc3c7;
     background-color: #fdfdfd;
@@ -157,7 +182,7 @@ form button {
 }
 
 
-/* --- CSS MỚI CHO MODAL NHẬP GHI CHÚ --- */
+/* --- CSS MỚI CHO MODAL GHI CHÚ ĐÃ THIẾT KẾ LẠI --- */
 #note-modal h2 {
     margin-top: 0;
     font-size: 1.2em;
@@ -165,27 +190,40 @@ form button {
 }
 #note-modal #note-input {
     width: 100%;
-    box-sizing: border-box; /* Đảm bảo padding không làm vỡ layout */
+    box-sizing: border-box;
+    margin-top: 5px;
 }
-.quick-buttons {
-    display: flex;
-    gap: 10px;
+.note-label {
+    display: block;
     margin-top: 15px;
+    font-weight: bold;
 }
-.quick-btn {
-    flex-grow: 1;
-    background-color: #ecf0f1;
-    color: #34495e;
-    border: 1px solid #bdc3c7;
-    font-size: 0.9em;
+
+/* Kiểu cho nhóm Radio Button chọn Ca */
+.shift-select-group {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Chia 2 cột */
+    gap: 8px;
 }
+.shift-select-group legend {
+    font-weight: bold;
+    padding: 0 5px;
+}
+.shift-select-group label {
+    display: block;
+    cursor: pointer;
+}
+
 .modal-actions {
     display: flex;
     justify-content: space-between;
     margin-top: 20px;
 }
 #delete-note-btn {
-    background-color: #e74c3c; /* Màu đỏ */
+    background-color: #e74c3c;
 }
 
 /* --- CSS Cũ (Modal Cài đặt) - Giữ nguyên --- */
