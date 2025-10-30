@@ -69,18 +69,23 @@
     <div id="note-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <span id="close-note-modal" class="close-btn">&times;</span>
-            <h2 id="note-modal-title">Thêm ghi chú (Ngày...)</h2>
+            <h2 id="note-modal-title">Cập nhật (Ngày...)</h2>
             <form id="note-form">
-                <input type="text" id="note-input" placeholder="Nhập ghi chú (ví dụ: đêm, ngày, họp...)" autocomplete="off">
                 
-                <div class="quick-buttons">
-                    <button type="button" class="quick-btn" data-value="đêm">Đêm</button>
-                    <button type="button" class="quick-btn" data-value="ngày">Ngày</button>
-                    <button type="button" class="quick-btn" data-value="giãn ca">Giãn Ca</button>
-                </div>
+                <fieldset class="shift-select-group">
+                    <legend>Chọn ca (Shift)</legend>
+                    <label><input type="radio" name="shift" value=""> Trống</label>
+                    <label><input type="radio" name="shift" value="ngày"> Ngày</label>
+                    <label><input type="radio" name="shift" value="đêm"> Đêm</label>
+                    <label><input type="radio" name="shift" value="giãn ca"> Giãn Ca</label>
+                    <label><input type="radio" name="shift" value="off"> Nghỉ (Off)</label>
+                </fieldset>
+
+                <label for="note-input" class="note-label">Ghi chú (Note)</label>
+                <input type="text" id="note-input" placeholder="Nhập ghi chú (ví dụ: Quang, họp...)" autocomplete="off">
 
                 <div class="modal-actions">
-                    <button type="button" id="delete-note-btn">Xóa Ghi Chú</button>
+                    <button type="button" id="delete-note-btn">Xóa Hết</button>
                     <button type="submit">Lưu</button>
                 </div>
             </form>
