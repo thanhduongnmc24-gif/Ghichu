@@ -20,12 +20,12 @@
 
     <header>
         <h1>Thời Khóa Biểu Của Bạn</h1>
+        <button id="settings-btn" class="icon-btn">⚙️</button>
         <div id="clock-container">
             <span id="date"></span>
             <span id="time"></span>
         </div>
-        <button id="notify-button">Bật Thông Báo</button>
-    </header>
+        </header>
 
     <main>
         <section class="form-section">
@@ -65,6 +65,17 @@
                 </ul>
         </section>
     </main>
+
+    <div id="settings-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <span id="close-modal" class="close-btn">&times;</span>
+            <h2>Cài đặt chung</h2>
+            
+            <button id="notify-button">Bật Thông Báo (Toàn cục)</button>
+            <p>Cho phép ứng dụng gửi thông báo.</p>
+            
+            </div>
+    </div>
 
     <script src="app.js"></script>
 </body>
