@@ -20,33 +20,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const manualEvent = document.getElementById('manual-event');
     const scheduleList = document.getElementById('schedule-list');
 
-    // --- 3. Dữ liệu (Tạm thời lưu ở đây) ---
-    // Trong ứng dụng thực tế, bạn sẽ dùng localStorage hoặc IndexedDB
+    // --- 3. Dữ liệu ---
     let schedule = [];
+    const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 
     // --- 4. Logic Đồng hồ ---
     function updateClock() {
         const now = new Date();
-        
-        // Định dạng ngày: Thứ [2-CN], Ngày [dd]/[mm]/[yyyy]
-        const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
         const dayName = days[now.getDay()];
         const dateStr = `${dayName}, ${now.toLocaleDateString('vi-VN')}`;
-        
-        // Định dạng giờ 00-24
         const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-
         dateEl.textContent = dateStr;
         timeEl.textContent = timeStr;
     }
-    updateClock(); // Chạy lần đầu
-    setInterval(updateClock, 1000); // Cập nhật mỗi giây
+    updateClock();
+    setInterval(updateClock, 1000);
 
     // --- 5. Logic Hiển thị TKB ---
     function renderSchedule() {
-        scheduleList.innerHTML = ''; // Xóa list cũ
+        scheduleList.innerHTML = '';
         
-        // Sắp xếp TKB theo thời gian
         schedule.sort((a, b) => {
             if (a.day !== b.day) return days.indexOf(a.day) - days.indexOf(b.day);
             return a.time.localeCompare(b.time);
@@ -70,18 +63,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 6. Xử lý Form Thủ Công ---
     manualForm.addEventListener('submit', (e) => {
-        e.preventDefault(); // Ngăn trang tải lại
-        
+        e.preventDefault();
         const newEvent = {
             day: manualDay.value,
             time: manualTime.value,
             event: manualEvent.value
         };
-
-        schedule.push(newEvent); // Thêm vào mảng
-        renderSchedule(); // Vẽ lại TKB
-
-        // Xóa form
+        schedule.push(newEvent);
+        renderSchedule();
         manualEvent.value = '';
     });
 
@@ -94,20 +83,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/api/ai-parse', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: text })
             });
-
             const data = await response.json();
-
-            // Tự động điền vào form thủ công
             manualDay.value = data.day;
             manualTime.value = data.time;
             manualEvent.value = data.event;
-
-            aiInput.value = ''; // Xóa input AI
+            aiInput.value = '';
         } catch (err) {
             console.error('Lỗi gọi AI API:', err);
             alert('Không thể phân tích. Vui lòng thử lại.');
@@ -118,8 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
     scheduleList.addEventListener('click', (e) => {
         if (e.target.classList.contains('delete-btn')) {
             const index = e.target.getAttribute('data-index');
-            schedule.splice(index, 1); // Xóa khỏi mảng
-            renderSchedule(); // Vẽ lại
+            schedule.splice(index, 1);
+            renderSchedule();
         }
     });
 
@@ -128,10 +111,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!("Notification" in window)) {
             alert("Trình duyệt này không hỗ trợ thông báo.");
         } else if (Notification.permission === "granted") {
-            // Nếu đã có quyền, gửi thử 1 thông báo
             new Notification("Đã bật!", { body: "Bạn đã bật thông báo thành công!" });
         } else if (Notification.permission !== "denied") {
-            // Hỏi quyền
             Notification.requestPermission().then(permission => {
                 if (permission === "granted") {
                     new Notification("Cảm ơn!", { body: "Thông báo đã được bật!" });
@@ -142,28 +123,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 10. Kiểm tra TKB để gửi Thông báo ---
     function checkNotifications() {
-        if (Notification.permission !== "granted") {
-            return; // Chưa cho phép, không làm gì cả
-        }
-
+        if (Notification.permission !== "granted") return;
         const now = new Date();
-        const currentDay = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'][now.getDay()];
+        const currentDay = days[now.getDay()];
         const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
         schedule.forEach(event => {
             if (event.day === currentDay && event.time === currentTime) {
-                // Đã đến giờ!
                 new Notification("Đến giờ rồi!", {
                     body: event.event,
-                    icon: "icons/icon-192x192.png" // (Bạn phải tự tạo icon này)
+                    icon: "icons/icon-192x192.png"
                 });
             }
         });
     }
-
-    // Chạy kiểm tra thông báo mỗi 30 giây (không nên chạy mỗi giây)
-    setInterval(checkNotifications, 30000);
-
-    // Khởi động
-    renderSchedule();
+    setInterval(checkNotifications, 30000); // Kiểm tra mỗi 30 giây
+    renderSchedule(); // Hiển thị TKB khi mới tải trang
 });
