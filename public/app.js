@@ -10,21 +10,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 2. Lấy các phần tử DOM (CẬP NHẬT) ---
     const dateEl = document.getElementById('date');
     const timeEl = document.getElementById('time');
-    const notifyButton = document.getElementById('notify-button');
+    // Nút Bật Thông Báo (vẫn ID cũ, nhưng giờ ở trong modal)
+    const notifyButton = document.getElementById('notify-button'); 
     const aiForm = document.getElementById('ai-form');
     const aiInput = document.getElementById('ai-input');
     const manualForm = document.getElementById('manual-form');
     const manualDay = document.getElementById('manual-day');
-    const manualTimeStart = document.getElementById('manual-time-start'); // ID ĐÃ ĐỔI
-    const manualTimeEnd = document.getElementById('manual-time-end');   // ID MỚI
+    const manualTimeStart = document.getElementById('manual-time-start');
+    const manualTimeEnd = document.getElementById('manual-time-end');
     const manualEvent = document.getElementById('manual-event');
     const scheduleList = document.getElementById('schedule-list');
 
-    // --- 3. Dữ liệu (CẬP NHẬT: Lấy từ localStorage) ---
+    // CÁC PHẦN TỬ MỚI CHO MODAL CÀI ĐẶT
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeModalBtn = document.getElementById('close-modal');
+
+    // --- 3. Dữ liệu (Lấy từ localStorage - như cũ) ---
+    // Cấu trúc dữ liệu TKB bây giờ là:
+    // { day, time, time_end, event, notify_offset }
     let schedule = JSON.parse(localStorage.getItem('mySchedule')) || [];
     const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 
-    // --- HÀM MỚI: Lưu TKB vào localStorage ---
+    // --- Hàm Lưu TKB (như cũ) ---
     function saveSchedule() {
         localStorage.setItem('mySchedule', JSON.stringify(schedule));
     }
@@ -41,13 +49,27 @@ document.addEventListener('DOMContentLoaded', () => {
     updateClock();
     setInterval(updateClock, 1000);
 
-    // --- 5. Logic Hiển thị TKB (CẬP NHẬT) ---
+    // --- 5. LOGIC MỚI: Xử lý Modal Cài đặt ---
+    settingsBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'flex';
+    });
+    closeModalBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+    });
+    // Đóng modal khi nhấn ra ngoài
+    settingsModal.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+            settingsModal.style.display = 'none';
+        }
+    });
+
+    // --- 6. Logic Hiển thị TKB (CẬP NHẬT LỚN) ---
     function renderSchedule() {
         scheduleList.innerHTML = '';
         
         schedule.sort((a, b) => {
             if (a.day !== b.day) return days.indexOf(a.day) - days.indexOf(b.day);
-            return a.time.localeCompare(b.time); // Sắp xếp theo giờ bắt đầu
+            return a.time.localeCompare(b.time);
         });
 
         if (schedule.length === 0) {
@@ -57,44 +79,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
         schedule.forEach((event, index) => {
             const li = document.createElement('li');
+            
+            // Lấy giá trị báo trước (mặc định là 0 - đúng giờ)
+            const offset = event.notify_offset || 0;
 
-            // CẬP NHẬT HIỂN THỊ: Thêm time_end
-            // Chỉ hiển thị "8:00 - 9:00" nếu giờ kết thúc khác giờ bắt đầu
             const timeDisplay = (event.time_end && event.time_end !== event.time) ?
                                 `${event.time} - ${event.time_end}` :
                                 event.time;
 
+            // CẬP NHẬT: Thêm dropdown Báo trước
             li.innerHTML = `
                 <div class="time">${event.day}<br>${timeDisplay}</div>
                 <div class="event">${event.event}</div>
+                
+                <select class="notify-select" data-index="${index}">
+                    <option value="0" ${offset == 0 ? 'selected' : ''}>Báo đúng giờ</option>
+                    <option value="5" ${offset == 5 ? 'selected' : ''}>Báo trước 5 phút</option>
+                    <option value="10" ${offset == 10 ? 'selected' : ''}>Báo trước 10 phút</option>
+                    <option value="15" ${offset == 15 ? 'selected' : ''}>Báo trước 15 phút</option>
+                    <option value="30" ${offset == 30 ? 'selected' : ''}>Báo trước 30 phút</option>
+                </select>
+
                 <button class="delete-btn" data-index="${index}">Xóa</button>
             `;
             scheduleList.appendChild(li);
         });
     }
 
-    // --- 6. Xử lý Form Thủ Công (CẬP NHẬT) ---
+    // --- 7. Xử lý Form Thủ Công (CẬP NHẬT) ---
     manualForm.addEventListener('submit', (e) => {
         e.preventDefault();
         
         const newEvent = {
             day: manualDay.value,
-            time: manualTimeStart.value, // Dùng ID mới
-            time_end: manualTimeEnd.value, // Dùng ID mới
-            event: manualEvent.value
+            time: manualTimeStart.value,
+            time_end: manualTimeEnd.value,
+            event: manualEvent.value,
+            notify_offset: 0 // Thêm giá trị mặc định là "Báo đúng giờ"
         };
 
         schedule.push(newEvent);
         saveSchedule(); // <-- LƯU LẠI
         renderSchedule();
 
-        // Xóa form
         manualEvent.value = '';
-        manualTimeStart.value = ''; // Xóa giờ bắt đầu
-        manualTimeEnd.value = '';   // Xóa giờ kết thúc
+        manualTimeStart.value = '';
+        manualTimeEnd.value = '';
     });
 
-    // --- 7. Xử lý Form AI (CẬP NHẬT) ---
+    // --- 8. Xử lý Form AI (CẬP NHẬT) ---
+    // (Cần cập nhật để AI trả về cả offset, nhưng tạm thời để mặc định)
     aiForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const text = aiInput.value;
@@ -106,32 +140,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: text })
             });
-            const data = await response.json();
+            // Gemini trả về text, nên parse là json()
+            const data = await response.json(); 
 
-            // CẬP NHẬT: Điền cả 2 ô thời gian
             manualDay.value = data.day;
-            manualTimeStart.value = data.time;      // Dùng ID mới
-            manualTimeEnd.value = data.time_end;    // Dùng ID mới
+            manualTimeStart.value = data.time;
+            manualTimeEnd.value = data.time_end;
             manualEvent.value = data.event;
+            // (Hiện tại AI chưa hỗ trợ offset, nên sẽ dùng mặc định khi lưu)
 
             aiInput.value = '';
         } catch (err) {
             console.error('Lỗi gọi AI API:', err);
-            alert('Không thể phân tích. Vui lòng thử lại.');
+            // Kiểm tra xem lỗi có phải do response không phải JSON không
+            console.log("Response text (nếu có):", await err.response?.text());
+            alert('Không thể phân tích. Vui lòng kiểm tra lại prompt.');
         }
     });
 
-    // --- 8. Xử lý Nút Xóa TKB (CẬP NHẬT) ---
+    // --- 9. Xử lý Nút Xóa TKB (như cũ) ---
     scheduleList.addEventListener('click', (e) => {
         if (e.target.classList.contains('delete-btn')) {
             const index = e.target.getAttribute('data-index');
-            schedule.splice(index, 1); // Xóa khỏi mảng
-            saveSchedule(); // <-- LƯU LẠI
+            schedule.splice(index, 1);
+            saveSchedule();
             renderSchedule();
         }
     });
 
-    // --- 9. Logic Thông báo (như cũ) ---
+    // --- 10. LOGIC MỚI: Lưu khi thay đổi Báo trước ---
+    scheduleList.addEventListener('change', (e) => {
+        if (e.target.classList.contains('notify-select')) {
+            const index = e.target.getAttribute('data-index');
+            const newOffset = e.target.value;
+            
+            schedule[index].notify_offset = parseInt(newOffset);
+            saveSchedule();
+            
+            // (Không cần render lại, chỉ cần lưu)
+            console.log(`Đã lưu báo trước: ${newOffset} phút cho mục ${index}`);
+        }
+    });
+
+    // --- 11. Logic Thông báo (toàn cục - như cũ, nút giờ ở trong modal) ---
     notifyButton.addEventListener('click', () => {
         if (!("Notification" in window)) {
             alert("Trình duyệt này không hỗ trợ thông báo.");
@@ -146,25 +197,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 10. Kiểm tra TKB để gửi Thông báo (như cũ) ---
-    // Logic này vẫn đúng, nó sẽ kiểm tra giờ BẮT ĐẦU (event.time)
+    // --- 12. Kiểm tra TKB để gửi Thông báo (CẬP NHẬT LỚN) ---
     function checkNotifications() {
         if (Notification.permission !== "granted") return;
+
         const now = new Date();
         const currentDay = days[now.getDay()];
-        const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        // Lấy giờ hiện tại "HH:MM"
+        const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
         schedule.forEach(event => {
-            if (event.day === currentDay && event.time === currentTime) {
-                new Notification("Đến giờ rồi!", {
-                    body: event.event,
+            // Lấy thời gian báo trước (mặc định 0)
+            const offset = parseInt(event.notify_offset || 0);
+
+            // 1. Phân tích giờ bắt đầu của sự kiện
+            const [hours, minutes] = event.time.split(':').map(Number);
+
+            // 2. Tạo đối tượng Date cho thời gian sự kiện
+            const eventDate = new Date();
+            eventDate.setHours(hours, minutes, 0, 0); // Đặt giờ sự kiện
+
+            // 3. Trừ đi số phút báo trước
+            eventDate.setMinutes(eventDate.getMinutes() - offset);
+
+            // 4. Lấy thời gian "HH:MM" cần báo thức
+            const notifyTimeStr = `${String(eventDate.getHours()).padStart(2, '0')}:${String(eventDate.getMinutes()).padStart(2, '0')}`;
+
+            // 5. So sánh
+            if (event.day === currentDay && notifyTimeStr === currentTimeStr) {
+                // Đã đến giờ báo thức!
+                new Notification("Sắp đến giờ!", {
+                    body: `${event.event} (lúc ${event.time})`,
                     icon: "icons/icon-192x192.png"
                 });
             }
         });
     }
+    
+    // Tăng tần suất kiểm tra lên mỗi 30 giây (như cũ)
     setInterval(checkNotifications, 30000);
 
-    // Khởi động: Hiển thị TKB đã lưu khi mới tải trang
+    // Khởi động
     renderSchedule();
 });
