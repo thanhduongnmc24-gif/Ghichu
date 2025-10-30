@@ -1,81 +1,37 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thời Khóa Biểu PWA</title>
-    
     <link rel="stylesheet" href="style.css">
-    
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#3498db">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="TKB App">
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-
-</head>
+    </head>
 <body>
-
     <header>
-        <h1>Thời Khóa Biểu Của Bạn</h1>
-        <button id="settings-btn" class="icon-btn">⚙️</button>
-        <div id="clock-container">
-            <span id="date"></span>
-            <span id="time"></span>
-        </div>
         </header>
 
     <main>
-        <section class="form-section">
-            <h2>Thêm bằng AI</h2>
-            <form id="ai-form">
-                <input type="text" id="ai-input" placeholder="Ví dụ: Học Lý từ 14:30 đến 16:00 Thứ Năm...">
-                <button type="submit">Phân tích</button>
-            </form>
-        </section>
-
-        <section class="form-section">
-            <h2>Thêm Thủ Công</h2>
-            <form id="manual-form">
-                <select id="manual-day">
-                    <option value="Thứ Hai">Thứ Hai</option>
-                    <option value="Thứ Ba">Thứ Ba</option>
-                    <option value="Thứ Tư">Thứ Tư</option>
-                    <option value="Thứ Năm">Thứ Năm</option>
-                    <option value="Thứ Sáu">Thứ Sáu</option>
-                    <option value="Thứ Bảy">Thứ Bảy</option>
-                    <option value="Chủ Nhật">Chủ Nhật</option>
-                </select>
-                
-                <label for="manual-time-start">Từ:</label>
-                <input type="time" id="manual-time-start" required>
-                <label for="manual-time-end">Đến:</label>
-                <input type="time" id="manual-time-end" required>
-                
-                <input type="text" id="manual-event" placeholder="Nội dung sự kiện..." required>
-                <button type="submit">Thêm vào TKB</button>
-            </form>
-        </section>
-
         <section id="schedule-container">
             <h2>Thời khóa biểu</h2>
-            <ul id="schedule-list">
-                </ul>
-        </section>
-    </main>
-
-    <div id="settings-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <span id="close-modal" class="close-btn">&times;</span>
-            <h2>Cài đặt chung</h2>
-            
-            <button id="notify-button">Bật Thông Báo (Toàn cục)</button>
-            <p>Cho phép ứng dụng gửi thông báo.</p>
-            
+            <div id="schedule-grid-wrapper">
+                <table id="schedule-table">
+                    <thead>
+                        <tr>
+                            <th class="time-header">Giờ</th>
+                            <th>Thứ Hai</th>
+                            <th>Thứ Ba</th>
+                            <th>Thứ Tư</th>
+                            <th>Thứ Năm</th>
+                            <th>Thứ Sáu</th>
+                            <th>Thứ Bảy</th>
+                            <th>Chủ Nhật</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-table-body">
+                        </tbody>
+                </table>
             </div>
-    </div>
+        </section>
+        
+        </main>
 
     <script src="app.js"></script>
 </body>
