@@ -37,41 +37,33 @@ app.post('/api/ai-parse', async (req, res) => {
     // 3. Tạo câu lệnh (Prompt) MỚI
     const prompt = `
         Bạn là trợ lý phân tích lịch làm việc. Nhiệm vụ của bạn là đọc văn bản và chuyển nó thành một MẢNG JSON.
-        Mỗi đối tượng trong mảng phải có định dạng:
+        Mỗi đối tượng trong mảng chỉ chứa 2 thông tin: "date" (ngày) và "note" (ghi chú).
         { 
           "date": "YYYY-MM-DD", 
-          "shift": "...", 
           "note": "..."
         }
 
         Quy tắc:
-        1. "shift" (Ca): Phải là một trong các giá trị: "ngày", "đêm", "giãn ca", "off" (nếu người dùng nói nghỉ). Nếu không nói, để trống ("").
-        2. "note" (Ghi chú): Là bất kỳ văn bản nào còn lại (tên người, sự kiện, v.v.). Nếu không nói, để trống ("").
+        1. "note" (Ghi chú): Là bất kỳ văn bản nào (tên người, sự kiện, v.v.).
+        2. Bỏ qua các từ khóa ca làm việc như "ngày", "đêm", "giãn ca". AI không cần xử lý chúng.
         
         Hôm nay là ngày: ${todayStr}. Năm hiện tại: ${currentYear}.
 
         VÍ DỤ XỬ LÝ:
-        Input: "30/10 đêm, 31/10 giãn ca, 1/11 ngày."
+        Input: "Quang 30/10"
         Output: [
-            { "date": "${currentYear}-10-30", "shift": "đêm", "note": "" },
-            { "date": "${currentYear}-10-31", "shift": "giãn ca", "note": "" },
-            { "date": "${currentYear}-11-01", "shift": "ngày", "note": "" }
+            { "date": "${currentYear}-10-30", "note": "Quang" }
         ]
 
-        Input: "Quang 30/10" (Giống ví dụ của người dùng)
+        Input: "Họp 28/11 và 15/11" (Hai ngày riêng biệt)
         Output: [
-            { "date": "${currentYear}-10-30", "shift": "", "note": "Quang" }
+            { "date": "${currentYear}-11-28", "note": "Họp" },
+            { "date": "${currentYear}-11-15", "note": "Họp" }
         ]
-
-        Input: "Quang 30/10 ca đêm" (Kết hợp cả hai)
+        
+        Input: "Quang 30/10 ca đêm" (Bỏ qua "ca đêm")
         Output: [
-            { "date": "${currentYear}-10-30", "shift": "đêm", "note": "Quang" }
-        ]
-
-        Input: "quang 28-15/11" (Hai ngày riêng biệt)
-        Output: [
-            { "date": "${currentYear}-11-28", "shift": "", "note": "quang" },
-            { "date": "${currentYear}-11-15", "shift": "", "note": "quang" }
+            { "date": "${currentYear}-10-30", "note": "Quang" }
         ]
 
         Văn bản của người dùng: "${text}"
