@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. Dữ liệu (Như cũ) ---
     let noteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
-    let currentViewDate = new Date();
+    let currentViewDate = new Date(); // Luôn là giờ địa phương
 
     // --- CÀI ĐẶT CHU KỲ (CẬP NHẬT) ---
     // 1. Ngày gốc (Epoch). Chúng ta chọn 26/10/2025 làm mốc 0.
@@ -205,11 +205,12 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCalendar(currentViewDate);
     });
 
-    // --- 8. LOGIC MỚI: Xử lý Modal Ghi Chú (Như cũ) ---
+    // --- 8. LOGIC MỚI: Xử lý Modal Ghi Chú (CẬP NHẬT - Sửa lỗi múi giờ) ---
     function openNoteModal(dateStr) {
         // CẬP NHẬT: Sửa lỗi T00:00:00 (chỉ cần YYYY-MM-DD)
         const dateParts = dateStr.split('-').map(Number);
-        const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+        // Tạo Date object an toàn theo giờ địa phương
+        const date = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]); 
         
         noteModal.style.display = 'flex';
         noteModalTitle.textContent = `Cập nhật (${date.toLocaleDateString('vi-VN')})`;
@@ -268,6 +269,10 @@ document.addEventListener('DOMContentLoaded', () => {
         aiInput.disabled = true;
         aiForm.querySelector('button').disabled = true;
         aiForm.querySelector('button').textContent = "Đang xử lý...";
+
+Vui lòng thay thế **5 tệp** sau: `package.json`, `index.js`, `public/index.html`, `public/style.css`, và `public/app.js` bằng mã mới này.
+
+Việc sửa lỗi logic tính toán ngày (Date) trong `app.js` và `index.js` sẽ giải quyết cả hai vấn đề (treo deploy và sai ngày hiện tại).
 
         try {
             const response = await fetch('/api/ai-parse', {
