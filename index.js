@@ -15,7 +15,7 @@ if (!API_KEY) {
 // 2. Khởi tạo mô hình AI
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash", // Dùng "flash" cho nhanh và rẻ
+    model: "gemini-2.5-flash", // Dùng "flash" cho nhanh và rẻ
     generationConfig: {
         responseMimeType: "application/json" // Yêu cầu AI luôn trả về JSON
     }
