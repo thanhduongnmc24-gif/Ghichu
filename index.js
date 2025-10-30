@@ -13,7 +13,7 @@ if (!API_KEY) {
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash", // Hoặc "gemini-2.5-flash" như bạn đã dùng
+    model: "gemini-2.5-flash", // Hoặc "gemini-2.5-flash" như bạn đã dùng
     generationConfig: {
         responseMimeType: "application/json" 
     }
@@ -43,7 +43,7 @@ app.post('/api/ai-parse', async (req, res) => {
     const todayStr = `${partMap.year}-${partMap.month}-${partMap.day}`;
     const currentYear = partMap.year;
 
-    // 3. Tạo câu lệnh (Prompt) MỚI
+    // 3. Tạo câu lệnh (Prompt) (Như cũ)
     const prompt = `
         Bạn là trợ lý phân tích lịch làm việc. Nhiệm vụ của bạn là đọc văn bản và chuyển nó thành một MẢNG JSON.
         Mỗi đối tượng trong mảng chỉ chứa 2 thông tin: "date" (ngày) và "note" (ghi chú).
