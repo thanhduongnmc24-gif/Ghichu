@@ -13,7 +13,7 @@ if (!API_KEY) {
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 const model = genAI.getGenerativeModel({ 
-    model: "gemini-2.5-flash", // Hoặc "gemini-2.5-flash" như bạn đã dùng
+    model: "gemini-1.5-flash", // Hoặc "gemini-2.5-flash" như bạn đã dùng
     generationConfig: {
         responseMimeType: "application/json" 
     }
@@ -23,27 +23,25 @@ const model = genAI.getGenerativeModel({
 app.use(express.json());
 app.use(express.static('public'));
 
-// --- API Endpoint cho AI (CẬP NHẬT LOGIC NGÀY) ---
+// --- API Endpoint cho AI (CẬP NHẬT PROMPT) ---
 app.post('/api/ai-parse', async (req, res) => {
     const text = req.body.text || "";
     if (!text) {
         return res.status(400).json({ error: 'Không có văn bản' });
     }
     
-    // CẬP NHẬT: Lấy ngày hôm nay theo múi giờ Hà Nội (GMT+7)
+    // Lấy ngày hôm nay theo múi giờ Hà Nội (GMT+7)
     const today = new Date();
-    // 'en-CA' là định dạng YYYY-MM-DD
     const options = { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' };
     const formatter = new Intl.DateTimeFormat('en-CA', options); 
     
-    // Tách các phần ra để đảm bảo đúng YYYY-MM-DD
     const parts = formatter.formatToParts(today);
     const partMap = parts.reduce((acc, part) => { acc[part.type] = part.value; return acc; }, {});
     
     const todayStr = `${partMap.year}-${partMap.month}-${partMap.day}`;
     const currentYear = partMap.year;
 
-    // 3. Tạo câu lệnh (Prompt) (Như cũ)
+    // 3. Tạo câu lệnh (Prompt) MỚI
     const prompt = `
         Bạn là trợ lý phân tích lịch làm việc. Nhiệm vụ của bạn là đọc văn bản và chuyển nó thành một MẢNG JSON.
         Mỗi đối tượng trong mảng chỉ chứa 2 thông tin: "date" (ngày) và "note" (ghi chú).
@@ -68,6 +66,13 @@ app.post('/api/ai-parse', async (req, res) => {
         Output: [
             { "date": "${currentYear}-11-28", "note": "Họp" },
             { "date": "${currentYear}-11-15", "note": "Họp" }
+        ]
+        
+        Input: "Q 30/10 2/11 3/11" (Một ghi chú, nhiều ngày)
+        Output: [
+            { "date": "${currentYear}-10-30", "note": "Q" },
+            { "date": "${currentYear}-11-02", "note": "Q" },
+            { "date": "${currentYear}-11-03", "note": "Q" }
         ]
         
         Input: "Quang 30/10 ca đêm" (Bỏ qua "ca đêm")
