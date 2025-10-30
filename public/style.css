@@ -1,3 +1,4 @@
+/* Thiết lập cơ bản (không đổi) */
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     line-height: 1.6;
@@ -11,6 +12,8 @@ header {
     color: white;
     padding: 20px;
     text-align: center;
+    /* CẬP NHẬT: Thêm flex để căn chỉnh nút Cài đặt */
+    position: relative;
 }
 #clock-container {
     font-size: 1.1em;
@@ -20,6 +23,7 @@ header {
     font-weight: bold;
     margin-left: 10px;
 }
+/* CẬP NHẬT: Nút Bật Thông Báo cũ (giờ dùng cho Cài đặt) */
 #notify-button {
     background-color: #2980b9;
     color: white;
@@ -27,14 +31,18 @@ header {
     padding: 10px 15px;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 1em;
     margin-top: 15px;
+}
+#notify-button:hover {
+    background-color: #2471a3;
 }
 main {
     max-width: 800px;
     margin: 20px auto;
     padding: 0 15px;
 }
+/* Các form (không đổi) */
 .form-section {
     background-color: white;
     border-radius: 8px;
@@ -50,11 +58,12 @@ form {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    align-items: center; /* Căn chỉnh các label */
 }
 form input[type="text"],
 form input[type="time"],
 form select {
-    flex: 1;
+    flex-grow: 1; /* Cho phép co dãn */
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
@@ -72,6 +81,8 @@ form button {
 #ai-form button {
     background-color: #e67e22;
 }
+
+/* Danh sách TKB (CẬP NHẬT) */
 #schedule-list {
     list-style-type: none;
     padding: 0;
@@ -84,8 +95,10 @@ form button {
     padding: 15px;
     margin-bottom: 10px;
     display: flex;
+    flex-wrap: wrap; /* Cho phép xuống hàng trên điện thoại */
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 #schedule-list li .time {
@@ -95,7 +108,8 @@ form button {
     margin-right: 15px;
 }
 #schedule-list li .event {
-    flex-grow: 1;
+    flex-grow: 1; /* Tên sự kiện chiếm nhiều không gian nhất */
+    min-width: 150px; /* Đảm bảo không bị vỡ */
 }
 #schedule-list li button {
     background-color: #e74c3c;
@@ -105,4 +119,64 @@ form button {
     border-radius: 5px;
     cursor: pointer;
     font-size: 0.8em;
+}
+
+/* --- CSS MỚI THÊM --- */
+
+/* 1. Nút Cài đặt (Icon) */
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 1.8em;
+    color: white;
+    cursor: pointer;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 5px;
+    line-height: 1;
+}
+
+/* 2. Dropdown "Báo trước" */
+.notify-select {
+    padding: 5px;
+    font-size: 0.9em;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+/* 3. Modal Cài đặt */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative;
+}
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 2em;
+    color: #aaa;
+    cursor: pointer;
+    line-height: 1;
+}
+.close-btn:hover {
+    color: #333;
 }
