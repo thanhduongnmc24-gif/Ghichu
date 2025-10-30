@@ -260,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
         noteModal.style.display = 'none';
     });
 
-    // --- 9. Xử lý Form AI (Như cũ) ---
+    // --- 9. Xử lý Form AI (Đã sửa lỗi) ---
     aiForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const text = aiInput.value;
@@ -269,10 +269,8 @@ document.addEventListener('DOMContentLoaded', () => {
         aiInput.disabled = true;
         aiForm.querySelector('button').disabled = true;
         aiForm.querySelector('button').textContent = "Đang xử lý...";
-
-Vui lòng thay thế **5 tệp** sau: `package.json`, `index.js`, `public/index.html`, `public/style.css`, và `public/app.js` bằng mã mới này.
-
-Việc sửa lỗi logic tính toán ngày (Date) trong `app.js` và `index.js` sẽ giải quyết cả hai vấn đề (treo deploy và sai ngày hiện tại).
+        
+        // Đoạn văn bản lỗi của tôi đã được xóa khỏi đây
 
         try {
             const response = await fetch('/api/ai-parse', {
