@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. Đăng ký Service Worker ---
-    // CẬP NHẬT: Đường dẫn tới service-worker
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/calendar/service-worker.js')
             .then(reg => console.log('Service Worker (Lịch) đã đăng ký!', reg))
@@ -22,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const date = new Date(year, month - 1, day);
         return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
     }
+
 
     // --- 2. Lấy các phần tử DOM (Như cũ) ---
     const dateEl = document.getElementById('date');
@@ -104,7 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- 6. LOGIC Vẽ Lịch Tháng (Như cũ) ---
+
+    // --- 6. LOGIC MỚI: Vẽ Lịch Tháng (CẬP NHẬT HOÀN TOÀN VỚI TAILWIND) ---
     function renderCalendar(date) {
         calendarBody.innerHTML = '';
         const year = date.getFullYear();
@@ -123,7 +124,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         for (let i = 0; i < 42; i++) {
             const dayCell = document.createElement('div');
-            dayCell.className = 'calendar-day';
+            
+            // CÁC LỚP TAILWIND CƠ BẢN CHO Ô NGÀY
+            dayCell.className = "bg-gray-700 rounded-lg p-2 min-h-[100px] flex flex-col justify-between relative cursor-pointer hover:bg-gray-600 transition-colors";
 
             const currentDate = new Date(startDate);
             currentDate.setDate(startDate.getDate() + i);
@@ -131,42 +134,56 @@ document.addEventListener('DOMContentLoaded', () => {
             const dateStr = getLocalDateString(currentDate);
             const day = currentDate.getDate();
             
+            // TẠO SỐ NGÀY
             const dayNumberEl = document.createElement('span');
-            dayNumberEl.className = 'day-number';
+            dayNumberEl.className = 'day-number font-semibold text-lg text-white'; // Lớp Tailwind
             dayNumberEl.textContent = day;
             dayCell.appendChild(dayNumberEl);
             
             dayCell.dataset.date = dateStr; 
 
+            // Xử lý các ngày của tháng khác
             if (currentDate.getMonth() !== month) {
-                dayCell.classList.add('other-month');
+                dayCell.classList.add('other-month', 'bg-gray-800', 'opacity-50', 'cursor-default'); // Lớp Tailwind
+                dayCell.classList.remove('hover:bg-gray-600', 'cursor-pointer');
+                dayNumberEl.classList.add('text-gray-500'); // Lớp Tailwind
+                dayNumberEl.classList.remove('text-white');
             } else {
                 
+                // Xử lý Ca (Shift)
                 const shift = getShiftForDate(dateStr);
                 const note = noteData[dateStr] || "";
 
                 if (shift === 'giãn ca') {
-                    dayCell.classList.add('shift-gian-ca');
+                    dayCell.classList.add('bg-yellow-900/30'); // Lớp Tailwind
+                    dayCell.classList.remove('bg-gray-700');
                 } else if (shift === 'off') {
-                    dayCell.classList.add('shift-off');
+                    dayCell.classList.add('bg-gray-700/50'); // Lớp Tailwind
                 } else {
                     const shiftEl = document.createElement('span');
-                    shiftEl.className = 'day-shift';
+                    // Lớp Tailwind cho Ca
+                    shiftEl.className = 'day-shift text-xs font-bold text-blue-300 bg-blue-900/50 px-2 py-0.5 rounded-full self-start';
                     shiftEl.textContent = shift;
                     dayCell.appendChild(shiftEl);
                 }
                 
+                // Xử lý Ghi chú (Note)
                 if (note) {
                     const noteEl = document.createElement('span');
-                    noteEl.className = 'day-note';
+                    // Lớp Tailwind cho Ghi chú
+                    noteEl.className = 'day-note text-sm font-medium text-yellow-300 text-center w-full mt-1';
                     noteEl.textContent = note;
                     dayCell.appendChild(noteEl);
                 }
                 
+                // Xử lý ngày hôm nay
                 if (dateStr === todayStr) {
-                    dayCell.classList.add('today');
+                    dayCell.classList.add('today', 'border-2', 'border-blue-500'); // Lớp Tailwind
+                    dayNumberEl.classList.add('text-blue-400'); // Lớp Tailwind
+                    dayNumberEl.classList.remove('text-white');
                 }
 
+                // Gắn sự kiện click (chỉ cho ngày trong tháng)
                 dayCell.addEventListener('click', () => {
                     openNoteModal(dateStr);
                 });
@@ -237,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         noteModal.style.display = 'none';
     });
 
-    // --- 9. Xử lý Form AI (CẬP NHẬT ĐƯỜNG DẪN FETCH) ---
+    // --- 9. Xử lý Form AI (Như cũ, đường dẫn /api/calendar-ai-parse đã đúng) ---
     aiForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const text = aiInput.value;
@@ -248,7 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
         aiForm.querySelector('button').textContent = "Đang xử lý...";
         
         try {
-            // CẬP NHẬT: Đường dẫn API mới
             const response = await fetch('/api/calendar-ai-parse', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
