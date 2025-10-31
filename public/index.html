@@ -5,12 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tin Tức Tổng Hợp</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1F2937">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tin Tức">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
     <style>
-        /* Thêm font Inter cho đẹp */
+        /* (Toàn bộ CSS <style> của bạn giữ nguyên) */
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* CSS cho spinner loading */
         .spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
@@ -23,19 +30,16 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* CSS cho nút feed (desktop, mobile) */
         .feed-button.active { background-color: white; color: #111827; font-weight: 600; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
         .feed-button { color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
         .feed-button:hover { background-color: #374151; }
         #mobile-menu .feed-button { display: block; width: 100%; text-align: left; padding: 10px 16px; border-radius: 6px; font-weight: 500; color: #D1D5DB; }
         #mobile-menu .feed-button:hover { background-color: #4B5563; }
         #mobile-menu .feed-button.active { background-color: #6B7280; color: white; }
-
-        /* [MỚI] CSS cho nút Lịch */
         .nav-link {
             color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0;
             padding: 8px 16px; border-radius: 8px;
-            border: 1px solid #4B5563; /* Viền nhẹ */
+            border: 1px solid #4B5563; 
             margin-left: 12px;
             transition: all 0.2s;
         }
@@ -43,23 +47,16 @@
         #mobile-menu .nav-link { 
             display: block; width: 100%; text-align: left; padding: 10px 16px; 
             border: none; margin-left: 0; color: #E5E7EB; font-weight: 600; 
-            background-color: #4B5563; /* Nền khác 1 chút */
+            background-color: #4B5563; 
         }
         #mobile-menu .nav-link:hover { background-color: #5b6676; }
-
-
-        /* CSS cho chat */
         #chat-input { background-color: #374151; color: white; border: 1px solid #4B5563; }
         #chat-input:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); }
         .chat-bubble { max-width: 80%; padding: 10px 16px; border-radius: 16px; margin-bottom: 8px; line-height: 1.5; }
         .user-bubble { background-color: #3B82F6; color: white; align-self: flex-end; }
         .model-bubble { background-color: #4B5563; color: #E5E7EB; align-self: flex-start; }
-
-        /* CSS giới hạn dòng */
         .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
         .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-
-        /* CSS cho Toast Notification */
         #summary-toast {
             position: fixed;
             bottom: 1rem;
@@ -204,8 +201,16 @@
         </div>
     </div>
 
+    
     <script type="module">
-        // ----- BIẾN TOÀN CỤC -----
+        // CẬP NHẬT: Thêm logic đăng ký Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(reg => console.log('Main Service Worker Registered!', reg))
+                .catch(err => console.error('Main Service Worker registration failed:', err));
+        }
+
+        // ----- (Toàn bộ JavaScript cũ của bạn cho trang Tin Tức giữ nguyên) -----
         const newsGrid = document.getElementById('news-grid');
         const loadingSpinner = document.getElementById('loading-spinner');
         const summaryModal = document.getElementById('summary-modal');
@@ -233,15 +238,12 @@
         const iconCheck = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
         const iconError = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
 
-
-        // ----- CACHE & HISTORY -----
         const clientRssCache = new Map();
         let chatHistory = [];
         let summaryEventSource = null;
         let completedSummary = { title: '', text: '' };
         let toastTimeoutId = null;
 
-        // ----- HÀM GỌI API (Tóm tắt - Streaming) -----
         function callGeminiAPIStreaming(prompt, title) {
             if (summaryEventSource) {
                 summaryEventSource.close();
@@ -257,7 +259,7 @@
             summaryEventSource.onopen = () => console.log("Kết nối stream tóm tắt thành công!");
             summaryEventSource.onerror = (error) => {
                 console.error("Lỗi kết nối EventSource:", error);
-                showToast("Lỗi tóm tắt", "Không thể kết nối server.", 'error', null, 5000); // Hiển thị lỗi
+                showToast("Lỗi tóm tắt", "Không thể kết nối server.", 'error', null, 5000); 
                 if (summaryEventSource) summaryEventSource.close();
                 summaryEventSource = null;
             };
@@ -277,7 +279,7 @@
                         if (summaryEventSource) summaryEventSource.close();
                         summaryEventSource = null;
                         completedSummary = { title: title, text: currentSummaryText };
-                        showSummaryReadyNotification(title); // Thông báo khi xong
+                        showSummaryReadyNotification(title); 
                     }
                 } catch (e) {
                     console.error("Lỗi phân tích dữ liệu stream:", e, event.data);
@@ -288,7 +290,6 @@
             };
         }
 
-        // ----- HÀM GỌI API (Chat) -----
         async function callChatAPI() {
             const loadingBubble = document.createElement('div');
             loadingBubble.className = 'model-bubble';
@@ -327,7 +328,6 @@
             }
         }
 
-        // ----- HÀM XỬ LÝ RSS -----
         async function fetchRSS(rssUrl, sourceName, { display = true } = {}) {
             if (display) {
                 loadingSpinner.classList.remove('hidden');
@@ -367,7 +367,6 @@
             }
         }
 
-        // ----- HÀM HIỂN THỊ -----
         function displayArticles(items, sourceName) {
             newsGrid.innerHTML = '';
             items.forEach(item => {
@@ -422,7 +421,6 @@
             });
         }
 
-        // ----- HÀM XỬ LÝ SỰ KIỆN (RSS & Tóm tắt) -----
         function handleFeedButtonClick(e) {
              const clickedButton = e.target.closest('.feed-button');
              if (!clickedButton || clickedButton.classList.contains('active')) return;
@@ -449,10 +447,9 @@
             
             callGeminiAPIStreaming(prompt, title);
             
-            showToast("Đang tóm tắt...", title.substring(0, 50) + "...", 'loading', null, 5000); // Tự ẩn sau 5s
+            showToast("Đang tóm tắt...", title.substring(0, 50) + "...", 'loading', null, 5000);
         }
 
-         // ----- HÀM XỬ LÝ TOAST -----
          function showToast(mainMessage, detailMessage, state = 'ready', onClickAction, autoHideDelay = null) {
              if (toastTimeoutId) clearTimeout(toastTimeoutId);
 
@@ -513,7 +510,6 @@
               );
          }
 
-        // ----- HÀM XỬ LÝ SỰ KIỆN (Chat) -----
         function renderChatHistory() {
             chatDisplay.innerHTML = '';
             if (chatHistory.length === 0) {
@@ -548,7 +544,6 @@
             renderChatHistory();
         }
 
-        // ----- GẮN KẾT CÁC SỰ KIỆN -----
         function prewarmCache() {
             console.log("[Cache-Warmer] Bắt đầu tải nền các feed khác...");
             const feedsToPrewarm = Array.from(feedNav.querySelectorAll('.feed-button:not(.active)'));
