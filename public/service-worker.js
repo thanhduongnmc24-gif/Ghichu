@@ -1,14 +1,13 @@
 const CACHE_NAME = 'ghichu-app-cache-v1';
-// CẬP NHẬT: Thêm lại các tệp /calendar/ vào cache
+// CẬP NHẬT: Thêm lại các tệp Lịch vào cache
+// (Vì Lịch là một phần của JS/HTML chính nên không cần cache riêng)
 const urlsToCache = [
     '/',
     '/index.html',
     '/manifest.json',
-    '/calendar/',
-    '/calendar/index.html',
-    '/calendar/app.js',
     '/icons/icon-192x192.png'
     // (Các tệp CSS/JS của trang Tin Tức là từ CDN nên không cần cache)
+    // (Các tệp Lịch đã được gộp vào index.html nên không cần cache riêng)
 ];
 
 // 1. Cài đặt Service Worker: Mở cache và lưu các tệp
