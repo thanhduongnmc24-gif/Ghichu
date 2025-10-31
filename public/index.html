@@ -33,20 +33,16 @@
         }
         /* CSS cho nút Tải lại */
         .refresh-button {
-             color: #D1D5DB; padding: 8px; margin-left: 8px;
+             color: #D1D5DB; padding: 8px; 
              border-radius: 8px; transition: all 0.2s;
         }
         .refresh-button:hover { background-color: #374151; }
         .refresh-button svg { width: 20px; height: 20px; }
         
-        /* CSS cho nút Tải lại (Mobile) */
-        #mobile-menu .refresh-button {
-            display: flex; align-items: center; width: 100%; text-align: left; 
-            padding: 10px 16px; border-radius: 6px; font-weight: 500; 
-            color: #D1D5DB; margin-left: 0;
+        /* CẬP NHẬT: Thêm margin cho nút Tải lại (Desktop) */
+        .sm\:flex .refresh-button {
+            margin-left: 8px;
         }
-        #mobile-menu .refresh-button:hover { background-color: #4B5563; }
-        #mobile-menu .refresh-button svg { margin-right: 10px; }
         
         .feed-button.active { background-color: white; color: #111827; font-weight: 600; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
         .feed-button { color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
@@ -141,7 +137,10 @@
                     </button>
                  </div>
 
-                 <div class="sm:hidden">
+                 <div class="sm:hidden flex items-center space-x-2"> 
+                     <button id="refresh-feed-button-mobile" class="refresh-button" title="Tải lại tin tức">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
+                     </button>
                      <button id="hamburger-button" class="text-gray-300 hover:text-white focus:outline-none focus:text-white p-2">
                           <span class="sr-only">Mở menu</span>
                          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
@@ -152,10 +151,6 @@
              <div id="mobile-menu" class="hidden sm:hidden bg-gray-700 absolute top-full left-0 right-0 z-20 shadow-lg mt-1 rounded-b-md">
                  <div class="px-2 pt-2 pb-3 space-y-1">
                      <a href="/calendar" class="nav-link">Lịch Làm Việc</a>
-                     <button id="refresh-feed-button-mobile" class="refresh-button" title="Tải lại tin tức">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
-                        <span>Tải lại Tin</span>
-                     </button>
                      <div class="border-t border-gray-600 my-2"></div>
                      <button class="feed-button active" data-rss="https://vnexpress.net/rss/tin-moi-nhat.rss" data-source="VnExpress">VnExpress</button>
                      <button class="feed-button" data-rss="https://tuoitre.vn/rss/tin-moi-nhat.rss" data-source="Tuổi Trẻ">Tuổi Trẻ</button>
@@ -175,7 +170,6 @@
         </div>
         <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
     </main>
-
     <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
@@ -225,17 +219,14 @@
 
     
     <script type="module">
-        // CẬP NHẬT: Toàn bộ logic JS được bọc trong DOMContentLoaded
         document.addEventListener('DOMContentLoaded', () => {
 
-            // Đăng ký Service Worker
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/service-worker.js')
                     .then(reg => console.log('Main Service Worker Registered!', reg))
                     .catch(err => console.error('Main Service Worker registration failed:', err));
             }
 
-            // ----- BIẾN TOÀN CỤC (đã chuyển vào trong) -----
             const newsGrid = document.getElementById('news-grid');
             const loadingSpinner = document.getElementById('loading-spinner');
             const summaryModal = document.getElementById('summary-modal');
@@ -260,7 +251,7 @@
             const toastCta = document.getElementById('toast-cta');
             
             const refreshFeedButton = document.getElementById('refresh-feed-button');
-            const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); // Nút refresh mobile
+            const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
 
             const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
             const iconCheck = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
@@ -272,21 +263,15 @@
             let completedSummary = { title: '', text: '' };
             let toastTimeoutId = null;
 
-            // ----- (Toàn bộ các hàm (callGeminiAPIStreaming, callChatAPI, v.v...) giữ nguyên) -----
-            
+            // (Hàm callGeminiAPIStreaming giữ nguyên)
             function callGeminiAPIStreaming(prompt, title) {
-                // (Hàm này giữ nguyên)
                 if (summaryEventSource) {
                     summaryEventSource.close();
-                    console.log("Đã đóng stream tóm tắt cũ.");
                 }
                 let currentSummaryText = '';
-
                 const encodedPrompt = encodeURIComponent(prompt);
                 const streamUrl = `/summarize-stream?prompt=${encodedPrompt}`;
                 summaryEventSource = new EventSource(streamUrl);
-                console.log("Đang kết nối tới stream tóm tắt...");
-
                 summaryEventSource.onopen = () => console.log("Kết nối stream tóm tắt thành công!");
                 summaryEventSource.onerror = (error) => {
                     console.error("Lỗi kết nối EventSource:", error);
@@ -320,33 +305,29 @@
                     }
                 };
             }
-
+            
+            // (Hàm callChatAPI giữ nguyên)
             async function callChatAPI() {
-                // (Hàm này giữ nguyên)
                 const loadingBubble = document.createElement('div');
                 loadingBubble.className = 'model-bubble';
                 loadingBubble.innerHTML = `<div class="spinner border-t-white" style="width: 20px; height: 20px;"></div>`;
                 chatDisplay.appendChild(loadingBubble);
                 chatDisplay.scrollTop = chatDisplay.scrollHeight;
-
                 try {
                     const response = await fetch('/chat', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ history: chatHistory })
                     });
-
                     if (!response.ok) {
                         const errorText = await response.text();
                         throw new Error(`Lỗi server: ${errorText}`);
                     }
-
                     const result = await response.json();
                     const answer = result.answer;
                     chatHistory.push({ role: "model", parts: [{ text: answer }] });
                     chatDisplay.removeChild(loadingBubble);
                     renderChatHistory();
-
                 } catch (error) {
                     console.error("Lỗi khi gọi API chat:", error);
                     chatDisplay.removeChild(loadingBubble);
@@ -360,18 +341,16 @@
                 }
             }
 
+            // (Hàm fetchRSS giữ nguyên)
             async function fetchRSS(rssUrl, sourceName, { display = true, force = false } = {}) {
-                // (Hàm này giữ nguyên)
                 if (display) {
                     loadingSpinner.classList.remove('hidden');
                     newsGrid.innerHTML = '';
                 }
-                
                 if (force) {
                     clientRssCache.delete(rssUrl);
                     console.log(`[CACHE] Đã xóa ${rssUrl} do yêu cầu Tải lại.`);
                 }
-
                 if (clientRssCache.has(rssUrl)) {
                     if (display) {
                         displayArticles(clientRssCache.get(rssUrl), sourceName);
@@ -386,7 +365,6 @@
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(str, "text/xml");
                     if (xmlDoc.getElementsByTagName("parsererror").length) throw new Error("Lỗi phân tích XML");
-
                     let items;
                     const itemNodes = xmlDoc.querySelectorAll("item");
                     if (itemNodes.length === 0) {
@@ -406,8 +384,8 @@
                 }
             }
 
+            // (Hàm displayArticles giữ nguyên)
             function displayArticles(items, sourceName) {
-                // (Hàm này giữ nguyên)
                 newsGrid.innerHTML = '';
                 items.forEach(item => {
                     const title = item.querySelector("title")?.textContent || "Không có tiêu đề";
@@ -425,11 +403,9 @@
                     if (descriptionText.startsWith(title)) {
                         descriptionText = descriptionText.substring(title.length).trim();
                     }
-
                     const card = document.createElement('a');
                     card.href = link;
                     card.className = "bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-[1.03] hover:shadow-blue-500/20 block";
-
                     card.innerHTML = `
                         <img src="${imgSrc}" alt="${title}" class="w-full h-48 object-cover" onerror="this.src='https://placehold.co/600x400/374151/9CA3AF?text=Error';">
                         <div class="p-5">
@@ -444,13 +420,11 @@
                             </div>
                         </div>
                     `;
-
                      card.addEventListener('click', (e) => {
                          if (e.target.closest('.summary-btn')) {
                              return;
                          }
                      });
-
                     const summaryButton = card.querySelector('.summary-btn');
                     summaryButton.addEventListener('click', (e) => {
                         e.preventDefault();
@@ -461,24 +435,21 @@
                 });
             }
 
+            // (Hàm handleFeedButtonClick giữ nguyên)
             function handleFeedButtonClick(e) {
-                // (Hàm này giữ nguyên)
                  const clickedButton = e.target.closest('.feed-button');
                  if (!clickedButton || clickedButton.classList.contains('active')) return;
-
                  const rssUrl = clickedButton.dataset.rss;
                  const sourceName = clickedButton.dataset.source;
-
                  document.querySelectorAll('#feed-nav .feed-button, #mobile-menu .feed-button').forEach(btn => btn.classList.remove('active'));
                  document.querySelectorAll(`.feed-button[data-rss="${rssUrl}"]`).forEach(btn => btn.classList.add('active'));
-
                  window.scrollTo({ top: 0, behavior: 'smooth' });
                  fetchRSS(rssUrl, sourceName);
                  mobileMenu.classList.add('hidden');
             }
 
+            // (Hàm handleSummaryClick giữ nguyên)
             function handleSummaryClick(title, description) {
-                // (Hàm này giữ nguyên)
                 if (!description || description === "Không có mô tả.") {
                      showToast("Không thể tóm tắt", "Bài viết không có đủ nội dung.", 'error', null, 4000);
                     return;
@@ -486,21 +457,16 @@
                 const prompt = `Tóm tắt nội dung sau đây trong khoảng 200 từ:
                 Tiêu đề: ${title}
                 Nội dung: ${description}`;
-                
                 callGeminiAPIStreaming(prompt, title);
-                
                 showToast("Đang tóm tắt...", title.substring(0, 50) + "...", 'loading', null, 5000);
             }
 
+            // (Hàm showToast giữ nguyên)
              function showToast(mainMessage, detailMessage, state = 'ready', onClickAction, autoHideDelay = null) {
-                // (Hàm này giữ nguyên)
                  if (toastTimeoutId) clearTimeout(toastTimeoutId);
-
                  toastMainMessage.textContent = mainMessage;
                  toastTitle.textContent = detailMessage;
-
                  summaryToast.classList.remove('toast-loading', 'bg-blue-600', 'bg-red-600');
-
                  if (state === 'loading') {
                      toastIcon.innerHTML = iconSpinner;
                      summaryToast.classList.add('toast-loading'); 
@@ -520,16 +486,14 @@
                      toastCta.style.display = 'none';
                      summaryToast.onclick = null;
                  }
-                 
                  summaryToast.classList.remove('hidden');
                  setTimeout(() => summaryToast.classList.add('show'), 50);
-
                  if (autoHideDelay) {
                      toastTimeoutId = setTimeout(hideToast, autoHideDelay);
                  }
              }
+             // (Hàm hideToast giữ nguyên)
              function hideToast() {
-                // (Hàm này giữ nguyên)
                   if (toastTimeoutId) clearTimeout(toastTimeoutId);
                   toastTimeoutId = null;
                   summaryToast.classList.remove('show');
@@ -539,8 +503,8 @@
                   }, 300);
                   summaryToast.onclick = null;
              }
+             // (Hàm showSummaryReadyNotification giữ nguyên)
              function showSummaryReadyNotification(title) {
-                // (Hàm này giữ nguyên)
                   showToast(
                       "Tóm tắt đã sẵn sàng!",
                       title.substring(0, 50) + "...",
@@ -555,8 +519,8 @@
                   );
              }
 
+            // (Hàm renderChatHistory giữ nguyên)
             function renderChatHistory() {
-                // (Hàm này giữ nguyên)
                 chatDisplay.innerHTML = '';
                 if (chatHistory.length === 0) {
                      chatDisplay.innerHTML = `<div class="model-bubble">Chào đại ca, Tèo xin trả lời bất kỳ câu hỏi nào của đại ca?</div>`;
@@ -576,8 +540,8 @@
                 });
                 chatDisplay.scrollTop = chatDisplay.scrollHeight;
             }
+            // (Hàm handleSendChat giữ nguyên)
             async function handleSendChat(e) {
-                // (Hàm này giữ nguyên)
                 e.preventDefault();
                 const prompt = chatInput.value.trim();
                 if (!prompt) return;
@@ -586,14 +550,13 @@
                 chatInput.value = '';
                 await callChatAPI();
             }
+            // (Hàm resetChat giữ nguyên)
             function resetChat() {
-                // (Hàm này giữ nguyên)
                 chatHistory = [];
                 renderChatHistory();
             }
-
+            // (Hàm prewarmCache giữ nguyên)
             function prewarmCache() {
-                // (Hàm này giữ nguyên)
                 console.log("[Cache-Warmer] Bắt đầu tải nền các feed khác...");
                 const feedsToPrewarm = Array.from(feedNav.querySelectorAll('.feed-button:not(.active)'));
                 feedsToPrewarm.forEach(feed => {
@@ -601,27 +564,24 @@
                 });
             }
 
-            // CẬP NHẬT: Logic Tải lại (Refresh)
+            // (Hàm handleRefreshClick giữ nguyên)
             function handleRefreshClick() {
                 console.log("Đang yêu cầu tải lại...");
-                // Tìm nút đang active
                 const activeButton = feedNav.querySelector('.feed-button.active');
                 if (activeButton) {
                     const rssUrl = activeButton.dataset.rss;
                     const sourceName = activeButton.dataset.source;
-                    // Gọi fetchRSS với cờ `force = true`
                     fetchRSS(rssUrl, sourceName, { display: true, force: true });
                 }
-                // Nếu đang ở mobile, đóng menu lại
                 mobileMenu.classList.add('hidden');
             }
 
-            // ----- GẮN KẾT CÁC SỰ KIỆN (ĐÃ SỬA LỖI) -----
+            // ----- GẮN KẾT CÁC SỰ KIỆN (Như cũ) -----
             (async () => {
                 feedNav.addEventListener('click', handleFeedButtonClick);
                 mobileMenu.addEventListener('click', handleFeedButtonClick);
                 refreshFeedButton.addEventListener('click', handleRefreshClick);
-                refreshFeedButtonMobile.addEventListener('click', handleRefreshClick); // Gắn sự kiện cho nút mobile
+                refreshFeedButtonMobile.addEventListener('click', handleRefreshClick);
 
                 const defaultFeed = feedNav.querySelector('.feed-button.active');
                 if (defaultFeed) {
