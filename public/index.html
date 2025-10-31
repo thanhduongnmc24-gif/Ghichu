@@ -13,6 +13,8 @@
     <meta name="apple-mobile-web-app-title" content="Ghichu App">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 
+    <link rel="prefetch" href="/calendar/" as="document">
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -69,7 +71,7 @@
             color: #1F2937; 
         }
         
-        /* CẬP NHẬT: CSS cho nút Cài đặt (Mobile) */
+        /* CSS cho nút Cài đặt (Mobile) */
         #mobile-menu .settings-button-mobile {
             display: flex; align-items: center; width: 100%; text-align: left; 
             padding: 10px 16px; border-radius: 6px; font-weight: 500; 
@@ -226,6 +228,11 @@
                  </div>
              </div>
         </nav>
+        
+        <div id="clock-container" class="text-center pb-3 text-sm text-gray-400 hidden">
+            <span id="calendar-date">...</span>
+            <span id="calendar-time" class="ml-2 font-semibold">...</span>
+        </div>
     </header>
 
     <main id="news-main" class="container mx-auto p-4 md:p-8">
@@ -238,8 +245,8 @@
     <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
         <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6">
             <h2 class="text-xl font-bold text-white mb-4">Thêm Nhanh (AI)</h2>
-            <form id="ai-form" class="flex space-x-2">
-                <input type="text" id="ai-input" placeholder="Ví dụ: Quang 30/10, Họp 15/11..." class="flex-grow p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+            <form id="calendar-ai-form" class="flex space-x-2">
+                <input type="text" id="calendar-ai-input" placeholder="Ví dụ: Quang 30/10, Họp 15/11..." class="flex-grow p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-lg transition-colors flex-shrink-0">Phân tích</button>
             </form>
         </section>
@@ -756,16 +763,18 @@
 
             // --- BIẾN LỊCH: Lấy DOM ---
             const calendarMain = document.getElementById('calendar-main');
-            const cal_dateEl = document.getElementById('date'); // Đổi tên tránh xung đột
-            const cal_timeEl = document.getElementById('time');
-            const cal_aiForm = document.getElementById('ai-form'); // Form AI của Lịch
-            const cal_aiInput = document.getElementById('ai-input'); // Input AI của Lịch
+            // CẬP NHẬT: Lấy ID Đồng hồ mới
+            const cal_dateEl = document.getElementById('calendar-date'); 
+            const cal_timeEl = document.getElementById('calendar-time');
+            // CẬP NHẬT: Lấy ID Form AI mới
+            const cal_aiForm = document.getElementById('calendar-ai-form'); 
+            const cal_aiInput = document.getElementById('calendar-ai-input'); 
             const calendarBody = document.getElementById('calendar-body');
             const currentMonthYearEl = document.getElementById('current-month-year');
             const prevMonthBtn = document.getElementById('prev-month-btn');
             const nextMonthBtn = document.getElementById('next-month-btn');
             
-            // CẬP NHẬT: Lấy các nút Cài đặt (chỉ có 1 bộ modal)
+            // CẬP NHẬT: Lấy các nút Cài đặt (chung)
             const settingsBtn = document.getElementById('settings-btn');
             const settingsBtnMobile = document.getElementById('settings-btn-mobile');
             const settingsModal = document.getElementById('settings-modal');
@@ -775,6 +784,7 @@
             const notifyTimeDem = document.getElementById('notify-time-dem');
             const notifyTimeOff = document.getElementById('notify-time-off');
             
+            // CẬP NHẬT: Lấy các nút Modal Ghi chú (chung)
             const noteModal = document.getElementById('note-modal');
             const closeNoteModalBtn = document.getElementById('close-note-modal');
             const noteModalTitle = document.getElementById('note-modal-title');
@@ -1014,6 +1024,7 @@
             const newsTabBtn = document.getElementById('news-tab-btn');
             const calendarTabBtn = document.getElementById('calendar-tab-btn');
             const calendarTabBtnMobile = document.getElementById('calendar-tab-btn-mobile');
+            const clockContainer = document.getElementById('clock-container'); // Lấy Đồng hồ
             
             // --- HÀM TAB: Chuyển tab ---
             function showTab(tabName) {
@@ -1031,6 +1042,8 @@
                     // Ẩn/hiện nút (Mobile)
                     refreshFeedButtonMobile.classList.remove('hidden');
                     settingsBtnMobile.classList.add('hidden');
+                    // Ẩn đồng hồ
+                    clockContainer.classList.add('hidden');
                 } else if (tabName === 'calendar') {
                     newsMain.classList.add('hidden');
                     calendarMain.classList.remove('hidden');
@@ -1045,6 +1058,8 @@
                     // Ẩn/hiện nút (Mobile)
                     refreshFeedButtonMobile.classList.add('hidden');
                     settingsBtnMobile.classList.remove('hidden');
+                    // Hiện đồng hồ
+                    clockContainer.classList.remove('hidden');
                 }
             }
 
