@@ -168,16 +168,13 @@ app.post('/chat', async (req, res) => {
     }
 });
 
-// ----- [MỚI] ENDPOINT CỦA LỊCH LÀM VIỆC -----
-// (Đây là logic từ tệp index.js cũ của bạn, được gộp vào đây)
-
+// ----- ENDPOINT CỦA LỊCH LÀM VIỆC (Không thay đổi) -----
 app.post('/api/calendar-ai-parse', async (req, res) => {
     const text = req.body.text || "";
     if (!text) {
         return res.status(400).json({ error: 'Không có văn bản' });
     }
     
-    // Lấy ngày hôm nay theo múi giờ Hà Nội (GMT+7)
     const today = new Date();
     const options = { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' };
     const formatter = new Intl.DateTimeFormat('en-CA', options); 
@@ -188,7 +185,6 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
     const todayStr = `${partMap.year}-${partMap.month}-${partMap.day}`;
     const currentYear = partMap.year;
 
-    // Prompt cho Lịch (Lấy từ logic cũ của bạn)
     const prompt = `
         Bạn là trợ lý phân tích lịch làm việc. Nhiệm vụ của bạn là đọc văn bản và chuyển nó thành một MẢNG JSON.
         Mỗi đối tượng trong mảng chỉ chứa 2 thông tin: "date" (ngày) và "note" (ghi chú).
@@ -211,9 +207,8 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
     `;
 
     try {
-        // Dùng chung genAI đã khởi tạo ở trên
          const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.5-flash", // Dùng model flash cho nhanh
+            model: "gemini-2.5-flash",
             generationConfig: {
                 responseMimeType: "application/json" 
             }
@@ -236,20 +231,14 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
 
 // ----- CÁC ROUTE TRANG -----
 
-// Trang chủ (Tin tức)
-app.get('/', (req, res) => {
+// CẬP NHẬT: Tất cả các route không xác định sẽ trỏ về index.html
+// Điều này xử lý cả trang chủ ('/') và các trang con (PWA)
+app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Trang Lịch
-app.get('/calendar', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'calendar', 'index.html'));
 });
 
 
 // --- Khởi động Server ---
 app.listen(PORT, () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);
-    console.log(`Trang tin tức: http://localhost:${PORT}`);
-    console.log(`Trang lịch: http://localhost:${PORT}/calendar`);
 });
