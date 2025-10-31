@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ghichu App</title> <script src="https://cdn.tailwindcss.com"></script>
+    <title>Ghichu App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1F2937">
@@ -40,7 +41,7 @@
             margin-left: 8px;
         }
         
-        /* CẬP NHẬT: CSS cho Tab (Tin tức / Lịch) */
+        /* CSS cho Tab (Tin tức / Lịch) */
         .tab-button {
             color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0;
             padding: 8px 16px; border-radius: 8px;
@@ -49,7 +50,7 @@
             margin-left: 12px;
         }
         .tab-button:hover { background-color: #374151; }
-        .tab-button.active { /* Tab đang được chọn */
+        .tab-button.active { 
             background-color: white; 
             color: #111827; 
             font-weight: 600;
@@ -64,9 +65,19 @@
         }
         #mobile-menu .tab-button:hover { background-color: #5b6676; }
         #mobile-menu .tab-button.active {
-            background-color: #E5E7EB; /* Sáng hơn */
-            color: #1F2937; /* Tối hơn */
+            background-color: #E5E7EB; 
+            color: #1F2937; 
         }
+        
+        /* CẬP NHẬT: CSS cho nút Cài đặt (Mobile) */
+        #mobile-menu .settings-button-mobile {
+            display: flex; align-items: center; width: 100%; text-align: left; 
+            padding: 10px 16px; border-radius: 6px; font-weight: 500; 
+            color: #D1D5DB; margin-left: 0;
+        }
+        #mobile-menu .settings-button-mobile:hover { background-color: #4B5563; }
+        #mobile-menu .settings-button-mobile svg { margin-right: 10px; width: 20px; height: 20px; }
+        
         
         /* CSS cho Feed (cũ) */
         .feed-button { color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
@@ -182,11 +193,17 @@
                     <button id="refresh-feed-button" class="refresh-button" title="Tải lại tin tức">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                     </button>
+                    <button id="settings-btn" class="refresh-button hidden" title="Cài đặt">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </button>
                  </div>
 
                  <div class="sm:hidden flex items-center space-x-2"> 
                      <button id="refresh-feed-button-mobile" class="refresh-button" title="Tải lại tin tức">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
+                     </button>
+                     <button id="settings-btn-mobile" class="refresh-button hidden" title="Cài đặt">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                      </button>
                      <button id="hamburger-button" class="text-gray-300 hover:text-white focus:outline-none focus:text-white p-2">
                           <span class="sr-only">Mở menu</span>
@@ -331,6 +348,7 @@
                     <span>Báo <strong>Giãn Ca</strong> lúc:</span>
                     <input type="time" id="notify-time-off" value="08:00">
                 </label>
+                
             </fieldset>
         </div>
     </div>
@@ -356,6 +374,7 @@
             </form>
         </div>
     </div>
+    
     
     <script type="module">
         document.addEventListener('DOMContentLoaded', () => {
@@ -739,14 +758,16 @@
             const calendarMain = document.getElementById('calendar-main');
             const cal_dateEl = document.getElementById('date'); // Đổi tên tránh xung đột
             const cal_timeEl = document.getElementById('time');
-            const cal_aiForm = document.getElementById('ai-form');
-            const cal_aiInput = document.getElementById('ai-input');
+            const cal_aiForm = document.getElementById('ai-form'); // Form AI của Lịch
+            const cal_aiInput = document.getElementById('ai-input'); // Input AI của Lịch
             const calendarBody = document.getElementById('calendar-body');
             const currentMonthYearEl = document.getElementById('current-month-year');
             const prevMonthBtn = document.getElementById('prev-month-btn');
             const nextMonthBtn = document.getElementById('next-month-btn');
             
+            // CẬP NHẬT: Lấy các nút Cài đặt (chỉ có 1 bộ modal)
             const settingsBtn = document.getElementById('settings-btn');
+            const settingsBtnMobile = document.getElementById('settings-btn-mobile');
             const settingsModal = document.getElementById('settings-modal');
             const closeModalBtn = document.getElementById('close-modal');
             const notifyButton = document.getElementById('notify-button');
@@ -816,6 +837,11 @@
                 notifyTimeNgay.value = appSettings.notifyTimeNgay;
                 notifyTimeDem.value = appSettings.notifyTimeDem;
                 notifyTimeOff.value = appSettings.notifyTimeOff;
+            }
+            
+            function openSettingsModal() {
+                loadSettings(); 
+                settingsModal.style.display = 'flex';
             }
 
             // --- HÀM LỊCH: Vẽ Lịch ---
@@ -998,11 +1024,13 @@
                     newsTabBtn.classList.add('active');
                     calendarTabBtn.classList.remove('active');
                     calendarTabBtnMobile.classList.remove('active');
-                    // Ẩn/hiện nút refresh
+                    // Ẩn/hiện nút (Desktop)
                     refreshFeedButton.classList.remove('hidden');
-                    refreshFeedButtonMobile.classList.remove('hidden');
-                    // Ẩn/hiện nút cài đặt
                     settingsBtn.classList.add('hidden');
+                    feedNav.classList.remove('hidden');
+                    // Ẩn/hiện nút (Mobile)
+                    refreshFeedButtonMobile.classList.remove('hidden');
+                    settingsBtnMobile.classList.add('hidden');
                 } else if (tabName === 'calendar') {
                     newsMain.classList.add('hidden');
                     calendarMain.classList.remove('hidden');
@@ -1010,11 +1038,13 @@
                     newsTabBtn.classList.remove('active');
                     calendarTabBtn.classList.add('active');
                     calendarTabBtnMobile.classList.add('active');
-                    // Ẩn/hiện nút refresh
+                    // Ẩn/hiện nút (Desktop)
                     refreshFeedButton.classList.add('hidden');
-                    refreshFeedButtonMobile.classList.add('hidden');
-                    // Ẩn/hiện nút cài đặt
                     settingsBtn.classList.remove('hidden');
+                    feedNav.classList.add('hidden');
+                    // Ẩn/hiện nút (Mobile)
+                    refreshFeedButtonMobile.classList.add('hidden');
+                    settingsBtnMobile.classList.remove('hidden');
                 }
             }
 
@@ -1085,10 +1115,10 @@
                 loadSettings();
                 setInterval(checkDailyShiftNotification, 60000);
 
-                settingsBtn.addEventListener('click', () => {
-                    loadSettings(); 
-                    settingsModal.style.display = 'flex';
-                });
+                // Gắn sự kiện cho Cài đặt (cả 2 nút)
+                settingsBtn.addEventListener('click', openSettingsModal);
+                settingsBtnMobile.addEventListener('click', openSettingsModal);
+                
                 closeModalBtn.addEventListener('click', () => {
                     settingsModal.style.display = 'none';
                 });
