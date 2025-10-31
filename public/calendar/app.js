@@ -1,7 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. Đăng ký Service Worker (ĐÃ XÓA) ---
-    // Logic này đã được chuyển lên trang Tin Tức (index.html)
+    // --- 1. Đăng ký Service Worker ---
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/calendar/service-worker.js')
+            .then(reg => console.log('Service Worker (Lịch) đã đăng ký!', reg))
+            .catch(err => console.log('Đăng ký Service Worker (Lịch) lỗi:', err));
+    }
     
     // --- HÀM MỚI: SỬA LỖI MÚI GIỜ (Lấy YYYY-MM-DD theo giờ địa phương) ---
     function getLocalDateString(date) {
@@ -392,35 +396,59 @@ document.addEventListener('DOMContentLoaded', () => {
         aiForm.querySelector('button').textContent = "Phân tích";
     });
     
-    // --- 10. LOGIC MỚI: Kiểm tra Thông báo Ca Hàng Ngày ---
+    // --- 10. LOGIC MỚI: Kiểm tra Thông báo Ca Hàng Ngày (CẬP NHẬT) ---
     function checkDailyShiftNotification() {
-        if (Notification.permission !== "granted") return; 
+        if (Notification.permission !== "granted") return; // Chưa cho phép
 
         const now = new Date();
         const todayStr = getLocalDateString(now);
         
+        // Chống spam: Nếu đã gửi thông báo hôm nay rồi thì thôi
         if (lastNotificationSentDate === todayStr) return;
 
         const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         
         const todayShift = getShiftForDate(todayStr);
+        let shiftDisplayName = ""; // Tên ca hiển thị
+        let timeToAlert = ""; // Giờ báo thức
 
-        let notificationMessage = null;
-
-        if (todayShift === 'ngày' && currentTimeStr === appSettings.notifyTimeNgay) {
-            notificationMessage = "Đã đến giờ báo thức Ca NGÀY của bạn!";
-        } else if (todayShift === 'đêm' && currentTimeStr === appSettings.notifyTimeDem) {
-            notificationMessage = "Đã đến giờ báo thức Ca ĐÊM của bạn!";
-        } else if (todayShift === 'giãn ca' && currentTimeStr === appSettings.notifyTimeOff) {
-            notificationMessage = "Đã đến giờ báo thức ngày GIÃN CA của bạn!";
+        // 1. Xác định Ca và Giờ báo thức
+        if (todayShift === 'ngày') {
+            shiftDisplayName = "Ca Ngày";
+            timeToAlert = appSettings.notifyTimeNgay;
+        } else if (todayShift === 'đêm') {
+            shiftDisplayName = "Ca Đêm";
+            timeToAlert = appSettings.notifyTimeDem;
+        } else if (todayShift === 'giãn ca') {
+            shiftDisplayName = "Giãn Ca";
+            timeToAlert = appSettings.notifyTimeOff;
+        } else if (todayShift === 'off') {
+            shiftDisplayName = "Ngày Nghỉ";
+            timeToAlert = appSettings.notifyTimeOff;
         }
 
-        if (notificationMessage) {
-            new Notification("Thông báo Lịch Làm Việc", {
-                body: notificationMessage,
+        // 2. Kiểm tra xem đã đến giờ báo thức chưa
+        if (timeToAlert && currentTimeStr === timeToAlert) {
+            
+            // 3. Lấy ghi chú của ngày hôm nay
+            const notes = noteData[todayStr] || [];
+            let notesString = "";
+            if (notes.length > 0) {
+                // Nối các ghi chú lại: " - Ghi chú 1, Ghi chú 2"
+                notesString = " - " + notes.join(', ');
+            }
+
+            // 4. Tạo Tiêu đề và Nội dung mới
+            const newTitle = "Lịch Luân Phiên";
+            const newBody = `${shiftDisplayName}${notesString}`; // Ví dụ: "Ca Ngày - Họp, Quang" hoặc "Ca Đêm"
+
+            // 5. Gửi thông báo
+            new Notification(newTitle, {
+                body: newBody,
                 icon: "/calendar/icons/icon-192x192.png" 
             });
             
+            // 6. Đánh dấu là đã gửi hôm nay
             lastNotificationSentDate = todayStr;
         }
     }
