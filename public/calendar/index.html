@@ -20,23 +20,40 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* Ẩn thanh cuộn (nếu cần) */
-        /* ::-webkit-scrollbar { display: none; } */
         
+        /* CSS cho danh sách ghi chú trong ô ngày */
         .day-note-list {
             margin-top: 4px;
-            padding-left: 16px;
+            padding-left: 16px; /* Thụt vào cho list */
             overflow: hidden;
-            max-height: 60px;
+            max-height: 60px; /* Giới hạn chiều cao */
         }
         .day-note {
             overflow: hidden; display: -webkit-box;
             -webkit-box-orient: vertical;
-            -webkit-line-clamp: 1;
+            -webkit-line-clamp: 1; /* Chỉ hiện 1 dòng mỗi ghi chú */
             font-size: 0.8em;
             font-weight: 500;
-            color: #C0392B; 
-            list-style-type: disc; 
+            color: #C0392B; /* Màu chữ ghi chú (Nền sáng) */
+            list-style-type: disc; /* Kiểu chấm tròn */
+        }
+        
+        /* Căn lề cho input time trong modal */
+        .time-setting-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem; /* mb-3 */
+        }
+        .time-setting-label span {
+            color: #D1D5DB; /* text-gray-300 */
+        }
+        .time-setting-label input[type="time"] {
+            background-color: #4B5563; /* bg-gray-600 */
+            color: #FFFFFF;
+            border: 1px solid #6B7280; /* border-gray-500 */
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.25rem 0.5rem; /* px-2 py-1 */
         }
     </style>
 </head>
@@ -50,7 +67,7 @@
             </a>
             <h1 class="text-xl md:text-2xl font-bold text-white absolute left-1/2 -translate-x-1/2">Lịch Làm Việc</h1>
             <button id="settings-btn" class="text-gray-300 hover:text-white transition-colors">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </button>
         </nav>
         <div id="clock-container" class="text-center pb-3 text-sm text-gray-400">
@@ -80,7 +97,8 @@
             </div>
             
             <div class="overflow-x-auto">
-                <div class="min-w-[700px]"> <div id="calendar-weekdays" class="grid grid-cols-7 gap-1 md:gap-2 mb-2">
+                <div class="min-w-[700px]"> 
+                    <div id="calendar-weekdays" class="grid grid-cols-7 gap-1 md:gap-2 mb-2">
                         <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T2</div>
                         <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T3</div>
                         <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T4</div>
@@ -100,12 +118,34 @@
 
     <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-white">Cài đặt chung</h2>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Cài đặt</h2>
                 <button id="close-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
             </div>
-            <button id="notify-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Bật Thông Báo (Toàn cục)</button>
-            <p class="text-sm text-gray-400 mt-2">Cho phép ứng dụng gửi thông báo.</p>
+            
+            <fieldset class="border border-gray-600 p-4 rounded-lg">
+                <legend class="text-lg font-semibold text-white px-2">Thông báo</legend>
+                <button id="notify-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Bật Thông Báo (Toàn cục)</button>
+                <p class="text-sm text-gray-400 mt-2 mb-4">Cho phép ứng dụng gửi thông báo trên trình duyệt này.</p>
+                
+                <hr class="border-gray-600 my-4">
+                
+                <h3 class="text-md font-semibold text-white mb-3">Giờ báo thức theo ca:</h3>
+                
+                <label class="time-setting-label">
+                    <span>Báo ca <strong>Ngày</strong> lúc:</span>
+                    <input type="time" id="notify-time-ngay" value="06:00">
+                </label>
+                <label class="time-setting-label">
+                    <span>Báo ca <strong>Đêm</strong> lúc:</span>
+                    <input type="time" id="notify-time-dem" value="20:00">
+                </label>
+                <label class="time-setting-label">
+                    <span>Báo <strong>Giãn Ca</strong> lúc:</span>
+                    <input type="time" id="notify-time-off" value="08:00">
+                </label>
+                
+            </fieldset>
         </div>
     </div>
 
