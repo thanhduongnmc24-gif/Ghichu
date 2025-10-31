@@ -213,7 +213,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
     try {
         // Dùng chung genAI đã khởi tạo ở trên
          const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash", // Dùng model flash cho nhanh
+            model: "gemini-2.5-flash", // Dùng model flash cho nhanh
             generationConfig: {
                 responseMimeType: "application/json" 
             }
