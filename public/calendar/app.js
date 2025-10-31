@@ -1,11 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. Đăng ký Service Worker ---
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/calendar/service-worker.js')
-            .then(reg => console.log('Service Worker (Lịch) đã đăng ký!', reg))
-            .catch(err => console.log('Đăng ký Service Worker (Lịch) lỗi:', err));
-    }
+    // --- 1. Đăng ký Service Worker (ĐÃ XÓA) ---
+    // Logic này đã được chuyển lên trang Tin Tức (index.html)
     
     // --- HÀM MỚI: SỬA LỖI MÚI GIỜ (Lấy YYYY-MM-DD theo giờ địa phương) ---
     function getLocalDateString(date) {
@@ -62,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentViewDate = new Date(); 
     
-    // CẬP NHẬT: Biến chống spam (chỉ chặn trong 1 phút)
+    // CẬP NHẬT: Logic chống spam mới (chỉ chặn 1 phút)
     let lastNotificationSentTime = null; 
 
     // --- CÀI ĐẶT CHU KỲ (Như cũ) ---
