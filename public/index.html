@@ -3,17 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tin Tức Tổng Hợp</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Ghichu App</title> <script src="https://cdn.tailwindcss.com"></script>
     
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1F2937">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Tin Tức">
+    <meta name="apple-mobile-web-app-title" content="Ghichu App">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-
-    <link rel="prefetch" href="/calendar/" as="document">
 
     <style>
         body {
@@ -33,37 +30,52 @@
         }
         /* CSS cho nút Tải lại */
         .refresh-button {
-             color: #D1D5DB; padding: 8px; 
+             color: #D1D5DB; padding: 8px;
              border-radius: 8px; transition: all 0.2s;
         }
         .refresh-button:hover { background-color: #374151; }
         .refresh-button svg { width: 20px; height: 20px; }
         
-        /* CẬP NHẬT: Thêm margin cho nút Tải lại (Desktop) */
         .sm\:flex .refresh-button {
             margin-left: 8px;
         }
         
-        .feed-button.active { background-color: white; color: #111827; font-weight: 600; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
+        /* CẬP NHẬT: CSS cho Tab (Tin tức / Lịch) */
+        .tab-button {
+            color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0;
+            padding: 8px 16px; border-radius: 8px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            margin-left: 12px;
+        }
+        .tab-button:hover { background-color: #374151; }
+        .tab-button.active { /* Tab đang được chọn */
+            background-color: white; 
+            color: #111827; 
+            font-weight: 600;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        /* CSS cho Menu Mobile (cập nhật) */
+        #mobile-menu .tab-button { 
+            display: block; width: 100%; text-align: left; padding: 10px 16px; 
+            border: none; margin-left: 0; color: #E5E7EB; font-weight: 600; 
+            background-color: #4B5563; 
+        }
+        #mobile-menu .tab-button:hover { background-color: #5b6676; }
+        #mobile-menu .tab-button.active {
+            background-color: #E5E7EB; /* Sáng hơn */
+            color: #1F2937; /* Tối hơn */
+        }
+        
+        /* CSS cho Feed (cũ) */
         .feed-button { color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
         .feed-button:hover { background-color: #374151; }
         #mobile-menu .feed-button { display: block; width: 100%; text-align: left; padding: 10px 16px; border-radius: 6px; font-weight: 500; color: #D1D5DB; }
         #mobile-menu .feed-button:hover { background-color: #4B5563; }
         #mobile-menu .feed-button.active { background-color: #6B7280; color: white; }
-        .nav-link {
-            color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0;
-            padding: 8px 16px; border-radius: 8px;
-            border: 1px solid #4B5563; 
-            margin-left: 12px;
-            transition: all 0.2s;
-        }
-        .nav-link:hover { background-color: #374151; }
-        #mobile-menu .nav-link { 
-            display: block; width: 100%; text-align: left; padding: 10px 16px; 
-            border: none; margin-left: 0; color: #E5E7EB; font-weight: 600; 
-            background-color: #4B5563; 
-        }
-        #mobile-menu .nav-link:hover { background-color: #5b6676; }
+        
+        /* (Các CSS khác giữ nguyên) */
         #chat-input { background-color: #374151; color: white; border: 1px solid #4B5563; }
         #chat-input:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); }
         .chat-bubble { max-width: 80%; padding: 10px 16px; border-radius: 16px; margin-bottom: 8px; line-height: 1.5; }
@@ -109,6 +121,39 @@
           #toast-close-button:hover {
               color: white;
           }
+          
+        /* CSS cho Lịch (Nền Sáng) */
+        .day-note-list {
+            margin-top: 4px;
+            padding-left: 16px; 
+            overflow: hidden;
+            max-height: 60px; 
+        }
+        .day-note {
+            overflow: hidden; display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 1; 
+            font-size: 0.8em;
+            font-weight: 500;
+            color: #C0392B; 
+            list-style-type: disc; 
+        }
+        .time-setting-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem; 
+        }
+        .time-setting-label span {
+            color: #D1D5DB; 
+        }
+        .time-setting-label input[type="time"] {
+            background-color: #4B5563; 
+            color: #FFFFFF;
+            border: 1px solid #6B7280; 
+            border-radius: 0.375rem; 
+            padding: 0.25rem 0.5rem; 
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -119,7 +164,9 @@
     <header class="bg-gray-800 shadow-md sticky top-0 z-30">
         <nav class="container mx-auto px-4 py-4 relative">
              <div class="flex justify-between items-center">
-                 <h1 class="text-2xl font-bold text-white">Tin Tức Tổng Hợp</h1>
+                 <button id="news-tab-btn" class="tab-button active text-xl font-bold !ml-0">
+                     Tin Tức
+                 </button>
                  
                  <div class="hidden sm:flex items-center">
                     <div id="feed-nav" class="flex space-x-2 overflow-x-auto py-1">
@@ -131,7 +178,7 @@
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://thethao247.vn/bong-da.rss" data-source="Thể Thao 247">Thể Thao 247</button>
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
                     </div>
-                    <a href="/calendar" class="nav-link">Lịch Làm Việc</a>
+                    <button id="calendar-tab-btn" class="tab-button">Lịch Làm Việc</button>
                     <button id="refresh-feed-button" class="refresh-button" title="Tải lại tin tức">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                     </button>
@@ -150,7 +197,7 @@
              
              <div id="mobile-menu" class="hidden sm:hidden bg-gray-700 absolute top-full left-0 right-0 z-20 shadow-lg mt-1 rounded-b-md">
                  <div class="px-2 pt-2 pb-3 space-y-1">
-                     <a href="/calendar" class="nav-link">Lịch Làm Việc</a>
+                     <button id="calendar-tab-btn-mobile" class="tab-button">Lịch Làm Việc</button>
                      <div class="border-t border-gray-600 my-2"></div>
                      <button class="feed-button active" data-rss="https://vnexpress.net/rss/tin-moi-nhat.rss" data-source="VnExpress">VnExpress</button>
                      <button class="feed-button" data-rss="https://tuoitre.vn/rss/tin-moi-nhat.rss" data-source="Tuổi Trẻ">Tuổi Trẻ</button>
@@ -164,12 +211,51 @@
         </nav>
     </header>
 
-    <main class="container mx-auto p-4 md:p-8">
+    <main id="news-main" class="container mx-auto p-4 md:p-8">
         <div id="loading-spinner" class="flex justify-center items-center h-64">
             <div class="spinner border-t-blue-500" style="width: 50px; height: 50px;"></div>
         </div>
         <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
     </main>
+    
+    <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
+        <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6">
+            <h2 class="text-xl font-bold text-white mb-4">Thêm Nhanh (AI)</h2>
+            <form id="ai-form" class="flex space-x-2">
+                <input type="text" id="ai-input" placeholder="Ví dụ: Quang 30/10, Họp 15/11..." class="flex-grow p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-lg transition-colors flex-shrink-0">Phân tích</button>
+            </form>
+        </section>
+
+        <section id="calendar-container" class="bg-white text-gray-900 rounded-lg shadow-lg p-4 md:p-6">
+            <div id="calendar-header" class="flex justify-between items-center mb-4">
+                <button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <h2 id="current-month-year" class="text-xl md:text-2xl font-bold text-gray-900">Tháng 10 2025</h2>
+                <button id="next-month-btn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <div class="min-w-[700px]"> 
+                    <div id="calendar-weekdays" class="grid grid-cols-7 gap-1 md:gap-2 mb-2">
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T2</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T3</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T4</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T5</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T6</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T7</div>
+                        <div class="weekday sunday bg-gray-100 text-red-600 font-semibold text-sm p-3 rounded-lg text-center">CN</div>
+                    </div>
+                    <div id="calendar-body" class="grid grid-cols-7 gap-1 md:gap-2">
+                        </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
     <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
@@ -217,21 +303,79 @@
         </div>
     </div>
 
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Cài đặt</h2>
+                <button id="close-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+            
+            <fieldset class="border border-gray-600 p-4 rounded-lg">
+                <legend class="text-lg font-semibold text-white px-2">Thông báo</legend>
+                <button id="notify-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Bật Thông Báo (Toàn cục)</button>
+                <p class="text-sm text-gray-400 mt-2 mb-4">Cho phép ứng dụng gửi thông báo trên trình duyệt này.</p>
+                
+                <hr class="border-gray-600 my-4">
+                
+                <h3 class="text-md font-semibold text-white mb-3">Giờ báo thức theo ca:</h3>
+                
+                <label class="time-setting-label">
+                    <span>Báo ca <strong>Ngày</strong> lúc:</span>
+                    <input type="time" id="notify-time-ngay" value="06:00">
+                </label>
+                <label class="time-setting-label">
+                    <span>Báo ca <strong>Đêm</strong> lúc:</span>
+                    <input type="time" id="notify-time-dem" value="20:00">
+                </label>
+                <label class="time-setting-label">
+                    <span>Báo <strong>Giãn Ca</strong> lúc:</span>
+                    <input type="time" id="notify-time-off" value="08:00">
+                </label>
+            </fieldset>
+        </div>
+    </div>
+    <div id="note-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col">
+            <span id="close-note-modal" class="absolute top-3 right-4 text-gray-400 hover:text-white text-3xl cursor-pointer">&times;</span>
+            <h2 id="note-modal-title" class="text-2xl font-bold text-white mb-2">Cập nhật (Ngày...)</h2>
+            
+            <p id="modal-shift-info" class="bg-gray-700 p-3 rounded-lg text-gray-200 text-center font-semibold mb-4">
+                Ca tự động: <strong>...</strong>
+            </p>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Ghi chú hiện có:</label>
+            <div id="note-list-wrapper" class="flex-grow overflow-y-auto bg-gray-900 p-3 rounded-lg min-h-[100px] max-h-[200px] mb-4">
+                <ul id="note-list" class="space-y-2">
+                    </ul>
+            </div>
+            <form id="add-note-form">
+                <label for="new-note-input" class="block text-sm font-medium text-gray-300 mb-2">Thêm ghi chú mới:</label>
+                <div class="flex space-x-2">
+                    <input type="text" id="new-note-input" placeholder="Nhập ghi chú mới..." autocomplete="off" class="flex-grow p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
     
     <script type="module">
         document.addEventListener('DOMContentLoaded', () => {
 
+            // --- ĐĂNG KÝ SERVICE WORKER ---
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/service-worker.js')
                     .then(reg => console.log('Main Service Worker Registered!', reg))
                     .catch(err => console.error('Main Service Worker registration failed:', err));
             }
 
+            // ===================================================================
+            // PHẦN 1: LOGIC VÀ BIẾN CỦA TRANG TIN TỨC (NEWS)
+            // ===================================================================
+
+            const newsMain = document.getElementById('news-main');
             const newsGrid = document.getElementById('news-grid');
             const loadingSpinner = document.getElementById('loading-spinner');
             const summaryModal = document.getElementById('summary-modal');
             const closeSummaryModalButton = document.getElementById('close-summary-modal');
-            const summaryContentWrapper = document.getElementById('summary-content-wrapper');
             const summaryTitleElement = document.getElementById('summary-title');
             const summaryTextElement = document.getElementById('summary-text');
             const feedNav = document.getElementById('feed-nav');
@@ -461,7 +605,7 @@
                 showToast("Đang tóm tắt...", title.substring(0, 50) + "...", 'loading', null, 5000);
             }
 
-            // (Hàm showToast giữ nguyên)
+            // (Hàm showToast, hideToast, showSummaryReadyNotification giữ nguyên)
              function showToast(mainMessage, detailMessage, state = 'ready', onClickAction, autoHideDelay = null) {
                  if (toastTimeoutId) clearTimeout(toastTimeoutId);
                  toastMainMessage.textContent = mainMessage;
@@ -492,7 +636,6 @@
                      toastTimeoutId = setTimeout(hideToast, autoHideDelay);
                  }
              }
-             // (Hàm hideToast giữ nguyên)
              function hideToast() {
                   if (toastTimeoutId) clearTimeout(toastTimeoutId);
                   toastTimeoutId = null;
@@ -503,7 +646,6 @@
                   }, 300);
                   summaryToast.onclick = null;
              }
-             // (Hàm showSummaryReadyNotification giữ nguyên)
              function showSummaryReadyNotification(title) {
                   showToast(
                       "Tóm tắt đã sẵn sàng!",
@@ -519,7 +661,7 @@
                   );
              }
 
-            // (Hàm renderChatHistory giữ nguyên)
+            // (Hàm renderChatHistory, handleSendChat, resetChat, prewarmCache giữ nguyên)
             function renderChatHistory() {
                 chatDisplay.innerHTML = '';
                 if (chatHistory.length === 0) {
@@ -540,7 +682,6 @@
                 });
                 chatDisplay.scrollTop = chatDisplay.scrollHeight;
             }
-            // (Hàm handleSendChat giữ nguyên)
             async function handleSendChat(e) {
                 e.preventDefault();
                 const prompt = chatInput.value.trim();
@@ -550,12 +691,10 @@
                 chatInput.value = '';
                 await callChatAPI();
             }
-            // (Hàm resetChat giữ nguyên)
             function resetChat() {
                 chatHistory = [];
                 renderChatHistory();
             }
-            // (Hàm prewarmCache giữ nguyên)
             function prewarmCache() {
                 console.log("[Cache-Warmer] Bắt đầu tải nền các feed khác...");
                 const feedsToPrewarm = Array.from(feedNav.querySelectorAll('.feed-button:not(.active)'));
@@ -575,13 +714,324 @@
                 }
                 mobileMenu.classList.add('hidden');
             }
+            
+            // ===================================================================
+            // PHẦN 2: LOGIC VÀ BIẾN CỦA TRANG LỊCH (CALENDAR)
+            // (Toàn bộ mã từ public/calendar/app.js được dán vào đây)
+            // ===================================================================
 
-            // ----- GẮN KẾT CÁC SỰ KIỆN (Như cũ) -----
+            // --- HÀM LỊCH: SỬA LỖI MÚI GIỜ ---
+            function getLocalDateString(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            // --- HÀM LỊCH: Tính toán số ngày ---
+            function dateToDays(dateStr) {
+                const [year, month, day] = dateStr.split('-').map(Number);
+                const date = new Date(year, month - 1, day);
+                return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
+            }
+
+            // --- BIẾN LỊCH: Lấy DOM ---
+            const calendarMain = document.getElementById('calendar-main');
+            const cal_dateEl = document.getElementById('date'); // Đổi tên tránh xung đột
+            const cal_timeEl = document.getElementById('time');
+            const cal_aiForm = document.getElementById('ai-form');
+            const cal_aiInput = document.getElementById('ai-input');
+            const calendarBody = document.getElementById('calendar-body');
+            const currentMonthYearEl = document.getElementById('current-month-year');
+            const prevMonthBtn = document.getElementById('prev-month-btn');
+            const nextMonthBtn = document.getElementById('next-month-btn');
+            
+            const settingsBtn = document.getElementById('settings-btn');
+            const settingsModal = document.getElementById('settings-modal');
+            const closeModalBtn = document.getElementById('close-modal');
+            const notifyButton = document.getElementById('notify-button');
+            const notifyTimeNgay = document.getElementById('notify-time-ngay');
+            const notifyTimeDem = document.getElementById('notify-time-dem');
+            const notifyTimeOff = document.getElementById('notify-time-off');
+            
+            const noteModal = document.getElementById('note-modal');
+            const closeNoteModalBtn = document.getElementById('close-note-modal');
+            const noteModalTitle = document.getElementById('note-modal-title');
+            const modalShiftInfo = document.getElementById('modal-shift-info'); 
+            const noteList = document.getElementById('note-list');
+            const addNoteForm = document.getElementById('add-note-form');
+            const newNoteInput = document.getElementById('new-note-input');
+
+            let currentEditingDateStr = null;
+
+            // --- BIẾN LỊCH: Dữ liệu ---
+            let noteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
+            let appSettings = JSON.parse(localStorage.getItem('myScheduleSettings')) || {
+                notifyTimeNgay: "06:00",
+                notifyTimeDem: "20:00",
+                notifyTimeOff: "08:00"
+            };
+            let currentViewDate = new Date(); 
+            let lastNotificationSentTime = null; 
+
+            // --- BIẾN LỊCH: Chu kỳ Ca ---
+            const EPOCH_DAYS = dateToDays('2025-10-26');
+            const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
+
+            // --- HÀM LỊCH: Lưu Dữ liệu ---
+            function saveNoteData() {
+                const cleanData = {};
+                for (const date in noteData) {
+                    if (Array.isArray(noteData[date]) && noteData[date].length > 0) {
+                        cleanData[date] = noteData[date];
+                    }
+                }
+                localStorage.setItem('myScheduleNotes', JSON.stringify(cleanData));
+            }
+            function saveSettings() {
+                localStorage.setItem('myScheduleSettings', JSON.stringify(appSettings));
+            }
+            
+            // --- HÀM LỊCH: Tính Ca ---
+            function getShiftForDate(dateStr) {
+                const currentDays = dateToDays(dateStr);
+                const diffDays = currentDays - EPOCH_DAYS;
+                const patternIndex = (diffDays % SHIFT_PATTERN.length + SHIFT_PATTERN.length) % SHIFT_PATTERN.length;
+                return SHIFT_PATTERN[patternIndex];
+            }
+
+            // --- HÀM LỊCH: Đồng hồ ---
+            function updateCalendarClock() {
+                const now = new Date();
+                const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+                const dayName = days[now.getDay()];
+                const dateStr = `${dayName}, ${now.toLocaleDateString('vi-VN')}`;
+                const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+                cal_dateEl.textContent = dateStr;
+                cal_timeEl.textContent = timeStr;
+            }
+
+            // --- HÀM LỊCH: Modal Cài đặt ---
+            function loadSettings() {
+                notifyTimeNgay.value = appSettings.notifyTimeNgay;
+                notifyTimeDem.value = appSettings.notifyTimeDem;
+                notifyTimeOff.value = appSettings.notifyTimeOff;
+            }
+
+            // --- HÀM LỊCH: Vẽ Lịch ---
+            function renderCalendar(date) {
+                calendarBody.innerHTML = '';
+                const year = date.getFullYear();
+                const month = date.getMonth(); 
+
+                currentMonthYearEl.textContent = `Tháng ${month + 1} ${year}`;
+                const firstDayOfMonth = new Date(year, month, 1);
+                
+                let firstDayOfWeek = firstDayOfMonth.getDay();
+                if (firstDayOfWeek === 0) firstDayOfWeek = 7; 
+
+                const startDate = new Date(firstDayOfMonth);
+                startDate.setDate(firstDayOfMonth.getDate() - (firstDayOfWeek - 1));
+
+                const todayStr = getLocalDateString(new Date());
+
+                for (let i = 0; i < 42; i++) {
+                    const dayCell = document.createElement('div');
+                    dayCell.className = "bg-white rounded-lg p-2 min-h-[100px] flex flex-col justify-start relative cursor-pointer hover:bg-gray-50 transition-colors border border-gray-200";
+                    const currentDate = new Date(startDate);
+                    currentDate.setDate(startDate.getDate() + i);
+                    const dateStr = getLocalDateString(currentDate);
+                    const day = currentDate.getDate();
+                    
+                    const dayNumberEl = document.createElement('span');
+                    dayNumberEl.className = 'day-number font-semibold text-lg text-gray-800'; 
+                    dayNumberEl.textContent = day;
+                    dayCell.appendChild(dayNumberEl);
+                    
+                    dayCell.dataset.date = dateStr; 
+
+                    if (currentDate.getMonth() !== month) {
+                        dayCell.classList.add('other-month', 'bg-gray-50', 'opacity-70', 'cursor-default'); 
+                        dayCell.classList.remove('hover:bg-gray-50', 'cursor-pointer');
+                        dayNumberEl.classList.add('text-gray-400'); 
+                        dayNumberEl.classList.remove('text-gray-800');
+                    } else {
+                        const shift = getShiftForDate(dateStr);
+                        const notes = noteData[dateStr] || []; 
+
+                        if (shift === 'giãn ca') {
+                            dayCell.classList.add('bg-yellow-100'); 
+                            dayCell.classList.remove('bg-white');
+                        } else if (shift === 'off') {
+                            dayCell.classList.add('bg-gray-100'); 
+                            dayCell.classList.remove('bg-white');
+                        } else {
+                            const shiftEl = document.createElement('span');
+                            shiftEl.className = 'day-shift text-xs font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full self-start mt-1';
+                            shiftEl.textContent = shift;
+                            dayCell.appendChild(shiftEl);
+                        }
+                        
+                        if (notes.length > 0) {
+                            const noteListEl = document.createElement('ul');
+                            noteListEl.className = 'day-note-list';
+                            notes.forEach(noteText => {
+                                const noteEl = document.createElement('li');
+                                noteEl.className = 'day-note'; 
+                                noteEl.textContent = noteText;
+                                noteListEl.appendChild(noteEl);
+                            });
+                            dayCell.appendChild(noteListEl);
+                        }
+                        
+                        if (dateStr === todayStr) {
+                            dayCell.classList.add('today', 'border-2', 'border-blue-500'); 
+                            dayNumberEl.classList.add('text-blue-600'); 
+                            dayNumberEl.classList.remove('text-gray-800');
+                        }
+
+                        dayCell.addEventListener('click', () => {
+                            openNoteModal(dateStr);
+                        });
+                    }
+                    calendarBody.appendChild(dayCell);
+                }
+            }
+
+            // --- HÀM LỊCH: Modal Ghi chú ---
+            function openNoteModal(dateStr) {
+                const date = new Date(dateStr + 'T12:00:00'); 
+                noteModal.style.display = 'flex';
+                noteModalTitle.textContent = `Cập nhật (${date.toLocaleDateString('vi-VN')})`;
+                currentEditingDateStr = dateStr; 
+                const shift = getShiftForDate(dateStr);
+                modalShiftInfo.innerHTML = `Ca tự động: <strong>${shift.toUpperCase()}</strong>`;
+                renderNoteList(dateStr);
+                newNoteInput.value = ''; 
+                newNoteInput.focus();
+            }
+            
+            function renderNoteList(dateStr) {
+                noteList.innerHTML = ''; 
+                const notes = noteData[dateStr] || [];
+                if (notes.length === 0) {
+                    noteList.innerHTML = `<li class="text-gray-400 text-sm italic">Không có ghi chú.</li>`;
+                    return;
+                }
+                notes.forEach((noteText, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded';
+                    li.innerHTML = `
+                        <span class="text-gray-100">${noteText}</span>
+                        <div class="flex-shrink-0 ml-2">
+                            <button data-index="${index}" class="edit-note text-blue-400 hover:text-blue-300 text-xs font-medium mr-2">Sửa</button>
+                            <button data-index="${index}" class="delete-note text-red-400 hover:text-red-300 text-xs font-medium">Xóa</button>
+                        </div>
+                    `;
+                    noteList.appendChild(li);
+                });
+            }
+
+            // --- HÀM LỊCH: Thông báo ---
+            function checkDailyShiftNotification() {
+                if (Notification.permission !== "granted") return; 
+                const now = new Date();
+                const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                
+                if (currentTimeStr === "00:00") {
+                    lastNotificationSentTime = null;
+                }
+                if (lastNotificationSentTime === currentTimeStr) return;
+
+                const todayStr = getLocalDateString(now);
+                const todayShift = getShiftForDate(todayStr);
+                let shiftDisplayName = ""; 
+                let timeToAlert = ""; 
+
+                if (todayShift === 'ngày') {
+                    shiftDisplayName = "Ca Ngày";
+                    timeToAlert = appSettings.notifyTimeNgay;
+                } else if (todayShift === 'đêm') {
+                    shiftDisplayName = "Ca Đêm";
+                    timeToAlert = appSettings.notifyTimeDem;
+                } else if (todayShift === 'giãn ca') {
+                    shiftDisplayName = "Giãn Ca";
+                    timeToAlert = appSettings.notifyTimeOff;
+                } else if (todayShift === 'off') {
+                    shiftDisplayName = "Ngày Nghỉ";
+                    timeToAlert = appSettings.notifyTimeOff;
+                }
+
+                if (timeToAlert && currentTimeStr === timeToAlert) {
+                    const notes = noteData[todayStr] || [];
+                    let notesString = "";
+                    if (notes.length > 0) {
+                        notesString = " - " + notes.join(', ');
+                    }
+                    const newTitle = "Lịch Luân Phiên";
+                    const newBody = `${shiftDisplayName}${notesString}`; 
+
+                    new Notification(newTitle, {
+                        body: newBody,
+                        icon: "/icons/icon-192x192.png" 
+                    });
+                    
+                    lastNotificationSentTime = currentTimeStr;
+                }
+            }
+            
+            // ===================================================================
+            // PHẦN 3: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG)
+            // ===================================================================
+
+            // --- BIẾN TAB ---
+            const newsTabBtn = document.getElementById('news-tab-btn');
+            const calendarTabBtn = document.getElementById('calendar-tab-btn');
+            const calendarTabBtnMobile = document.getElementById('calendar-tab-btn-mobile');
+            
+            // --- HÀM TAB: Chuyển tab ---
+            function showTab(tabName) {
+                if (tabName === 'news') {
+                    newsMain.classList.remove('hidden');
+                    calendarMain.classList.add('hidden');
+                    // Cập nhật nút tab
+                    newsTabBtn.classList.add('active');
+                    calendarTabBtn.classList.remove('active');
+                    calendarTabBtnMobile.classList.remove('active');
+                    // Ẩn/hiện nút refresh
+                    refreshFeedButton.classList.remove('hidden');
+                    refreshFeedButtonMobile.classList.remove('hidden');
+                    // Ẩn/hiện nút cài đặt
+                    settingsBtn.classList.add('hidden');
+                } else if (tabName === 'calendar') {
+                    newsMain.classList.add('hidden');
+                    calendarMain.classList.remove('hidden');
+                    // Cập nhật nút tab
+                    newsTabBtn.classList.remove('active');
+                    calendarTabBtn.classList.add('active');
+                    calendarTabBtnMobile.classList.add('active');
+                    // Ẩn/hiện nút refresh
+                    refreshFeedButton.classList.add('hidden');
+                    refreshFeedButtonMobile.classList.add('hidden');
+                    // Ẩn/hiện nút cài đặt
+                    settingsBtn.classList.remove('hidden');
+                }
+            }
+
+            // --- GẮN SỰ KIỆN CHO TAB ---
+            newsTabBtn.addEventListener('click', () => showTab('news'));
+            calendarTabBtn.addEventListener('click', () => showTab('calendar'));
+            calendarTabBtnMobile.addEventListener('click', () => {
+                showTab('calendar');
+                mobileMenu.classList.add('hidden'); // Đóng menu mobile
+            });
+
+            // --- KHỞI ĐỘNG (TIN TỨC) ---
             (async () => {
                 feedNav.addEventListener('click', handleFeedButtonClick);
                 mobileMenu.addEventListener('click', handleFeedButtonClick);
                 refreshFeedButton.addEventListener('click', handleRefreshClick);
-                refreshFeedButtonMobile.addEventListener('click', handleRefreshClick);
+                refreshFeedButtonMobile.addEventListener('click', handleRefreshClick); 
 
                 const defaultFeed = feedNav.querySelector('.feed-button.active');
                 if (defaultFeed) {
@@ -626,6 +1076,150 @@
                 });
                 chatForm.addEventListener('submit', handleSendChat);
             })();
+            
+            // --- KHỞI ĐỘNG (LỊCH) ---
+            (async () => {
+                renderCalendar(currentViewDate);
+                updateCalendarClock();
+                setInterval(updateCalendarClock, 1000);
+                loadSettings();
+                setInterval(checkDailyShiftNotification, 60000);
+
+                settingsBtn.addEventListener('click', () => {
+                    loadSettings(); 
+                    settingsModal.style.display = 'flex';
+                });
+                closeModalBtn.addEventListener('click', () => {
+                    settingsModal.style.display = 'none';
+                });
+                settingsModal.addEventListener('click', (e) => {
+                    if (e.target === settingsModal) {
+                        settingsModal.style.display = 'none';
+                    }
+                });
+                notifyTimeNgay.addEventListener('change', (e) => {
+                    appSettings.notifyTimeNgay = e.target.value;
+                    saveSettings();
+                });
+                notifyTimeDem.addEventListener('change', (e) => {
+                    appSettings.notifyTimeDem = e.target.value;
+                    saveSettings();
+                });
+                notifyTimeOff.addEventListener('change', (e) => {
+                    appSettings.notifyTimeOff = e.target.value;
+                    saveSettings();
+                });
+                notifyButton.addEventListener('click', () => {
+                    if (!("Notification" in window)) {
+                        alert("Trình duyệt này không hỗ trợ thông báo.");
+                    } else if (Notification.permission === "granted") {
+                        new Notification("Đã bật!", { body: "Bạn đã bật thông báo thành công!" });
+                    } else if (Notification.permission !== "denied") {
+                        Notification.requestPermission().then(permission => {
+                            if (permission === "granted") {
+                                new Notification("Cảm ơn!", { body: "Thông báo đã được bật!" });
+                            }
+                        });
+                    }
+                });
+                prevMonthBtn.addEventListener('click', () => {
+                    currentViewDate.setMonth(currentViewDate.getMonth() - 1);
+                    renderCalendar(currentViewDate);
+                });
+                nextMonthBtn.addEventListener('click', () => {
+                    currentViewDate.setMonth(currentViewDate.getMonth() + 1);
+                    renderCalendar(currentViewDate);
+                });
+                closeNoteModalBtn.addEventListener('click', () => {
+                    noteModal.style.display = 'none';
+                    currentEditingDateStr = null; 
+                });
+                noteModal.addEventListener('click', (e) => {
+                    if (e.target === noteModal) {
+                        noteModal.style.display = 'none';
+                        currentEditingDateStr = null;
+                    }
+                });
+                addNoteForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const noteText = newNoteInput.value.trim();
+                    if (!noteText || !currentEditingDateStr) return;
+                    if (!Array.isArray(noteData[currentEditingDateStr])) {
+                        noteData[currentEditingDateStr] = [];
+                    }
+                    noteData[currentEditingDateStr].push(noteText);
+                    saveNoteData();
+                    renderNoteList(currentEditingDateStr); 
+                    renderCalendar(currentViewDate); 
+                    newNoteInput.value = ''; 
+                });
+                noteList.addEventListener('click', (e) => {
+                    const target = e.target;
+                    const index = target.dataset.index;
+                    if (!currentEditingDateStr || index === undefined) return;
+                    const notes = noteData[currentEditingDateStr] || [];
+                    if (target.classList.contains('edit-note')) {
+                        const oldText = notes[index];
+                        const newText = prompt("Sửa ghi chú:", oldText);
+                        if (newText !== null && newText.trim() !== "") {
+                            noteData[currentEditingDateStr][index] = newText.trim();
+                            saveNoteData();
+                            renderNoteList(currentEditingDateStr);
+                            renderCalendar(currentViewDate);
+                        }
+                    }
+                    if (target.classList.contains('delete-note')) {
+                        if (confirm(`Bạn có chắc muốn xóa ghi chú: "${notes[index]}"?`)) {
+                            noteData[currentEditingDateStr].splice(index, 1);
+                            saveNoteData();
+                            renderNoteList(currentEditingDateStr);
+                            renderCalendar(currentViewDate);
+                        }
+                    }
+                });
+                cal_aiForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const text = cal_aiInput.value.trim();
+                    if (!text) return;
+                    cal_aiInput.disabled = true;
+                    cal_aiForm.querySelector('button').disabled = true;
+                    cal_aiForm.querySelector('button').textContent = "Đang xử lý...";
+                    try {
+                        const response = await fetch('/api/calendar-ai-parse', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ text: text })
+                        });
+                        const updates = await response.json(); 
+                        if (Array.isArray(updates)) {
+                            updates.forEach(update => {
+                                const dateStr = update.date;
+                                const noteText = update.note;
+                                if (dateStr && noteText) {
+                                    if (!Array.isArray(noteData[dateStr])) {
+                                        noteData[dateStr] = []; 
+                                    }
+                                    noteData[dateStr].push(noteText); 
+                                }
+                            });
+                            saveNoteData(); 
+                            renderCalendar(currentViewDate); 
+                            cal_aiInput.value = ''; 
+                        } else {
+                            throw new Error("AI không trả về định dạng mảng.");
+                        }
+                    } catch (err) {
+                        console.error('Lỗi gọi AI API (Lịch):', err);
+                        alert('Không thể phân tích. Vui lòng kiểm tra lại prompt và API key.');
+                    }
+                    cal_aiInput.disabled = false;
+                    cal_aiForm.querySelector('button').disabled = false;
+                    cal_aiForm.querySelector('button').textContent = "Phân tích";
+                });
+            })();
+            
+            // --- KHỞI ĐỘNG (TAB) ---
+            showTab('news'); // Hiển thị tab Tin Tức làm mặc định
 
         }); // Kết thúc DOMContentLoaded
     </script>
