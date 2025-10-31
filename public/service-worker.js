@@ -1,5 +1,5 @@
 const CACHE_NAME = 'ghichu-app-cache-v1';
-// Các tệp cốt lõi cần thiết để app chạy
+// CẬP NHẬT: Thêm lại các tệp /calendar/ vào cache
 const urlsToCache = [
     '/',
     '/index.html',
@@ -24,10 +24,12 @@ self.addEventListener('install', event => {
 
 // 2. Fetch: Phản hồi từ Cache trước, nếu không có mới lấy từ Mạng
 self.addEventListener('fetch', event => {
+    
+    // CẬP NHẬT: Logic "Cache First" (Ưu tiên Cache)
     event.respondWith(
         caches.match(event.request)
             .then(response => {
-                // Nếu tìm thấy trong cache, trả về nó
+                // Nếu tìm thấy trong cache, trả về nó (TẢI TỨC THÌ)
                 if (response) {
                     return response;
                 }
