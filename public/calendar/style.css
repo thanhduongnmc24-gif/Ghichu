@@ -1,0 +1,294 @@
+/* CẬP NHẬT: Thêm Box-sizing để sửa lỗi lệch cột */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* Thiết lập cơ bản */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+    background-color: #f4f7f6;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+header {
+    background-color: #3498db;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+}
+#clock-container {
+    font-size: 1.1em;
+    margin-top: 10px;
+}
+#clock-container #time {
+    font-weight: bold;
+    margin-left: 10px;
+}
+main {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 0 15px;
+}
+
+/* Form AI */
+.form-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.form-section h2 {
+    margin-top: 0;
+    color: #3498db;
+}
+form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+form input[type="text"] {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+}
+form button {
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+}
+#ai-form button {
+    background-color: #e67e22;
+}
+
+/* --- CSS LỊCH THÁNG --- */
+#calendar-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+#calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+#calendar-header button {
+    background: none;
+    border: none;
+    font-size: 2em;
+    color: #3498db;
+    cursor: pointer;
+}
+#current-month-year {
+    font-size: 1.5em;
+    color: #2c3e50;
+}
+
+/* Tiêu đề các Thứ (T2-CN) */
+#calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 5px;
+    border-radius: 5px;
+    gap: 5px; /* <-- Đã thêm gap để khớp */
+}
+.weekday {
+    text-align: center;
+    font-weight: bold;
+    color: #34495e; 
+    padding: 8px 0; 
+    background-color: #f4f7f6; 
+    border-radius: 5px; 
+}
+/* Màu đỏ cho Chủ Nhật */
+.weekday.sunday {
+    color: #e74c3c;
+}
+
+
+/* Lưới các Ngày */
+#calendar-body {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px; 
+}
+
+.calendar-day {
+    border: 1px solid #ecf0f1;
+    border-radius: 5px;
+    min-height: 80px;
+    padding: 6px; /* <-- box-sizing sẽ xử lý padding này */
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+.calendar-day:hover {
+    background-color: #f9f9f9;
+}
+
+/* Số ngày (ví dụ: 30, 31) */
+.day-number {
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+/* Ca (Shift) - (ví dụ: "đêm") */
+.day-shift {
+    font-size: 0.7em;
+    font-weight: 600;
+    color: #2980b9;
+    background-color: rgba(236, 240, 241, 0.8);
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+/* Ghi chú (Note) - (ví dụ: "Quang") */
+.day-note {
+    font-size: 0.85em;
+    font-weight: 500;
+    color: #c0392b; /* Màu khác để phân biệt */
+    width: 100%;
+    text-align: center; /* Căn giữa */
+    align-self: center;
+    margin-top: auto;
+    margin-bottom: auto;
+    padding-top: 5px;
+}
+
+/* Các kiểu đặc biệt cho Ca (Shift) */
+.shift-gian-ca {
+    background-color: #fef9e7; /* Màu vàng nhạt */
+}
+.shift-off {
+    background-color: #f1f1f1; /* Màu xám nhạt */
+}
+
+/* Ô ngày hôm nay */
+.calendar-day.today {
+    border-color: #3498db;
+}
+.today .day-number {
+    color: #3498db;
+    font-weight: bold;
+}
+
+/* Ô ngày của tháng khác */
+.calendar-day.other-month {
+    color: #bdc3c7;
+    background-color: #fdfdfd;
+    cursor: default;
+}
+
+
+/* --- CSS MODAL GHI CHÚ --- */
+#note-modal h2 {
+    margin-top: 0;
+    font-size: 1.2em;
+    color: #333;
+}
+#note-modal #note-input {
+    width: 100%;
+    /* box-sizing đã được xử lý toàn cục */
+    margin-top: 5px;
+}
+.note-label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+/* Dòng hiển thị Ca (Shift) tự động */
+#modal-shift-info {
+    font-size: 1.1em;
+    background-color: #f4f7f6;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    margin-top: 0;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+#delete-note-btn {
+    background-color: #e74c3c;
+}
+
+/* --- CSS Modal Cài đặt --- */
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 1.8em;
+    color: white;
+    cursor: pointer;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    padding: 5px;
+    line-height: 1;
+}
+
+/* CẬP NHẬT: CSS cho nút Quay Lại (Trang Lịch) */
+#back-to-news {
+    left: 15px;
+    right: auto;
+    font-size: 1.1em; /* Cỡ chữ nhỏ hơn */
+    font-weight: 500;
+    text-decoration: none;
+}
+#back-to-news:hover {
+    text-decoration: underline;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative;
+}
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 2em;
+    color: #aaa;
+    cursor: pointer;
+    line-height: 1;
+}
+.close-btn:hover {
+    color: #333;
+}
