@@ -61,7 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     let currentViewDate = new Date(); 
-    let lastNotificationSentDate = null; 
+    
+    // CẬP NHẬT: Biến chống spam (chỉ chặn trong 1 phút)
+    let lastNotificationSentTime = null; 
 
     // --- CÀI ĐẶT CHU KỲ (Như cũ) ---
     const EPOCH_DAYS = dateToDays('2025-10-26');
@@ -396,21 +398,25 @@ document.addEventListener('DOMContentLoaded', () => {
         aiForm.querySelector('button').textContent = "Phân tích";
     });
     
-    // --- 10. LOGIC MỚI: Kiểm tra Thông báo Ca Hàng Ngày (CẬP NHẬT) ---
+    // --- 10. LOGIC MỚI: Kiểm tra Thông báo Ca Hàng Ngày (ĐÃ SỬA LỖI) ---
     function checkDailyShiftNotification() {
         if (Notification.permission !== "granted") return; // Chưa cho phép
 
         const now = new Date();
-        const todayStr = getLocalDateString(now);
-        
-        // Chống spam: Nếu đã gửi thông báo hôm nay rồi thì thôi
-        if (lastNotificationSentDate === todayStr) return;
-
         const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         
+        // CẬP NHẬT: Reset biến chống spam vào nửa đêm
+        if (currentTimeStr === "00:00") {
+            lastNotificationSentTime = null;
+        }
+
+        // CẬP NHẬT: Chặn nếu đã gửi thông báo CÙNG THỜI GIAN này
+        if (lastNotificationSentTime === currentTimeStr) return;
+
+        const todayStr = getLocalDateString(now);
         const todayShift = getShiftForDate(todayStr);
-        let shiftDisplayName = ""; // Tên ca hiển thị
-        let timeToAlert = ""; // Giờ báo thức
+        let shiftDisplayName = ""; 
+        let timeToAlert = ""; 
 
         // 1. Xác định Ca và Giờ báo thức
         if (todayShift === 'ngày') {
@@ -434,13 +440,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const notes = noteData[todayStr] || [];
             let notesString = "";
             if (notes.length > 0) {
-                // Nối các ghi chú lại: " - Ghi chú 1, Ghi chú 2"
                 notesString = " - " + notes.join(', ');
             }
 
             // 4. Tạo Tiêu đề và Nội dung mới
             const newTitle = "Lịch Luân Phiên";
-            const newBody = `${shiftDisplayName}${notesString}`; // Ví dụ: "Ca Ngày - Họp, Quang" hoặc "Ca Đêm"
+            const newBody = `${shiftDisplayName}${notesString}`; // Ví dụ: "Ca Ngày - Họp, Quang"
 
             // 5. Gửi thông báo
             new Notification(newTitle, {
@@ -448,8 +453,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 icon: "/calendar/icons/icon-192x192.png" 
             });
             
-            // 6. Đánh dấu là đã gửi hôm nay
-            lastNotificationSentDate = todayStr;
+            // 6. Đánh dấu là đã gửi (chỉ chặn phút này)
+            lastNotificationSentTime = currentTimeStr;
         }
     }
 
