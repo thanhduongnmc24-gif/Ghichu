@@ -16,7 +16,6 @@
     <link rel="prefetch" href="/calendar/" as="document">
 
     <style>
-        /* (Toàn bộ CSS <style> của bạn giữ nguyên) */
         body {
             font-family: 'Inter', sans-serif;
         }
@@ -32,7 +31,7 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* Thêm CSS cho nút Tải lại */
+        /* CSS cho nút Tải lại */
         .refresh-button {
              color: #D1D5DB; padding: 8px; margin-left: 8px;
              border-radius: 8px; transition: all 0.2s;
@@ -40,7 +39,6 @@
         .refresh-button:hover { background-color: #374151; }
         .refresh-button svg { width: 20px; height: 20px; }
         
-        /* (Các CSS khác giữ nguyên) */
         .feed-button.active { background-color: white; color: #111827; font-weight: 600; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
         .feed-button { color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
         .feed-button:hover { background-color: #374151; }
@@ -164,7 +162,7 @@
         </div>
         <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
     </main>
-    
+
     <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
@@ -179,9 +177,11 @@
             </div>
         </div>
     </div>
+
     <button id="chat-fab" class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center z-40 transition-transform transform hover:scale-110">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
     </button>
+
     <div id="chat-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
              <div class="flex justify-between items-center mb-4">
@@ -199,6 +199,7 @@
              </form>
         </div>
     </div>
+
     <div id="summary-toast" class="hidden">
         <button id="toast-close-button">&times;</button>
         <div class="flex items-center">
@@ -245,7 +246,6 @@
         const toastMainMessage = document.getElementById('toast-main-message');
         const toastCta = document.getElementById('toast-cta');
 
-        // CẬP NHẬT 4: Lấy nút Tải lại (Refresh)
         const refreshFeedButton = document.getElementById('refresh-feed-button');
 
         const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
@@ -344,20 +344,17 @@
             }
         }
 
-        // CẬP NHẬT 5: Sửa hàm fetchRSS để hỗ trợ force refresh
         async function fetchRSS(rssUrl, sourceName, { display = true, force = false } = {}) {
             if (display) {
                 loadingSpinner.classList.remove('hidden');
                 newsGrid.innerHTML = '';
             }
             
-            // Nếu force = true, xóa cache của mục này
             if (force) {
                 clientRssCache.delete(rssUrl);
                 console.log(`[CACHE] Đã xóa ${rssUrl} do yêu cầu Tải lại.`);
             }
 
-            // (Logic cache giữ nguyên)
             if (clientRssCache.has(rssUrl)) {
                 if (display) {
                     displayArticles(clientRssCache.get(rssUrl), sourceName);
@@ -585,19 +582,6 @@
             feedsToPrewarm.forEach(feed => {
                 fetchRSS(feed.dataset.rss, feed.dataset.source, { display: false });
             });
-        }
-
-        // CẬP NHẬT 6: Thêm sự kiện cho nút Tải lại
-        function handleRefreshClick() {
-            console.log("Đang yêu cầu tải lại...");
-            // Tìm nút đang active
-            const activeButton = feedNav.querySelector('.feed-button.active');
-            if (activeButton) {
-                const rssUrl = activeButton.dataset.rss;
-                const sourceName = activeButton.dataset.source;
-                // Gọi fetchRSS với cờ `force = true`
-                fetchRSS(rssUrl, sourceName, { display: true, force: true });
-            }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
