@@ -1,16 +1,16 @@
 {
-  "name": "pwa-thoikhoabieu",
+  "name": "merged-app-backend",
   "version": "1.0.0",
-  "description": "Một PWA lịch làm việc",
-  "main": "index.js",
+  "description": "Backend gộp cho Tin Tức và Lịch",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
-    "@google/generative-ai": "^0.11.3"
+    "cors": "^2.8.5",
+    "node-fetch": "^3.3.2",
+    "@google/generative-ai": "^0.14.1"
   },
-  "engines": {
-    "node": "18.x"
-  }
+  "type": "module"
 }
