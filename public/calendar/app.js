@@ -424,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (todayShift === 'giãn ca') {
             shiftDisplayName = "Giãn Ca";
             timeToAlert = appSettings.notifyTimeOff;
-        } else if (todayShift === 'off') {
+        } else if (todayShift === 'off') { // Thêm ca "off" (nếu bạn có)
             shiftDisplayName = "Ngày Nghỉ";
             timeToAlert = appSettings.notifyTimeOff;
         }
@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 5. Gửi thông báo
             new Notification(newTitle, {
                 body: newBody,
-                icon: "/calendar/icons/icon-192x192.png" 
+                icon: "/icons/icon-192x192.png" // CẬP NHẬT: Đường dẫn icon PWA chung
             });
             
             // 6. Đánh dấu là đã gửi (chỉ chặn phút này)
