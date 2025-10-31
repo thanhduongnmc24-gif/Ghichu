@@ -1,89 +1,607 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lịch Làm Việc PWA</title>
-    
-    <link rel="stylesheet" href="style.css">
-    
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#3498db">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Lịch Ca">
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <title>Tin Tức Tổng Hợp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Thêm font Inter cho đẹp */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* CSS cho spinner loading */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* CSS cho nút feed (desktop, mobile) */
+        .feed-button.active { background-color: white; color: #111827; font-weight: 600; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
+        .feed-button { color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
+        .feed-button:hover { background-color: #374151; }
+        #mobile-menu .feed-button { display: block; width: 100%; text-align: left; padding: 10px 16px; border-radius: 6px; font-weight: 500; color: #D1D5DB; }
+        #mobile-menu .feed-button:hover { background-color: #4B5563; }
+        #mobile-menu .feed-button.active { background-color: #6B7280; color: white; }
 
+        /* [MỚI] CSS cho nút Lịch */
+        .nav-link {
+            color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0;
+            padding: 8px 16px; border-radius: 8px;
+            border: 1px solid #4B5563; /* Viền nhẹ */
+            margin-left: 12px;
+            transition: all 0.2s;
+        }
+        .nav-link:hover { background-color: #374151; }
+        #mobile-menu .nav-link { 
+            display: block; width: 100%; text-align: left; padding: 10px 16px; 
+            border: none; margin-left: 0; color: #E5E7EB; font-weight: 600; 
+            background-color: #4B5563; /* Nền khác 1 chút */
+        }
+        #mobile-menu .nav-link:hover { background-color: #5b6676; }
+
+
+        /* CSS cho chat */
+        #chat-input { background-color: #374151; color: white; border: 1px solid #4B5563; }
+        #chat-input:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); }
+        .chat-bubble { max-width: 80%; padding: 10px 16px; border-radius: 16px; margin-bottom: 8px; line-height: 1.5; }
+        .user-bubble { background-color: #3B82F6; color: white; align-self: flex-end; }
+        .model-bubble { background-color: #4B5563; color: #E5E7EB; align-self: flex-start; }
+
+        /* CSS giới hạn dòng */
+        .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+        .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+
+        /* CSS cho Toast Notification */
+        #summary-toast {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            background-color: #2563EB; 
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            z-index: 60;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out; 
+            opacity: 0;
+            transform: translateY(20px);
+            max-width: 320px;
+        }
+        #summary-toast.toast-loading {
+            background-color: #374151; 
+            color: #E5E7EB; 
+            cursor: default;
+        }
+         #summary-toast.show {
+             opacity: 1;
+             transform: translateY(0);
+         }
+         #toast-close-button {
+             position: absolute;
+             top: 0.5rem;
+             right: 0.5rem;
+             color: #D1D5DB; 
+             background: transparent;
+             border: none;
+             font-size: 1.25rem;
+             cursor: pointer;
+         }
+          #toast-close-button:hover {
+              color: white;
+          }
+    </style>
+    <link rel="preconnect" href="https.fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="bg-gray-900 text-gray-100 antialiased">
 
-    <header>
-        <h1>Lịch Làm Việc</h1>
-        <button id="settings-btn" class="icon-btn">⚙️</button>
-        <div id="clock-container">
-            <span id="date"></span>
-            <span id="time"></span>
-        </div>
+    <header class="bg-gray-800 shadow-md sticky top-0 z-30">
+        <nav class="container mx-auto px-4 py-4 relative">
+             <div class="flex justify-between items-center">
+                 <h1 class="text-2xl font-bold text-white">Tin Tức Tổng Hợp</h1>
+                 
+                 <div class="hidden sm:flex items-center">
+                    <div id="feed-nav" class="flex space-x-2 overflow-x-auto py-1">
+                         <button class="feed-button active px-4 py-2 rounded-lg" data-rss="https://vnexpress.net/rss/tin-moi-nhat.rss" data-source="VnExpress">VnExpress</button>
+                         <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://tuoitre.vn/rss/tin-moi-nhat.rss" data-source="Tuổi Trẻ">Tuổi Trẻ</button>
+                         <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://thanhnien.vn/rss/home.rss" data-source="Thanh Niên">Thanh Niên</button>
+                         <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://dantri.com.vn/rss/home.rss" data-source="Dân Trí">Dân Trí</button>
+                         </div>
+                    <a href="/calendar" class="nav-link">Lịch Làm Việc</a>
+                 </div>
+
+                 <div class="sm:hidden">
+                     <button id="hamburger-button" class="text-gray-300 hover:text-white focus:outline-none focus:text-white p-2">
+                          <span class="sr-only">Mở menu</span>
+                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                     </button>
+                 </div>
+             </div>
+             
+             <div id="mobile-menu" class="hidden sm:hidden bg-gray-700 absolute top-full left-0 right-0 z-20 shadow-lg mt-1 rounded-b-md">
+                 <div class="px-2 pt-2 pb-3 space-y-1">
+                     <a href="/calendar" class="nav-link">Lịch Làm Việc</a>
+                     <div class="border-t border-gray-600 my-2"></div>
+                     <button class="feed-button active" data-rss="https://vnexpress.net/rss/tin-moi-nhat.rss" data-source="VnExpress">VnExpress</button>
+                     <button class="feed-button" data-rss="https://tuoitre.vn/rss/tin-moi-nhat.rss" data-source="Tuổi Trẻ">Tuổi Trẻ</button>
+                     <button class="feed-button" data-rss="https://thanhnien.vn/rss/home.rss" data-source="Thanh Niên">Thanh Niên</button>
+                     <button class="feed-button" data-rss="https://dantri.com.vn/rss/home.rss" data-source="Dân Trí">Dân Trí</button>
+                     </div>
+             </div>
+        </nav>
     </header>
 
-    <main>
-        <section class="form-section">
-            <h2>Thêm Nhanh (AI)</h2>
-            <form id="ai-form">
-                <input type="text" id="ai-input" placeholder="Ví dụ: Quang 30/10, Họp 15/11...">
-                <button type="submit">Phân tích</button>
-            </form>
-        </section>
-
-        <section id="calendar-container">
-            <div id="calendar-header">
-                <button id="prev-month-btn">&lt;</button>
-                <h2 id="current-month-year">Tháng 10 2025</h2>
-                <button id="next-month-btn">&gt;</button>
-            </div>
-            <div id="calendar-weekdays">
-                <div class="weekday">T2</div>
-                <div class="weekday">T3</div>
-                <div class="weekday">T4</div> <div class="weekday">T5</div>
-                <div class="weekday">T6</div>
-                <div class="weekday">T7</div>
-                <div class="weekday sunday">CN</div>
-            </div>
-            <div id="calendar-body">
-                </div>
-        </section>
-
+    <main class="container mx-auto p-4 md:p-8">
+        <div id="loading-spinner" class="flex justify-center items-center h-64">
+            <div class="spinner border-t-blue-500" style="width: 50px; height: 50px;"></div>
+        </div>
+        <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
     </main>
 
-    <div id="settings-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <span id="close-modal" class="close-btn">&times;</span>
-            <h2>Cài đặt chung</h2>
-            <button id="notify-button">Bật Thông Báo (Toàn cục)</button>
-            <p>Cho phép ứng dụng gửi thông báo.</p>
+    <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-white">Bản Tóm Tắt AI</h2>
+                <button id="close-summary-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+            <div id="summary-content-wrapper" class="min-h-[200px]">
+                 <div class="text-gray-200 space-y-4">
+                      <h3 id="summary-title" class="text-lg font-semibold text-white"></h3>
+                      <p id="summary-text" class="whitespace-pre-wrap leading-relaxed"></p>
+                 </div>
+            </div>
         </div>
     </div>
 
-    <div id="note-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <span id="close-note-modal" class="close-btn">&times;</span>
-            <h2 id="note-modal-title">Cập nhật (Ngày...)</h2>
-            <form id="note-form">
-                
-                <p id="modal-shift-info">Ca hôm nay: <strong>...</strong></p>
+    <button id="chat-fab" class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center z-40 transition-transform transform hover:scale-110">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+    </button>
 
-                <label for="note-input" class="note-label">Ghi chú (Note)</label>
-                <input type="text" id="note-input" placeholder="Nhập ghi chú (ví dụ: Quang, họp...)" autocomplete="off">
+    <div id="chat-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+             <div class="flex justify-between items-center mb-4">
+                 <h2 class="text-2xl font-bold text-white">Em là Tèo biết tuốt</h2>
+                 <button id="close-chat-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+             </div>
+             <div id="chat-display" class="min-h-[200px] bg-gray-900 p-4 rounded-lg mb-4 overflow-y-auto flex-grow flex flex-col">
+                 <div class="model-bubble">Chào đại ca, Tèo xin trả lời bất kỳ câu hỏi nào của đại ca?</div>
+             </div>
+             <form id="chat-form" class="flex space-x-2">
+                 <input type="text" id="chat-input" placeholder="Hôm nay đại ca thấy thế nào..." class="flex-grow p-3 rounded-lg focus:outline-none">
+                 <button type="submit" id="send-chat-button" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" /></svg>
+                 </button>
+             </form>
+        </div>
+    </div>
 
-                <div class="modal-actions">
-                    <button type="button" id="delete-note-btn">Xóa Ghi Chú</button>
-                    <button type="submit">Lưu</button>
+    <div id="summary-toast" class="hidden">
+        <button id="toast-close-button">&times;</button>
+        <div class="flex items-center">
+            <div id="toast-icon" class="flex-shrink-0 w-6 h-6">
                 </div>
-            </form>
+            <div class="ml-3">
+                <p id="toast-main-message" class="font-semibold"></p>
+                <p id="toast-title" class="text-sm text-gray-300 line-clamp-2"></p>
+                <p id="toast-cta" class="text-xs mt-2 text-blue-200">Nhấn để xem</p>
+            </div>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script type="module">
+        // ----- BIẾN TOÀN CỤC -----
+        const newsGrid = document.getElementById('news-grid');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const summaryModal = document.getElementById('summary-modal');
+        const closeSummaryModalButton = document.getElementById('close-summary-modal');
+        const summaryContentWrapper = document.getElementById('summary-content-wrapper');
+        const summaryTitleElement = document.getElementById('summary-title');
+        const summaryTextElement = document.getElementById('summary-text');
+        const feedNav = document.getElementById('feed-nav');
+        const chatFab = document.getElementById('chat-fab');
+        const chatModal = document.getElementById('chat-modal');
+        const closeChatModal = document.getElementById('close-chat-modal');
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatDisplay = document.getElementById('chat-display');
+        const hamburgerButton = document.getElementById('hamburger-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const summaryToast = document.getElementById('summary-toast');
+        const toastTitle = document.getElementById('toast-title');
+        const toastCloseButton = document.getElementById('toast-close-button');
+        const toastIcon = document.getElementById('toast-icon');
+        const toastMainMessage = document.getElementById('toast-main-message');
+        const toastCta = document.getElementById('toast-cta');
+
+        const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
+        const iconCheck = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+        const iconError = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+
+
+        // ----- CACHE & HISTORY -----
+        const clientRssCache = new Map();
+        let chatHistory = [];
+        let summaryEventSource = null;
+        let completedSummary = { title: '', text: '' };
+        let toastTimeoutId = null;
+
+        // ----- HÀM GỌI API (Tóm tắt - Streaming) -----
+        function callGeminiAPIStreaming(prompt, title) {
+            if (summaryEventSource) {
+                summaryEventSource.close();
+                console.log("Đã đóng stream tóm tắt cũ.");
+            }
+            let currentSummaryText = '';
+
+            const encodedPrompt = encodeURIComponent(prompt);
+            const streamUrl = `/summarize-stream?prompt=${encodedPrompt}`;
+            summaryEventSource = new EventSource(streamUrl);
+            console.log("Đang kết nối tới stream tóm tắt...");
+
+            summaryEventSource.onopen = () => console.log("Kết nối stream tóm tắt thành công!");
+            summaryEventSource.onerror = (error) => {
+                console.error("Lỗi kết nối EventSource:", error);
+                showToast("Lỗi tóm tắt", "Không thể kết nối server.", 'error', null, 5000); // Hiển thị lỗi
+                if (summaryEventSource) summaryEventSource.close();
+                summaryEventSource = null;
+            };
+            summaryEventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.text) {
+                        currentSummaryText += data.text;
+                    } else if (data.error) {
+                        console.error("Lỗi từ stream:", data.error);
+                        currentSummaryText += `\n\n[Lỗi: ${data.error}]`;
+                        if (summaryEventSource) summaryEventSource.close();
+                        summaryEventSource = null;
+                        showToast("Lỗi tóm tắt", data.error, 'error', null, 5000);
+                    } else if (data.done) {
+                        console.log("Stream tóm tắt hoàn thành.");
+                        if (summaryEventSource) summaryEventSource.close();
+                        summaryEventSource = null;
+                        completedSummary = { title: title, text: currentSummaryText };
+                        showSummaryReadyNotification(title); // Thông báo khi xong
+                    }
+                } catch (e) {
+                    console.error("Lỗi phân tích dữ liệu stream:", e, event.data);
+                    if (summaryEventSource) summaryEventSource.close();
+                    summaryEventSource = null;
+                    showToast("Lỗi tóm tắt", "Dữ liệu trả về không hợp lệ.", 'error', null, 5000);
+                }
+            };
+        }
+
+        // ----- HÀM GỌI API (Chat) -----
+        async function callChatAPI() {
+            const loadingBubble = document.createElement('div');
+            loadingBubble.className = 'model-bubble';
+            loadingBubble.innerHTML = `<div class="spinner border-t-white" style="width: 20px; height: 20px;"></div>`;
+            chatDisplay.appendChild(loadingBubble);
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ history: chatHistory })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Lỗi server: ${errorText}`);
+                }
+
+                const result = await response.json();
+                const answer = result.answer;
+                chatHistory.push({ role: "model", parts: [{ text: answer }] });
+                chatDisplay.removeChild(loadingBubble);
+                renderChatHistory();
+
+            } catch (error) {
+                console.error("Lỗi khi gọi API chat:", error);
+                chatDisplay.removeChild(loadingBubble);
+                const errorBubble = document.createElement('div');
+                errorBubble.className = 'model-bubble';
+                errorBubble.style.backgroundColor = '#991B1B';
+                errorBubble.textContent = `Lỗi: ${error.message}`;
+                chatDisplay.appendChild(errorBubble);
+            } finally {
+                chatDisplay.scrollTop = chatDisplay.scrollHeight;
+            }
+        }
+
+        // ----- HÀM XỬ LÝ RSS -----
+        async function fetchRSS(rssUrl, sourceName, { display = true } = {}) {
+            if (display) {
+                loadingSpinner.classList.remove('hidden');
+                newsGrid.innerHTML = '';
+            }
+            if (clientRssCache.has(rssUrl)) {
+                if (display) {
+                    displayArticles(clientRssCache.get(rssUrl), sourceName);
+                    loadingSpinner.classList.add('hidden');
+                }
+                return;
+            }
+            try {
+                const response = await fetch(`/get-rss?url=${encodeURIComponent(rssUrl)}`);
+                if (!response.ok) throw new Error('Lỗi server (RSS)');
+                const str = await response.text();
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(str, "text/xml");
+                if (xmlDoc.getElementsByTagName("parsererror").length) throw new Error("Lỗi phân tích XML");
+
+                let items;
+                const itemNodes = xmlDoc.querySelectorAll("item");
+                if (itemNodes.length === 0) {
+                    const entryNodes = xmlDoc.querySelectorAll("entry");
+                    if (entryNodes.length > 0) items = Array.from(entryNodes);
+                    else throw new Error("Không tìm thấy bài viết");
+                } else {
+                     items = Array.from(itemNodes);
+                }
+                clientRssCache.set(rssUrl, items);
+                if (display) displayArticles(items, sourceName);
+            } catch (error) {
+                console.error(`Lỗi tải RSS ${sourceName}:`, error);
+                if (display) newsGrid.innerHTML = `<p class="text-red-400 col-span-full text-center">${error.message}</p>`;
+            } finally {
+                if (display) loadingSpinner.classList.add('hidden');
+            }
+        }
+
+        // ----- HÀM HIỂN THỊ -----
+        function displayArticles(items, sourceName) {
+            newsGrid.innerHTML = '';
+            items.forEach(item => {
+                const title = item.querySelector("title")?.textContent || "Không có tiêu đề";
+                let description = item.querySelector("description")?.textContent || item.querySelector("summary")?.textContent || item.querySelector("content")?.textContent || "";
+                let link = item.querySelector("link")?.textContent || "#";
+                if (link === "#" && item.querySelector("link")?.hasAttribute("href")) {
+                    link = item.querySelector("link")?.getAttribute("href") || "#";
+                }
+                const pubDate = item.querySelector("pubDate")?.textContent || item.querySelector("updated")?.textContent || "";
+                const descParser = new DOMParser();
+                const descDoc = descParser.parseFromString(`<!doctype html><body>${description}`, 'text/html');
+                const img = descDoc.querySelector("img");
+                const imgSrc = img ? img.src : "https://placehold.co/600x400/374151/9CA3AF?text=Tin+Tuc";
+                let descriptionText = descDoc.body.textContent.trim() || "Không có mô tả.";
+                if (descriptionText.startsWith(title)) {
+                    descriptionText = descriptionText.substring(title.length).trim();
+                }
+
+                const card = document.createElement('a');
+                card.href = link;
+                card.className = "bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-[1.03] hover:shadow-blue-500/20 block";
+
+                card.innerHTML = `
+                    <img src="${imgSrc}" alt="${title}" class="w-full h-48 object-cover" onerror="this.src='https://placehold.co/600x400/374151/9CA3AF?text=Error';">
+                    <div class="p-5">
+                        <span class="text-xs font-semibold text-blue-400">${sourceName}</span>
+                        <h3 class="text-lg font-bold text-white mt-2 mb-1 leading-tight line-clamp-2">${title}</h3>
+                        <p class="text-sm text-gray-400 mt-2 mb-3 line-clamp-3">${descriptionText}</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <p class="text-sm text-gray-400">${pubDate ? new Date(pubDate).toLocaleString('vi-VN') : ''}</p>
+                            <button class="summary-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded-full transition-all duration-200 z-10 relative">
+                                Tóm tắt
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                 card.addEventListener('click', (e) => {
+                     if (e.target.closest('.summary-btn')) {
+                         return;
+                     }
+                 });
+
+                const summaryButton = card.querySelector('.summary-btn');
+                summaryButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSummaryClick(title, descriptionText);
+                });
+                newsGrid.appendChild(card);
+            });
+        }
+
+        // ----- HÀM XỬ LÝ SỰ KIỆN (RSS & Tóm tắt) -----
+        function handleFeedButtonClick(e) {
+             const clickedButton = e.target.closest('.feed-button');
+             if (!clickedButton || clickedButton.classList.contains('active')) return;
+
+             const rssUrl = clickedButton.dataset.rss;
+             const sourceName = clickedButton.dataset.source;
+
+             document.querySelectorAll('#feed-nav .feed-button, #mobile-menu .feed-button').forEach(btn => btn.classList.remove('active'));
+             document.querySelectorAll(`.feed-button[data-rss="${rssUrl}"]`).forEach(btn => btn.classList.add('active'));
+
+             window.scrollTo({ top: 0, behavior: 'smooth' });
+             fetchRSS(rssUrl, sourceName);
+             mobileMenu.classList.add('hidden');
+        }
+
+        function handleSummaryClick(title, description) {
+            if (!description || description === "Không có mô tả.") {
+                 showToast("Không thể tóm tắt", "Bài viết không có đủ nội dung.", 'error', null, 4000);
+                return;
+            }
+            const prompt = `Tóm tắt nội dung sau đây trong khoảng 200 từ:
+            Tiêu đề: ${title}
+            Nội dung: ${description}`;
+            
+            callGeminiAPIStreaming(prompt, title);
+            
+            showToast("Đang tóm tắt...", title.substring(0, 50) + "...", 'loading', null, 5000); // Tự ẩn sau 5s
+        }
+
+         // ----- HÀM XỬ LÝ TOAST -----
+         function showToast(mainMessage, detailMessage, state = 'ready', onClickAction, autoHideDelay = null) {
+             if (toastTimeoutId) clearTimeout(toastTimeoutId);
+
+             toastMainMessage.textContent = mainMessage;
+             toastTitle.textContent = detailMessage;
+
+             summaryToast.classList.remove('toast-loading', 'bg-blue-600', 'bg-red-600');
+
+             if (state === 'loading') {
+                 toastIcon.innerHTML = iconSpinner;
+                 summaryToast.classList.add('toast-loading'); 
+                 summaryToast.style.cursor = 'default';
+                 toastCta.style.display = 'none';
+                 summaryToast.onclick = null;
+             } else if (state === 'ready') {
+                 toastIcon.innerHTML = iconCheck;
+                 summaryToast.classList.add('bg-blue-600'); 
+                 summaryToast.style.cursor = 'pointer';
+                 toastCta.style.display = 'block';
+                 summaryToast.onclick = onClickAction;
+             } else if (state === 'error') {
+                 toastIcon.innerHTML = iconError;
+                 summaryToast.classList.add('bg-red-600'); 
+                 summaryToast.style.cursor = 'default';
+                 toastCta.style.display = 'none';
+                 summaryToast.onclick = null;
+             }
+             
+             summaryToast.classList.remove('hidden');
+             setTimeout(() => summaryToast.classList.add('show'), 50);
+
+             if (autoHideDelay) {
+                 toastTimeoutId = setTimeout(hideToast, autoHideDelay);
+             }
+         }
+         function hideToast() {
+              if (toastTimeoutId) clearTimeout(toastTimeoutId);
+              toastTimeoutId = null;
+              summaryToast.classList.remove('show');
+              setTimeout(() => {
+                  summaryToast.classList.add('hidden');
+                  summaryToast.classList.remove('toast-loading', 'bg-blue-600', 'bg-red-600');
+              }, 300);
+              summaryToast.onclick = null;
+         }
+         function showSummaryReadyNotification(title) {
+              showToast(
+                  "Tóm tắt đã sẵn sàng!",
+                  title.substring(0, 50) + "...",
+                  'ready', 
+                  () => { 
+                      summaryTitleElement.textContent = completedSummary.title;
+                      summaryTextElement.textContent = completedSummary.text;
+                      summaryModal.classList.remove('hidden');
+                      hideToast();
+                  },
+                  null 
+              );
+         }
+
+        // ----- HÀM XỬ LÝ SỰ KIỆN (Chat) -----
+        function renderChatHistory() {
+            chatDisplay.innerHTML = '';
+            if (chatHistory.length === 0) {
+                 chatDisplay.innerHTML = `<div class="model-bubble">Chào đại ca, Tèo xin trả lời bất kỳ câu hỏi nào của đại ca?</div>`;
+                 return;
+            }
+            chatHistory.forEach(message => {
+                const bubble = document.createElement('div');
+                bubble.className = 'chat-bubble';
+                if (message.role === 'user') {
+                    bubble.classList.add('user-bubble');
+                } else {
+                    bubble.classList.add('model-bubble');
+                }
+                bubble.style.whiteSpace = "pre-wrap";
+                bubble.textContent = message.parts[0].text;
+                chatDisplay.appendChild(bubble);
+            });
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
+        }
+        async function handleSendChat(e) {
+            e.preventDefault();
+            const prompt = chatInput.value.trim();
+            if (!prompt) return;
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            renderChatHistory();
+            chatInput.value = '';
+            await callChatAPI();
+        }
+        function resetChat() {
+            chatHistory = [];
+            renderChatHistory();
+        }
+
+        // ----- GẮN KẾT CÁC SỰ KIỆN -----
+        function prewarmCache() {
+            console.log("[Cache-Warmer] Bắt đầu tải nền các feed khác...");
+            const feedsToPrewarm = Array.from(feedNav.querySelectorAll('.feed-button:not(.active)'));
+            feedsToPrewarm.forEach(feed => {
+                fetchRSS(feed.dataset.rss, feed.dataset.source, { display: false });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            feedNav.addEventListener('click', handleFeedButtonClick);
+            mobileMenu.addEventListener('click', handleFeedButtonClick);
+
+            const defaultFeed = feedNav.querySelector('.feed-button.active');
+            if (defaultFeed) {
+                await fetchRSS(defaultFeed.dataset.rss, defaultFeed.dataset.source);
+            }
+            setTimeout(prewarmCache, 0);
+        });
+
+        closeSummaryModalButton.addEventListener('click', () => {
+             summaryModal.classList.add('hidden');
+             if (summaryEventSource) {
+                 summaryEventSource.close();
+                 summaryEventSource = null;
+             }
+        });
+         summaryModal.addEventListener('click', (e) => {
+             if (e.target === summaryModal) {
+                  summaryModal.classList.add('hidden');
+                  if (summaryEventSource) {
+                      summaryEventSource.close();
+                      summaryEventSource = null;
+                  }
+             }
+         });
+
+        hamburgerButton.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+         toastCloseButton.addEventListener('click', (e) => {
+             e.stopPropagation();
+             hideToast();
+         });
+
+        chatFab.addEventListener('click', () => {
+            chatModal.classList.remove('hidden');
+            chatInput.focus();
+        });
+        closeChatModal.addEventListener('click', () => {
+            chatModal.classList.add('hidden');
+            resetChat();
+        });
+        chatModal.addEventListener('click', (e) => {
+            if (e.target === chatModal) {
+                chatModal.classList.add('hidden');
+                resetChat();
+            }
+        });
+        chatForm.addEventListener('submit', handleSendChat);
+
+    </script>
 </body>
 </html>
