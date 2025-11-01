@@ -39,7 +39,16 @@
         .sm\:flex .refresh-button {
             margin-left: 8px;
         }
-        
+        /* CSS cho Tổng kết Ghi chú (Sử dụng Grid) */
+        .day-note-grid-group {
+            /* 2 cột: [auto] = rộng vừa đủ chữ (tiền tố), [1fr] = lấp đầy phần còn lại */
+            grid-template-columns: auto 1fr;
+        }
+
+        .note-content-indented {
+            /* Quan trọng: Buộc phần tử này bắt đầu ở cột 2 */
+            grid-column-start: 2;
+        }
         /* CẬP NHẬT: CSS cho Tab (Tin tức / Lịch) */
         .tab-button {
             color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0;
@@ -911,7 +920,8 @@
 
             }
 
-           // === HÀM MỚI: TÓM TẮT GHI CHÚ HÀNG THÁNG (ĐÃ CẬP NHẬT) ===
+
+            // --- HÀM LỊCH: Hiển thị tóm tắt ghi chú hàng tháng (Cập nhật dùng CSS Grid) ---
             function renderMonthlyNoteSummary(date) {
                 const monthlyNoteList = document.getElementById('monthly-note-list');
                 if (!monthlyNoteList) return; 
@@ -934,6 +944,12 @@
                     if (notes.length > 0) {
                         hasNotes = true;
                         
+                        // 1. Tạo "day group" (Đây sẽ là Grid Container)
+                        const dayGroup = document.createElement('div');
+                        // 'gap-1' tạo khoảng cách nhỏ giữa các ghi chú CÙNG ngày
+                        dayGroup.className = 'day-note-grid-group grid gap-1'; 
+
+                        // 2. Lấy thông tin (Thứ, ngày, ca)
                         const dayName = daysOfWeek[currentDate.getDay()]; 
                         const dateDisplay = `${currentDate.getDate()}/${currentDate.getMonth() + 1}`; 
                         const shift = getShiftForDate(dateStr); 
@@ -942,38 +958,49 @@
                         if (shift === 'ngày' || shift === 'đêm') {
                             shiftDisplay = `ca ${shift}`; 
                         }
-
-                        // === BẮT ĐẦU THAY ĐỔI LOGIC ===
-                        
-                        // 1. Tạo tiền tố (prefix) cho ngày
+                        // Đây là phần Tiền tố (Prefix)
                         const datePrefix = `${dayName} ngày ${dateDisplay} (${shiftDisplay}): `;
+                        
+                        // 3. Tạo ô Tiền tố (Grid Cell 1, Row 1)
+                        const prefixEl = document.createElement('div');
+                        // 'whitespace-nowrap' đảm bảo tiền tố không bị xuống dòng
+                        prefixEl.className = 'note-prefix p-2 bg-gray-700 rounded-l-md text-sm text-gray-200 whitespace-nowrap';
+                        prefixEl.textContent = datePrefix;
+                        dayGroup.appendChild(prefixEl);
 
-                        // 2. Xử lý ghi chú ĐẦU TIÊN (luôn hiển thị đầy đủ)
-                        const firstNoteElement = document.createElement('p');
-                        firstNoteElement.className = 'text-gray-200 p-2 bg-gray-700 rounded-md text-sm';
-                        firstNoteElement.textContent = datePrefix + notes[0]; // Gắn tiền tố + nội dung
-                        monthlyNoteList.appendChild(firstNoteElement);
+                        // 4. Tạo ô Nội dung Ghi chú 1 (Grid Cell 2, Row 1)
+                        const contentEl1 = document.createElement('div');
+                        contentEl1.className = 'note-content p-2 bg-gray-700 rounded-r-md text-sm text-gray-200';
+                        contentEl1.textContent = notes[0];
+                        dayGroup.appendChild(contentEl1);
 
-                        // 3. Xử lý các ghi chú CÒN LẠI (chỉ nội dung, có lề trái)
+                        // 5. Lặp qua các ghi chú CÒN LẠI (nếu có)
                         if (notes.length > 1) {
-                            // Lặp từ ghi chú thứ 2 trở đi
                             notes.slice(1).forEach(noteText => {
+                                // Tạo ô Nội dung thụt lề (Grid Cell 2, Row 2, 3...)
                                 const subsequentNoteElement = document.createElement('p');
-                                // Thêm class 'pl-12' (padding-left: 3rem) của Tailwind để tạo "khoảng trống"
-                                subsequentNoteElement.className = 'text-gray-200 p-2 bg-gray-700 rounded-md text-sm pl-12';
-                                subsequentNoteElement.textContent = noteText; // Chỉ hiển thị nội dung ghi chú
-                                monthlyNoteList.appendChild(subsequentNoteElement);
+                                // Class 'note-content-indented' sẽ buộc nó bắt đầu từ Cột 2
+                                subsequentNoteElement.className = 'note-content-indented text-gray-200 p-2 bg-gray-700 rounded-md text-sm';
+                                subsequentNoteElement.textContent = noteText;
+                                dayGroup.appendChild(subsequentNoteElement);
+    
+                                // Chúng ta không cần thêm ô trống ở Cột 1,
+                                // vì CSS Grid sẽ tự động xử lý khi 'subsequentNoteElement'
+                                // được chỉ định bắt đầu ở cột 2.
                             });
                         }
-                        // === KẾT THÚC THAY ĐỔI LOGIC ===
+                        
+                        // Thêm toàn bộ nhóm của ngày này (Grid) vào danh sách
+                        monthlyNoteList.appendChild(dayGroup);
                     }
                 }
 
+                // Nếu không có ghi chú nào trong tháng
                 if (!hasNotes) {
                     monthlyNoteList.innerHTML = `<p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>`;
                 }
             }
-            // === KẾT THÚC HÀM ===
+            // === KẾT THÚC HÀM THAY THẾ ===
 
             // --- HÀM LỊCH: Modal Ghi chú ---
             function openNoteModal(dateStr) {
