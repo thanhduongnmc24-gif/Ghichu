@@ -5,7 +5,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import webpush from 'web-push'; // <-- GÓI MỚI
+import webpush from 'web-push'; 
 
 // ----- CÀI ĐẶT CACHE (RSS) -----
 const cache = new Map();
@@ -149,31 +149,68 @@ app.post('/chat', async (req, res) => {
     }
 });
 
-// ----- ENDPOINT CỦA LỊCH LÀM VIỆC (CẬP NHẬT TÊN MODEL) -----
+// ----- ENDPOINT CỦA LỊCH LÀM VIỆC (CẬP NHẬT LOGIC NĂM) -----
 app.post('/api/calendar-ai-parse', async (req, res) => {
-    const text = req.body.text || "";
+    // CẬP NHẬT: Nhận cả 'text' và 'viewDate'
+    const { text, viewDate } = req.body;
+    
     if (!text) {
         return res.status(400).json({ error: 'Không có văn bản' });
     }
     
-    const today = new Date();
-    const options = { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' };
-    const formatter = new Intl.DateTimeFormat('en-CA', options); 
-    const parts = formatter.formatToParts(today);
-    const partMap = parts.reduce((acc, part) => { acc[part.type] = part.value; return acc; }, {});
-    const todayStr = `${partMap.year}-${partMap.month}-${partMap.day}`;
-    const currentYear = partMap.year;
+    // CẬP NHẬT: Ưu tiên dùng 'viewDate' (năm 2025)
+    let currentYear;
+    let todayStr;
 
+    if (viewDate && /^\d{4}-\d{2}-\d{2}$/.test(viewDate)) {
+        // Nếu app gửi 'viewDate' (ví dụ: '2025-10-31'), hãy dùng năm đó
+        currentYear = viewDate.substring(0, 4);
+        todayStr = viewDate;
+    } else {
+        // Nếu không (dự phòng), dùng ngày của server (GMT+7)
+        const today = new Date();
+        const options = { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' };
+        const formatter = new Intl.DateTimeFormat('en-CA', options); 
+        const parts = formatter.formatToParts(today);
+        const partMap = parts.reduce((acc, part) => { acc[part.type] = part.value; return acc; }, {});
+        todayStr = `${partMap.year}-${partMap.month}-${partMap.day}`;
+        currentYear = partMap.year;
+    }
+
+    // CẬP NHẬT: Đã đưa "currentYear" đúng vào prompt
     const prompt = `
-        Bạn là trợ lý phân tích lịch làm việc...
+        Bạn là trợ lý phân tích lịch làm việc. Nhiệm vụ của bạn là đọc văn bản và chuyển nó thành một MẢNG JSON.
+        Mỗi đối tượng trong mảng chỉ chứa 2 thông tin: "date" (ngày) và "note" (ghi chú).
         { "date": "YYYY-MM-DD", "note": "..." }
-        ...
+
+        Quy tắc:
+        1. "note" (Ghi chú): Là bất kỳ văn bản nào (tên người, sự kiện, v.v.).
+        2. Bỏ qua các từ khóa ca làm việc như "ngày", "đêm", "giãn ca". AI không cần xử lý chúng.
+        
+        Hôm nay là ngày: ${todayStr}. Năm hiện tại (RẤT QUAN TRỌNG, dùng năm này nếu không rõ): ${currentYear}.
+
+        VÍ DỤ XỬ LÝ:
+        Input: "Quang 30/10"
+        Output: [ { "date": "${currentYear}-10-30", "note": "Quang" } ]
+
+        Input: "Q 30/10 2/11 3/11"
+        Output: [
+            { "date": "${currentYear}-10-30", "note": "Q" },
+            { "date": "${currentYear}-11-02", "note": "Q" },
+            { "date": "${currentYear}-11-03", "note": "Q" }
+        ]
+        
+        Input: "Quang 30/10 ca đêm" (Bỏ qua "ca đêm")
+        Output: [
+            { "date": "${currentYear}-10-30", "note": "Quang" }
+        ]
+
         Văn bản của người dùng: "${text}"
-        ...
+
+        Chỉ trả về MỘT MẢNG JSON (JSON Array). Không thêm bất kỳ văn bản giải thích nào.
     `;
 
     try {
-         // CẬP NHẬT: Đổi "gemini-1.5-flash" thành "gemini-2.5-flash-preview-09-2025"
          const model = genAI.getGenerativeModel({ 
             model: "gemini-2.5-flash-preview-09-2025",
             generationConfig: {
@@ -210,7 +247,7 @@ app.post('/api/subscribe', (req, res) => {
     res.status(201).json({ status: 'success' });
 });
 
-// CẬP NHẬT: Endpoint mới để gửi VAPID Key an toàn
+// Endpoint mới để gửi VAPID Key an toàn
 app.get('/api/vapid-public-key', (req, res) => {
     if (!VAPID_PUBLIC_KEY) {
         return res.status(500).json({ error: 'VAPID Public Key chưa được cài đặt trên server.' });
@@ -229,9 +266,14 @@ app.get('*', (req, res) => {
 
 // --- Các hàm tính toán ca (giống hệt app.js) ---
 function dateToDays(dateStr) {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const date = new Date(year, month - 1, day);
-    return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
+    try {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+        return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
+    } catch (e) {
+        console.error("Lỗi dateToDays:", e, dateStr);
+        return 0;
+    }
 }
 const EPOCH_DAYS = dateToDays('2025-10-26');
 const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
@@ -284,9 +326,12 @@ async function checkAndSendNotifications() {
         if (timeToAlert && currentTimeStr === timeToAlert) {
             console.log(`ĐÃ ĐẾN GIỜ BÁO THỨC: ${shiftDisplayName} lúc ${currentTimeStr}`);
 
+            // CẬP NHẬT: Chúng ta không thể lấy ghi chú (note) từ localStorage
+            // (vì server không đọc được).
+            // Chúng ta sẽ phải nâng cấp sau này để lưu ghi chú lên server.
             const payload = JSON.stringify({
                 title: "Lịch Luân Phiên",
-                body: `${shiftDisplayName}` // (Tạm thời chưa có ghi chú)
+                body: `${shiftDisplayName}` // Chỉ gửi ca (shift)
             });
 
             const sendPromises = subscriptions.map(sub => 
