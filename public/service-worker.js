@@ -1,56 +1,44 @@
-const CACHE_NAME = 'ghichu-app-cache-v1';
-// CẬP NHẬT: Thêm lại các tệp Lịch vào cache
-// (Vì Lịch là một phần của JS/HTML chính nên không cần cache riêng)
-const urlsToCache = [
-    '/',
-    '/index.html',
-    '/manifest.json',
-    '/icons/icon-192x192.png'
-    // (Các tệp CSS/JS của trang Tin Tức là từ CDN nên không cần cache)
-    // (Các tệp Lịch đã được gộp vào index.html nên không cần cache riêng)
-];
+console.log('Service Worker (Push) đã tải!');
 
-// 1. Cài đặt Service Worker: Mở cache và lưu các tệp
-self.addEventListener('install', event => {
+// 1. Lắng nghe "cuộc gọi" (push event)
+self.addEventListener('push', event => {
+    console.log('[Service Worker] Đã nhận Push Event.');
+
+    let data;
+    try {
+        // Đọc dữ liệu server gửi (JSON: { title: "...", body: "..." })
+        data = event.data.json();
+    } catch (e) {
+        console.error("Không thể parse data:", e);
+        data = {
+            title: "Lỗi Thông Báo",
+            body: "Không thể đọc nội dung thông báo."
+        };
+    }
+
+    const title = data.title || "Thông Báo Mới";
+    const options = {
+        body: data.body || "Bạn có tin nhắn mới.",
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-192x192.png' // Icon nhỏ trên Android
+    };
+
+    // Hiển thị thông báo lên màn hình
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('Opened main cache');
-                return cache.addAll(urlsToCache);
-            })
+        self.registration.showNotification(title, options)
     );
 });
 
-// 2. Fetch: Phản hồi từ Cache trước, nếu không có mới lấy từ Mạng
-self.addEventListener('fetch', event => {
-    
-    // CẬP NHẬT: Logic "Cache First" (Ưu tiên Cache)
-    event.respondWith(
-        caches.match(event.request)
-            .then(response => {
-                // Nếu tìm thấy trong cache, trả về nó (TẢI TỨC THÌ)
-                if (response) {
-                    return response;
-                }
-                // Nếu không, fetch từ mạng
-                return fetch(event.request);
-            }
-        )
-    );
-});
+// 2. Lắng nghe khi người dùng nhấn vào thông báo
+self.addEventListener('notificationclick', event => {
+    console.log('[Service Worker] Đã nhấn vào Thông báo.');
+    event.notification.close(); // Đóng thông báo
 
-// 3. Kích hoạt: Xóa các cache cũ nếu có
-self.addEventListener('activate', event => {
-    const cacheWhitelist = [CACHE_NAME];
+    // Mở trang Lịch khi nhấn vào
     event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cacheName => {
-                    if (cacheWhitelist.indexOf(cacheName) === -1) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
+        // CẬP NHẬT: Chúng ta không thể mở /calendar/
+        // vì nó là một tab. Chúng ta sẽ mở trang chính ('/')
+        // và JavaScript trên trang chính sẽ tự chuyển tab (nếu cần).
+        clients.openWindow('/')
     );
 });
