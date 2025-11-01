@@ -42,3 +42,55 @@ self.addEventListener('notificationclick', event => {
         clients.openWindow('/')
     );
 });
+
+// Logic Cache (để tải ứng dụng nhanh)
+const CACHE_NAME = 'ghichu-app-cache-v2'; // Cập nhật v2
+const urlsToCache = [
+    '/',
+    '/index.html',
+    '/manifest.json',
+    '/icons/icon-192x192.png',
+    '/icons/icon-512x512.png'
+];
+
+self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then(cache => {
+                console.log('Opened main cache');
+                return cache.addAll(urlsToCache);
+            })
+    );
+});
+
+self.addEventListener('fetch', event => {
+    // Ưu tiên mạng cho API (get-rss, v.v.)
+    if (event.request.url.includes('/api/')) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+    
+    // Ưu tiên cache cho các tài sản tĩnh (app shell)
+    event.respondWith(
+        caches.match(event.request)
+            .then(response => {
+                return response || fetch(event.request);
+            }
+        )
+    );
+});
+
+self.addEventListener('activate', event => {
+    const cacheWhitelist = [CACHE_NAME];
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheWhitelist.indexOf(cacheName) === -1) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
+    );
+});
