@@ -48,8 +48,6 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
 }
 
 // CƠ SỞ DỮ LIỆU GIẢ LẬP (Lưu "số điện thoại" đăng ký)
-// Khi server restart, dữ liệu này sẽ mất. 
-// Trong tương lai, bạn có thể lưu vào file JSON hoặc database.
 let subscriptions = [];
 
 // ===================================================================
@@ -57,7 +55,6 @@ let subscriptions = [];
 // ===================================================================
 
 // ----- CÁC ENDPOINT CỦA TIN TỨC -----
-// (Toàn bộ logic /get-rss, /summarize-stream, /chat giữ nguyên)
 app.get('/get-rss', async (req, res) => {
     // (Giữ nguyên logic fetch RSS...)
     const rssUrl = req.query.url;
@@ -152,11 +149,13 @@ app.post('/chat', async (req, res) => {
     }
 });
 
-// ----- ENDPOINT CỦA LỊCH LÀM VIỆC -----
+// ----- ENDPOINT CỦA LỊCH LÀM VIỆC (CẬP NHẬT TÊN MODEL) -----
 app.post('/api/calendar-ai-parse', async (req, res) => {
-    // (Giữ nguyên logic AI của Lịch...)
     const text = req.body.text || "";
-    if (!text) return res.status(400).json({ error: 'Không có văn bản' });
+    if (!text) {
+        return res.status(400).json({ error: 'Không có văn bản' });
+    }
+    
     const today = new Date();
     const options = { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' };
     const formatter = new Intl.DateTimeFormat('en-CA', options); 
@@ -164,6 +163,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
     const partMap = parts.reduce((acc, part) => { acc[part.type] = part.value; return acc; }, {});
     const todayStr = `${partMap.year}-${partMap.month}-${partMap.day}`;
     const currentYear = partMap.year;
+
     const prompt = `
         Bạn là trợ lý phân tích lịch làm việc...
         { "date": "YYYY-MM-DD", "note": "..." }
@@ -171,27 +171,34 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
         Văn bản của người dùng: "${text}"
         ...
     `;
+
     try {
+         // CẬP NHẬT: Đổi "gemini-1.5-flash" thành "gemini-2.5-flash-preview-09-2025"
          const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.5-flash",
-            generationConfig: { responseMimeType: "application/json" }
+            model: "gemini-2.5-flash-preview-09-2025",
+            generationConfig: {
+                responseMimeType: "application/json" 
+            }
         });
+        
         const result = await model.generateContent(prompt);
         const response = result.response;
         const jsonText = response.text();
+
+        console.log("Gemini (Lịch) trả về:", jsonText);
         res.setHeader('Content-Type', 'application/json');
         res.send(jsonText); 
+
     } catch (err) {
         console.error("Lỗi khi gọi Gemini API (Lịch):", err);
         res.status(500).json({ error: 'AI (Lịch) gặp lỗi, không thể phân tích.' });
     }
 });
 
-// ----- CẬP NHẬT: ENDPOINT MỚI CHO WEB PUSH -----
+// ----- ENDPOINT MỚI CHO WEB PUSH -----
 app.post('/api/subscribe', (req, res) => {
     const subscription = req.body;
     
-    // Kiểm tra xem subscription đã tồn tại chưa (dựa trên endpoint)
     const exists = subscriptions.find(s => s.endpoint === subscription.endpoint);
     if (!exists) {
         subscriptions.push(subscription);
@@ -201,6 +208,14 @@ app.post('/api/subscribe', (req, res) => {
     }
 
     res.status(201).json({ status: 'success' });
+});
+
+// CẬP NHẬT: Endpoint mới để gửi VAPID Key an toàn
+app.get('/api/vapid-public-key', (req, res) => {
+    if (!VAPID_PUBLIC_KEY) {
+        return res.status(500).json({ error: 'VAPID Public Key chưa được cài đặt trên server.' });
+    }
+    res.json({ publicKey: VAPID_PUBLIC_KEY });
 });
 
 // ----- CÁC ROUTE TRANG -----
@@ -232,11 +247,9 @@ let lastCheckedMinute = -1;
 
 async function checkAndSendNotifications() {
     try {
-        // 1. Lấy giờ hiện tại (GMT+7)
         const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
         const currentMinute = now.getMinutes();
         
-        // 2. Chỉ chạy 1 lần mỗi phút
         if (currentMinute === lastCheckedMinute) {
             return;
         }
@@ -244,9 +257,7 @@ async function checkAndSendNotifications() {
         
         const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         
-        // 3. Tìm xem có ca nào khớp với giờ hiện tại không
-        // (Chúng ta không thể đọc localStorage của người dùng, nên tạm thời hardcode)
-        // (Trong tương lai, bạn sẽ lưu cài đặt này chung với subscription)
+        // (Đây là logic cài đặt cứng, chúng ta sẽ cải tiến sau)
         const settings = {
             notifyTimeNgay: "06:00",
             notifyTimeDem: "20:00",
@@ -270,23 +281,18 @@ async function checkAndSendNotifications() {
             timeToAlert = settings.notifyTimeOff;
         }
 
-        // 4. Nếu đúng giờ
         if (timeToAlert && currentTimeStr === timeToAlert) {
             console.log(`ĐÃ ĐẾN GIỜ BÁO THỨC: ${shiftDisplayName} lúc ${currentTimeStr}`);
 
-            // 5. Chuẩn bị nội dung thông báo
             const payload = JSON.stringify({
                 title: "Lịch Luân Phiên",
-                body: `${shiftDisplayName}` // Server không thể đọc Ghi chú (vì nó lưu ở localStorage),
-                                          // chúng ta sẽ sửa điều này sau.
+                body: `${shiftDisplayName}` // (Tạm thời chưa có ghi chú)
             });
 
-            // 6. Gửi cho TẤT CẢ những ai đã đăng ký
             const sendPromises = subscriptions.map(sub => 
                 webpush.sendNotification(sub, payload)
                     .catch(err => {
                         console.error("Lỗi gửi push, có thể subscription đã hết hạn:", err.statusCode);
-                        // Nếu lỗi 410 (Gone), xóa sub này đi
                         if (err.statusCode === 410) {
                             subscriptions = subscriptions.filter(s => s.endpoint !== sub.endpoint);
                         }
@@ -304,6 +310,5 @@ async function checkAndSendNotifications() {
 // --- Khởi động Server ---
 app.listen(PORT, () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);
-    // Bắt đầu vòng lặp kiểm tra thông báo (chạy mỗi phút)
     setInterval(checkAndSendNotifications, 60000); 
 });
