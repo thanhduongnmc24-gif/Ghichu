@@ -296,7 +296,6 @@
             // --- ĐĂNG KÝ SERVICE WORKER (CẬP NHẬT) ---
             if ('serviceWorker' in navigator) {
                 
-                // (Hàm urlBase64ToUint8Array giữ nguyên)
                 function urlBase64ToUint8Array(base64String) {
                     const padding = '='.repeat((4 - base64String.length % 4) % 4);
                     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -308,7 +307,6 @@
                     return outputArray;
                 }
                 
-                // HÀM MỚI: Lấy VAPID key từ server và Đăng ký Push
                 async function subscribeUserToPush() {
                     if (!window.swRegistration) {
                         console.error("Service worker chưa sẵn sàng.");
@@ -316,7 +314,7 @@
                     }
                     
                     try {
-                        // 1. Lấy Public Key từ server
+                        // CẬP NHẬT: Lấy VAPID Key từ server, không hardcode
                         const response = await fetch('/api/vapid-public-key');
                         if (!response.ok) throw new Error('Không thể lấy VAPID key từ server.');
                         const data = await response.json();
@@ -327,7 +325,6 @@
                              return;
                         }
 
-                        // 2. Đăng ký (Subscribe)
                         const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
                         const subscription = await window.swRegistration.pushManager.subscribe({
                             userVisibleOnly: true,
@@ -335,7 +332,6 @@
                         });
                         console.log('Đã đăng ký Push:', subscription);
 
-                        // 3. Gửi subscription lên server
                         await fetch('/api/subscribe', {
                             method: 'POST',
                             body: JSON.stringify(subscription),
@@ -352,14 +348,12 @@
                     }
                 }
                 
-                // Gắn hàm này vào nút "Bật Thông Báo" (trong logic Lịch)
                 window.subscribeUserToPush = subscribeUserToPush;
 
-                // Đăng ký Service Worker
                 navigator.serviceWorker.register('/service-worker.js')
                     .then(reg => {
                         console.log('Main Service Worker Registered!', reg);
-                        window.swRegistration = reg; // Lưu registration để dùng sau
+                        window.swRegistration = reg; 
                     })
                     .catch(err => console.error('Main Service Worker registration failed:', err));
             }
@@ -368,8 +362,6 @@
             // PHẦN 1: LOGIC VÀ BIẾN CỦA TRANG TIN TỨC (NEWS)
             // ===================================================================
             
-            // (Toàn bộ logic Tin Tức: const, hàm, sự kiện... giữ nguyên)
-            // ...
             const newsMain = document.getElementById('news-main');
             const newsGrid = document.getElementById('news-grid');
             const loadingSpinner = document.getElementById('loading-spinner');
@@ -1060,7 +1052,7 @@
                         });
                         
                         saveNoteData(); 
-                        renderCalendar(currentViewDate); // Vẽ lại lịch
+                        renderCalendar(currentViewDate); 
                         cal_aiInput.value = ''; 
 
                     } catch (err) {
