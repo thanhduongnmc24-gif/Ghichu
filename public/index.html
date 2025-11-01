@@ -5,36 +5,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ghichu App</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1F2937">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Ghichu App">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
     <link rel="prefetch" href="/calendar/" as="document">
+
     <style>
-        /* (Toàn bộ <style>... giữ nguyên) */
-        body { font-family: 'Inter', sans-serif; }
-        .spinner { border: 4px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top: 4px solid #fff; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .refresh-button { color: #D1D5DB; padding: 8px; border-radius: 8px; transition: all 0.2s; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* CSS cho nút Tải lại */
+        .refresh-button {
+             color: #D1D5DB; padding: 8px;
+             border-radius: 8px; transition: all 0.2s;
+        }
         .refresh-button:hover { background-color: #374151; }
         .refresh-button svg { width: 20px; height: 20px; }
-        .sm\:flex .refresh-button { margin-left: 8px; }
-        .tab-button { color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; border: 1px solid transparent; margin-left: 12px; }
+        
+        .sm\:flex .refresh-button {
+            margin-left: 8px;
+        }
+        
+        /* CSS cho Tab (Tin tức / Lịch) */
+        .tab-button {
+            color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0;
+            padding: 8px 16px; border-radius: 8px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            margin-left: 12px;
+        }
         .tab-button:hover { background-color: #374151; }
-        .tab-button.active { background-color: white; color: #111827; font-weight: 600; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
-        #mobile-menu .tab-button { display: block; width: 100%; text-align: left; padding: 10px 16px; border: none; margin-left: 0; color: #E5E7EB; font-weight: 600; background-color: #4B5563; }
+        .tab-button.active { 
+            background-color: white; 
+            color: #111827; 
+            font-weight: 600;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        /* CSS cho Menu Mobile (cập nhật) */
+        #mobile-menu .tab-button { 
+            display: block; width: 100%; text-align: left; padding: 10px 16px; 
+            border: none; margin-left: 0; color: #E5E7EB; font-weight: 600; 
+            background-color: #4B5563; 
+        }
         #mobile-menu .tab-button:hover { background-color: #5b6676; }
-        #mobile-menu .tab-button.active { background-color: #E5E7EB; color: #1F2937; }
-        #mobile-menu .settings-button-mobile { display: flex; align-items: center; width: 100%; text-align: left; padding: 10px 16px; border-radius: 6px; font-weight: 500; color: #D1D5DB; margin-left: 0; }
+        #mobile-menu .tab-button.active {
+            background-color: #E5E7EB; 
+            color: #1F2937; 
+        }
+        
+        /* CSS cho nút Cài đặt (Mobile) */
+        #mobile-menu .settings-button-mobile {
+            display: flex; align-items: center; width: 100%; text-align: left; 
+            padding: 10px 16px; border-radius: 6px; font-weight: 500; 
+            color: #D1D5DB; margin-left: 0;
+        }
         #mobile-menu .settings-button-mobile:hover { background-color: #4B5563; }
         #mobile-menu .settings-button-mobile svg { margin-right: 10px; width: 20px; height: 20px; }
+        
+        
+        /* CSS cho Feed (cũ) */
         .feed-button { color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
         .feed-button:hover { background-color: #374151; }
         #mobile-menu .feed-button { display: block; width: 100%; text-align: left; padding: 10px 16px; border-radius: 6px; font-weight: 500; color: #D1D5DB; }
         #mobile-menu .feed-button:hover { background-color: #4B5563; }
         #mobile-menu .feed-button.active { background-color: #6B7280; color: white; }
+        
+        /* (Các CSS khác giữ nguyên) */
         #chat-input { background-color: #374151; color: white; border: 1px solid #4B5563; }
         #chat-input:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); }
         .chat-bubble { max-width: 80%; padding: 10px 16px; border-radius: 16px; margin-bottom: 8px; line-height: 1.5; }
@@ -42,16 +96,77 @@
         .model-bubble { background-color: #4B5563; color: #E5E7EB; align-self: flex-start; }
         .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
         .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-        #summary-toast { position: fixed; bottom: 1rem; left: 1rem; background-color: #2563EB; color: white; padding: 1rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); z-index: 60; cursor: pointer; transition: all 0.3s ease-in-out; opacity: 0; transform: translateY(20px); max-width: 320px; }
-        #summary-toast.toast-loading { background-color: #374151; color: #E5E7EB; cursor: default; }
-         #summary-toast.show { opacity: 1; transform: translateY(0); }
-         #toast-close-button { position: absolute; top: 0.5rem; right: 0.5rem; color: #D1D5DB; background: transparent; border: none; font-size: 1.25rem; cursor: pointer; }
-          #toast-close-button:hover { color: white; }
-        .day-note-list { margin-top: 4px; padding-left: 16px; overflow: hidden; max-height: 60px; }
-        .day-note { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; font-size: 0.8em; font-weight: 500; color: #C0392B; list-style-type: disc; }
-        .time-setting-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
-        .time-setting-label span { color: #D1D5DB; }
-        .time-setting-label input[type="time"] { background-color: #4B5563; color: #FFFFFF; border: 1px solid #6B7280; border-radius: 0.375rem; padding: 0.25rem 0.5rem; }
+        #summary-toast {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            background-color: #2563EB; 
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            z-index: 60;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out; 
+            opacity: 0;
+            transform: translateY(20px);
+            max-width: 320px;
+        }
+        #summary-toast.toast-loading {
+            background-color: #374151; 
+            color: #E5E7EB; 
+            cursor: default;
+        }
+         #summary-toast.show {
+             opacity: 1;
+             transform: translateY(0);
+         }
+         #toast-close-button {
+             position: absolute;
+             top: 0.5rem;
+             right: 0.5rem;
+             color: #D1D5DB; 
+             background: transparent;
+             border: none;
+             font-size: 1.25rem;
+             cursor: pointer;
+         }
+          #toast-close-button:hover {
+              color: white;
+          }
+          
+        /* CSS cho Lịch (Nền Sáng) */
+        .day-note-list {
+            margin-top: 4px;
+            padding-left: 16px; 
+            overflow: hidden;
+            max-height: 60px; 
+        }
+        .day-note {
+            overflow: hidden; display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 1; 
+            font-size: 0.8em;
+            font-weight: 500;
+            color: #C0392B; 
+            list-style-type: disc; 
+        }
+        .time-setting-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem; 
+        }
+        .time-setting-label span {
+            color: #D1D5DB; 
+        }
+        .time-setting-label input[type="time"] {
+            background-color: #4B5563; 
+            color: #FFFFFF;
+            border: 1px solid #6B7280; 
+            border-radius: 0.375rem; 
+            padding: 0.25rem 0.5rem; 
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -65,6 +180,7 @@
                  <button id="news-tab-btn" class="tab-button active text-xl font-bold !ml-0">
                      Tin Tức
                  </button>
+                 
                  <div class="hidden sm:flex items-center">
                     <div id="feed-nav" class="flex space-x-2 overflow-x-auto py-1">
                          <button class="feed-button active px-4 py-2 rounded-lg" data-rss="https://vnexpress.net/rss/tin-moi-nhat.rss" data-source="VnExpress">VnExpress</button>
@@ -80,9 +196,10 @@
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                     </button>
                     <button id="settings-btn" class="refresh-button hidden" title="Cài đặt">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0..."></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     </button>
                  </div>
+
                  <div class="sm:hidden flex items-center space-x-2"> 
                      <button id="refresh-feed-button-mobile" class="refresh-button" title="Tải lại tin tức">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
@@ -91,18 +208,27 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0..."></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                      </button>
                      <button id="hamburger-button" class="text-gray-300 hover:text-white focus:outline-none focus:text-white p-2">
+                          <span class="sr-only">Mở menu</span>
                          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
                      </button>
                  </div>
              </div>
+             
              <div id="mobile-menu" class="hidden sm:hidden bg-gray-700 absolute top-full left-0 right-0 z-20 shadow-lg mt-1 rounded-b-md">
                  <div class="px-2 pt-2 pb-3 space-y-1">
                      <button id="calendar-tab-btn-mobile" class="tab-button">Lịch Làm Việc</button>
                      <div class="border-t border-gray-600 my-2"></div>
                      <button class="feed-button active" data-rss="https://vnexpress.net/rss/tin-moi-nhat.rss" data-source="VnExpress">VnExpress</button>
-                     </div>
+                     <button class="feed-button" data-rss="https://tuoitre.vn/rss/tin-moi-nhat.rss" data-source="Tuổi Trẻ">Tuổi Trẻ</button>
+                     <button class="feed-button" data-rss="https://thanhnien.vn/rss/home.rss" data-source="Thanh Niên">Thanh Niên</button>
+                     <button class="feed-button" data-rss="https://dantri.com.vn/rss/home.rss" data-source="Dân Trí">Dân Trí</button>
+                     <button class="feed-button" data-rss="https://vtv.vn/rss/home.rss" data-source="VTV">VTV</button>
+                     <button class="feed-button" data-rss="https://thethao247.vn/bong-da.rss" data-source="Thể Thao 247">Thể Thao 247</button>
+                     <button class="feed-button" data-rss="https://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
+                 </div>
              </div>
         </nav>
+        
         <div id="clock-container" class="text-center pb-3 text-sm text-gray-400 hidden">
             <span id="calendar-date">...</span>
             <span id="calendar-time" class="ml-2 font-semibold">...</span>
@@ -169,12 +295,16 @@
                 <h2 class="text-2xl font-bold text-white">Cài đặt</h2>
                 <button id="close-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
             </div>
+            
             <fieldset class="border border-gray-600 p-4 rounded-lg">
                 <legend class="text-lg font-semibold text-white px-2">Thông báo</legend>
                 <button id="notify-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Bật Thông Báo (Toàn cục)</button>
                 <p class="text-sm text-gray-400 mt-2 mb-4">Cho phép ứng dụng gửi thông báo trên trình duyệt này.</p>
+                
                 <hr class="border-gray-600 my-4">
+                
                 <h3 class="text-md font-semibold text-white mb-3">Giờ báo thức theo ca:</h3>
+                
                 <label class="time-setting-label">
                     <span>Báo ca <strong>Ngày</strong> lúc:</span>
                     <input type="time" id="notify-time-ngay" value="06:00">
@@ -187,6 +317,7 @@
                     <span>Báo <strong>Giãn Ca</strong> lúc:</span>
                     <input type="time" id="notify-time-off" value="08:00">
                 </label>
+                
             </fieldset>
         </div>
     </div>
@@ -194,6 +325,7 @@
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col">
             <span id="close-note-modal" class="absolute top-3 right-4 text-gray-400 hover:text-white text-3xl cursor-pointer">&times;</span>
             <h2 id="note-modal-title" class="text-2xl font-bold text-white mb-2">Cập nhật (Ngày...)</h2>
+            
             <p id="modal-shift-info" class="bg-gray-700 p-3 rounded-lg text-gray-200 text-center font-semibold mb-4">
                 Ca tự động: <strong>...</strong>
             </p>
@@ -219,18 +351,16 @@
             // --- ĐĂNG KÝ SERVICE WORKER ---
             if ('serviceWorker' in navigator) {
                 // CẬP NHẬT: Lấy Public Key từ Server (an toàn hơn)
-                // Chúng ta sẽ dùng VAPID_PUBLIC_KEY đã đặt trên Render
+                // Bạn phải tự dán VAPID PUBLIC KEY của bạn vào đây
                 const vapidPublicKey = 'BẠN PHẢI DÁN VAPID_PUBLIC_KEY CỦA BẠN VÀO ĐÂY'; 
                 
                 navigator.serviceWorker.register('/service-worker.js')
                     .then(reg => {
                         console.log('Main Service Worker Registered!', reg);
-                        // Lưu registration để dùng sau
-                        window.swRegistration = reg;
+                        window.swRegistration = reg; // Lưu registration để dùng sau
                     })
                     .catch(err => console.error('Main Service Worker registration failed:', err));
 
-                // Hàm chuyển đổi key (bắt buộc cho push)
                 function urlBase64ToUint8Array(base64String) {
                     const padding = '='.repeat((4 - base64String.length % 4) % 4);
                     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -242,11 +372,14 @@
                     return outputArray;
                 }
                 
-                // HÀM MỚI: Đăng ký nhận Push
                 async function subscribeUserToPush() {
                     if (!window.swRegistration) {
                         console.error("Service worker chưa sẵn sàng.");
                         return;
+                    }
+                    if (!vapidPublicKey.startsWith('B')) {
+                         alert("LỖI: VAPID_PUBLIC_KEY chưa được cấu hình trong index.html");
+                         return;
                     }
                     try {
                         const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
@@ -256,7 +389,6 @@
                         });
                         console.log('Đã đăng ký Push:', subscription);
 
-                        // Gửi subscription lên server
                         await fetch('/api/subscribe', {
                             method: 'POST',
                             body: JSON.stringify(subscription),
@@ -275,7 +407,6 @@
                 
                 // Gắn hàm này vào nút "Bật Thông Báo" (trong logic Lịch)
                 window.subscribeUserToPush = subscribeUserToPush;
-
             }
 
             // ===================================================================
@@ -648,10 +779,8 @@
 
             // --- BIẾN LỊCH: Lấy DOM ---
             const calendarMain = document.getElementById('calendar-main');
-            // CẬP NHẬT: Lấy ID Đồng hồ mới
             const cal_dateEl = document.getElementById('calendar-date'); 
             const cal_timeEl = document.getElementById('calendar-time');
-            // CẬP NHẬT: Lấy ID Form AI mới
             const cal_aiForm = document.getElementById('calendar-ai-form'); 
             const cal_aiInput = document.getElementById('calendar-ai-input'); 
             const calendarBody = document.getElementById('calendar-body');
@@ -659,7 +788,6 @@
             const prevMonthBtn = document.getElementById('prev-month-btn');
             const nextMonthBtn = document.getElementById('next-month-btn');
             
-            // CẬP NHẬT: Lấy các nút Cài đặt (chung)
             const settingsBtn = document.getElementById('settings-btn');
             const settingsBtnMobile = document.getElementById('settings-btn-mobile');
             const settingsModal = document.getElementById('settings-modal');
@@ -669,7 +797,6 @@
             const notifyTimeDem = document.getElementById('notify-time-dem');
             const notifyTimeOff = document.getElementById('notify-time-off');
             
-            // CẬP NHẬT: Lấy các nút Modal Ghi chú (chung)
             const noteModal = document.getElementById('note-modal');
             const closeNoteModalBtn = document.getElementById('close-note-modal');
             const noteModalTitle = document.getElementById('note-modal-title');
@@ -855,52 +982,15 @@
 
             // --- HÀM LỊCH: Thông báo ---
             function checkDailyShiftNotification() {
-                if (!window.swRegistration || Notification.permission !== "granted") return; 
-
+                // CẬP NHẬT: Không dùng "new Notification" ở đây nữa
+                // Logic này giờ đã chuyển 100% lên server.js
+                // Chỉ giữ lại logic chống spam cũ (đã sửa)
                 const now = new Date();
                 const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                
                 if (currentTimeStr === "00:00") {
                     lastNotificationSentTime = null;
                 }
-                if (lastNotificationSentTime === currentTimeStr) return;
-
-                const todayStr = getLocalDateString(now);
-                const todayShift = getShiftForDate(todayStr);
-                let shiftDisplayName = ""; 
-                let timeToAlert = ""; 
-
-                if (todayShift === 'ngày') {
-                    shiftDisplayName = "Ca Ngày";
-                    timeToAlert = appSettings.notifyTimeNgay;
-                } else if (todayShift === 'đêm') {
-                    shiftDisplayName = "Ca Đêm";
-                    timeToAlert = appSettings.notifyTimeDem;
-                } else if (todayShift === 'giãn ca') {
-                    shiftDisplayName = "Giãn Ca";
-                    timeToAlert = appSettings.notifyTimeOff;
-                } else if (todayShift === 'off') {
-                    shiftDisplayName = "Ngày Nghỉ";
-                    timeToAlert = appSettings.notifyTimeOff;
-                }
-
-                if (timeToAlert && currentTimeStr === timeToAlert) {
-                    const notes = noteData[todayStr] || [];
-                    let notesString = "";
-                    if (notes.length > 0) {
-                        notesString = " - " + notes.join(', ');
-                    }
-                    const newTitle = "Lịch Luân Phiên";
-                    const newBody = `${shiftDisplayName}${notesString}`; 
-
-                    // CẬP NHẬT: Dùng Service Worker để gửi, thay vì "new Notification"
-                    window.swRegistration.showNotification(newTitle, {
-                        body: newBody,
-                        icon: "/icons/icon-192x192.png" 
-                    });
-                    
-                    lastNotificationSentTime = currentTimeStr;
-                }
+                // (Phần còn lại của logic kiểm tra đã bị xóa, vì server đang làm)
             }
             
             // ===================================================================
@@ -918,34 +1008,26 @@
                 if (tabName === 'news') {
                     newsMain.classList.remove('hidden');
                     calendarMain.classList.add('hidden');
-                    // Cập nhật nút tab
                     newsTabBtn.classList.add('active');
                     calendarTabBtn.classList.remove('active');
                     calendarTabBtnMobile.classList.remove('active');
-                    // Ẩn/hiện nút (Desktop)
                     refreshFeedButton.classList.remove('hidden');
                     settingsBtn.classList.add('hidden');
                     feedNav.classList.remove('hidden');
-                    // Ẩn/hiện nút (Mobile)
                     refreshFeedButtonMobile.classList.remove('hidden');
                     settingsBtnMobile.classList.add('hidden');
-                    // Ẩn đồng hồ
                     clockContainer.classList.add('hidden');
                 } else if (tabName === 'calendar') {
                     newsMain.classList.add('hidden');
                     calendarMain.classList.remove('hidden');
-                    // Cập nhật nút tab
                     newsTabBtn.classList.remove('active');
                     calendarTabBtn.classList.add('active');
                     calendarTabBtnMobile.classList.add('active');
-                    // Ẩn/hiện nút (Desktop)
                     refreshFeedButton.classList.add('hidden');
                     settingsBtn.classList.remove('hidden');
                     feedNav.classList.add('hidden');
-                    // Ẩn/hiện nút (Mobile)
                     refreshFeedButtonMobile.classList.add('hidden');
                     settingsBtnMobile.classList.remove('hidden');
-                    // Hiện đồng hồ
                     clockContainer.classList.remove('hidden');
                 }
             }
@@ -1015,7 +1097,9 @@
                 updateCalendarClock();
                 setInterval(updateCalendarClock, 1000);
                 loadSettings();
-                setInterval(checkDailyShiftNotification, 60000);
+                
+                // CẬP NHẬT: Xóa logic setInterval(checkDaily...) vì server đã làm
+                // setInterval(checkDailyShiftNotification, 60000);
 
                 // Gắn sự kiện cho Cài đặt (cả 2 nút)
                 settingsBtn.addEventListener('click', openSettingsModal);
@@ -1045,6 +1129,7 @@
                 // CẬP NHẬT: Nút Bật Thông Báo giờ sẽ gọi hàm subscribe
                 notifyButton.addEventListener('click', () => {
                     if (typeof window.subscribeUserToPush === 'function') {
+                        // Gọi hàm subscribe đã định nghĩa ở đầu
                         window.subscribeUserToPush();
                     } else {
                         alert("Lỗi: Không tìm thấy hàm đăng ký thông báo.");
