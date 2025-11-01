@@ -37,8 +37,9 @@ if (GEMINI_API_KEY) {
 
 // CÀI ĐẶT WEB-PUSH (VAPID)
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+    // SỬA LỖI: Thêm 'mailto:'
     webpush.setVapidDetails(
-        'mailto:your-email@example.com', // Thay bằng email của bạn (không bắt buộc)
+        'mailto:example@example.com', // Không quan trọng, chỉ cần đúng định dạng
         VAPID_PUBLIC_KEY,
         VAPID_PRIVATE_KEY
     );
@@ -56,7 +57,6 @@ let subscriptions = [];
 
 // ----- CÁC ENDPOINT CỦA TIN TỨC -----
 app.get('/get-rss', async (req, res) => {
-    // (Giữ nguyên logic fetch RSS...)
     const rssUrl = req.query.url;
     if (!rssUrl) return res.status(400).send('Thiếu tham số url');
     const now = Date.now();
@@ -82,7 +82,6 @@ app.get('/get-rss', async (req, res) => {
     }
 });
 app.get('/summarize-stream', async (req, res) => {
-    // (Giữ nguyên logic Tóm tắt...)
     const { prompt } = req.query; 
     if (!prompt) return res.status(400).send('Thiếu prompt');
     if (!GEMINI_API_KEY || !genAI) return res.status(500).send('API Key chưa được cấu hình hoặc lỗi khởi tạo client');
@@ -114,7 +113,6 @@ app.get('/summarize-stream', async (req, res) => {
      req.on('close', () => { res.end(); });
 });
 app.post('/chat', async (req, res) => {
-    // (Giữ nguyên logic Chat...)
     const { history } = req.body;
     if (!history || history.length === 0) return res.status(400).send('Thiếu history');
     if (!GEMINI_API_KEY) return res.status(500).send('API Key chưa được cấu hình trên server');
@@ -149,16 +147,16 @@ app.post('/chat', async (req, res) => {
     }
 });
 
-// ----- ENDPOINT CỦA LỊCH LÀM VIỆC (CẬP NHẬT) -----
+// ----- ENDPOINT CỦA LỊCH LÀM VIỆC (ĐÃ SỬA LỖI) -----
 app.post('/api/calendar-ai-parse', async (req, res) => {
-    // CẬP NHẬT 1: Nhận cả 'text' và 'viewDate'
+    // SỬA LỖI 1: Nhận cả 'text' và 'viewDate'
     const { text, viewDate } = req.body;
     
     if (!text) {
         return res.status(400).json({ error: 'Không có văn bản' });
     }
     
-    // CẬP NHẬT 2: Ưu tiên dùng 'viewDate' (năm 2025)
+    // SỬA LỖI 2: Ưu tiên dùng 'viewDate' (năm 2025)
     let currentYear;
     let todayStr;
 
@@ -177,7 +175,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
         currentYear = partMap.year;
     }
 
-    // CẬP NHẬT 3: Đã đưa "currentYear" đúng vào prompt
+    // SỬA LỖI 3: Đã đưa "currentYear" đúng vào prompt
     const prompt = `
         Bạn là trợ lý phân tích lịch làm việc. Nhiệm vụ của bạn là đọc văn bản và chuyển nó thành một MẢNG JSON.
         Mỗi đối tượng trong mảng chỉ chứa 2 thông tin: "date" (ngày) và "note" (ghi chú).
@@ -207,11 +205,11 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
 
         Văn bản của người dùng: "${text}"
 
-        Chỉ trả về MỘT MẢNG JSON (JSON Array). Không thêm bất kỳ văn bản giải thích nào.
+        Chỉ trả về MỘT MẢNG JSON (JSON Array).
     `;
 
     try {
-         // CẬP NHẬT 4: Đổi "gemini-1.5-flash" thành model đang chạy
+         // SỬA LỖI 4: Đổi "gemini-1.5-flash" thành model đang chạy
          const model = genAI.getGenerativeModel({ 
             model: "gemini-2.5-flash-preview-09-2025",
             generationConfig: {
