@@ -38,7 +38,7 @@ if (GEMINI_API_KEY) {
 // CÀI ĐẶT WEB-PUSH (VAPID)
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
     webpush.setVapidDetails(
-        'mailto:your-email@example.com', // Thay bằng email của bạn (không bắt buộc)
+        'thanhduongnmc24@gmail.com', // Thay bằng email của bạn (không bắt buộc)
         VAPID_PUBLIC_KEY,
         VAPID_PRIVATE_KEY
     );
