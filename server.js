@@ -38,7 +38,7 @@ if (GEMINI_API_KEY) {
 // CÀI ĐẶT WEB-PUSH (VAPID)
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
     webpush.setVapidDetails(
-        'thanhduongnmc24@gmail.com', // Thay bằng email của bạn (không bắt buộc)
+        'mailto:your-email@example.com', // Thay bằng email của bạn (không bắt buộc)
         VAPID_PUBLIC_KEY,
         VAPID_PRIVATE_KEY
     );
@@ -149,16 +149,16 @@ app.post('/chat', async (req, res) => {
     }
 });
 
-// ----- ENDPOINT CỦA LỊCH LÀM VIỆC (CẬP NHẬT LOGIC NĂM) -----
+// ----- ENDPOINT CỦA LỊCH LÀM VIỆC (CẬP NHẬT) -----
 app.post('/api/calendar-ai-parse', async (req, res) => {
-    // CẬP NHẬT: Nhận cả 'text' và 'viewDate'
+    // CẬP NHẬT 1: Nhận cả 'text' và 'viewDate'
     const { text, viewDate } = req.body;
     
     if (!text) {
         return res.status(400).json({ error: 'Không có văn bản' });
     }
     
-    // CẬP NHẬT: Ưu tiên dùng 'viewDate' (năm 2025)
+    // CẬP NHẬT 2: Ưu tiên dùng 'viewDate' (năm 2025)
     let currentYear;
     let todayStr;
 
@@ -177,7 +177,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
         currentYear = partMap.year;
     }
 
-    // CẬP NHẬT: Đã đưa "currentYear" đúng vào prompt
+    // CẬP NHẬT 3: Đã đưa "currentYear" đúng vào prompt
     const prompt = `
         Bạn là trợ lý phân tích lịch làm việc. Nhiệm vụ của bạn là đọc văn bản và chuyển nó thành một MẢNG JSON.
         Mỗi đối tượng trong mảng chỉ chứa 2 thông tin: "date" (ngày) và "note" (ghi chú).
@@ -211,6 +211,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
     `;
 
     try {
+         // CẬP NHẬT 4: Đổi "gemini-1.5-flash" thành model đang chạy
          const model = genAI.getGenerativeModel({ 
             model: "gemini-2.5-flash-preview-09-2025",
             generationConfig: {
@@ -326,12 +327,9 @@ async function checkAndSendNotifications() {
         if (timeToAlert && currentTimeStr === timeToAlert) {
             console.log(`ĐÃ ĐẾN GIỜ BÁO THỨC: ${shiftDisplayName} lúc ${currentTimeStr}`);
 
-            // CẬP NHẬT: Chúng ta không thể lấy ghi chú (note) từ localStorage
-            // (vì server không đọc được).
-            // Chúng ta sẽ phải nâng cấp sau này để lưu ghi chú lên server.
             const payload = JSON.stringify({
                 title: "Lịch Luân Phiên",
-                body: `${shiftDisplayName}` // Chỉ gửi ca (shift)
+                body: `${shiftDisplayName}` // (Tạm thời chưa có ghi chú)
             });
 
             const sendPromises = subscriptions.map(sub => 
