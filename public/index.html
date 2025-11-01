@@ -167,48 +167,6 @@
             border-radius: 0.375rem; 
             padding: 0.25rem 0.5rem; 
         }
-        
-        /* CẬP NHẬT 2: CSS MỚI cho Tóm tắt Ghi chú */
-        .note-summary-item {
-            border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
-            padding-bottom: 0.75rem; /* pb-3 */
-        }
-        .note-summary-item:last-child {
-            border-bottom: none;
-        }
-        .summary-date-header {
-            font-size: 1rem; /* text-base */
-            font-weight: 600; /* font-semibold */
-            color: #1f2937; /* text-gray-900 */
-            display: flex;
-            align-items: center;
-        }
-        .summary-notes {
-            padding-left: 1.5rem; /* pl-6 */
-            margin-top: 0.25rem; /* mt-1 */
-            list-style-type: disc;
-            color: #4b5563; /* text-gray-600 */
-            font-size: 0.9em;
-        }
-        .summary-notes li {
-            padding-left: 0.25rem; /* pl-1 */
-        }
-        .summary-shift {
-            font-size: 0.75rem; /* text-xs */
-            font-weight: 700; /* font-bold */
-            padding: 2px 8px;
-            border-radius: 9999px; /* rounded-full */
-            margin-left: 0.5rem; /* ml-2 */
-            margin-right: 0.25rem; /* mr-1 */
-        }
-        .shift-ngày, .shift-đêm {
-            color: #1d4ed8; /* text-blue-700 */
-            background-color: #dbeafe; /* bg-blue-100 */
-        }
-        .shift-giãn { /* (Phải khớp với logic JS) */
-            color: #a16207; /* text-yellow-700 */
-            background-color: #fef9c3; /* bg-yellow-100 */
-        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -262,7 +220,11 @@
     </header>
 
     <main id="news-main" class="container mx-auto p-4 md:p-8">
-        </main>
+        <div id="loading-spinner" class="flex justify-center items-center h-64">
+            <div class="spinner border-t-blue-500" style="width: 50px; height: 50px;"></div>
+        </div>
+        <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+    </main>
     
     <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
         <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6">
@@ -300,7 +262,7 @@
                 </div>
             </div>
         </section>
-        
+
         <section id="note-summary-container" class="bg-white text-gray-900 rounded-lg shadow-lg p-4 md:p-6 mt-6 hidden">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Tổng kết Ghi chú trong tháng</h2>
             <ul id="note-summary-list" class="space-y-3">
@@ -308,25 +270,75 @@
         </section>
     </main>
 
-    <div id="summary-modal" class="hidden ...">
+    <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         </div>
-    <button id="chat-fab" class="fixed ...">
+    <button id="chat-fab" class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center z-40 transition-transform transform hover:scale-110">
         </button>
-    <div id="chat-modal" class="hidden ...">
+    <div id="chat-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         </div>
     <div id="summary-toast" class="hidden">
         </div>
 
-    <div id="settings-modal" class="hidden ...">
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Cài đặt</h2>
+                <button id="close-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+            
+            <fieldset class="border border-gray-600 p-4 rounded-lg">
+                <legend class="text-lg font-semibold text-white px-2">Thông báo</legend>
+                <button id="notify-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Bật Thông Báo (Toàn cục)</button>
+                <p class="text-sm text-gray-400 mt-2 mb-4">Cho phép ứng dụng gửi thông báo trên trình duyệt này.</p>
+                
+                <hr class="border-gray-600 my-4">
+                
+                <h3 class="text-md font-semibold text-white mb-3">Giờ báo thức theo ca:</h3>
+                
+                <label class="time-setting-label">
+                    <span>Báo ca <strong>Ngày</strong> lúc:</span>
+                    <input type="time" id="notify-time-ngay" value="06:00">
+                </label>
+                <label class="time-setting-label">
+                    <span>Báo ca <strong>Đêm</strong> lúc:</span>
+                    <input type="time" id="notify-time-dem" value="20:00">
+                </label>
+                <label class="time-setting-label">
+                    <span>Báo <strong>Giãn Ca</strong> lúc:</span>
+                    <input type="time" id="notify-time-off" value="08:00">
+                </label>
+                
+            </fieldset>
         </div>
-    <div id="note-modal" class="hidden ...">
+    </div>
+    <div id="note-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col">
+            <span id="close-note-modal" class="absolute top-3 right-4 text-gray-400 hover:text-white text-3xl cursor-pointer">&times;</span>
+            <h2 id="note-modal-title" class="text-2xl font-bold text-white mb-2">Cập nhật (Ngày...)</h2>
+            
+            <p id="modal-shift-info" class="bg-gray-700 p-3 rounded-lg text-gray-200 text-center font-semibold mb-4">
+                Ca tự động: <strong>...</strong>
+            </p>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Ghi chú hiện có:</label>
+            <div id="note-list-wrapper" class="flex-grow overflow-y-auto bg-gray-900 p-3 rounded-lg min-h-[100px] max-h-[200px] mb-4">
+                <ul id="note-list" class="space-y-2">
+                    </ul>
+            </div>
+            <form id="add-note-form">
+                <label for="new-note-input" class="block text-sm font-medium text-gray-300 mb-2">Thêm ghi chú mới:</label>
+                <div class="flex space-x-2">
+                    <input type="text" id="new-note-input" placeholder="Nhập ghi chú mới..." autocomplete="off" class="flex-grow p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Thêm</button>
+                </div>
+            </form>
         </div>
+    </div>
     
     
     <script type="module">
         document.addEventListener('DOMContentLoaded', () => {
 
-            // --- ĐĂNG KÝ SERVICE WORKER (CẬP NHẬT) ---
+            // --- ĐĂNG KÝ SERVICE WORKER (ĐÃ SỬA LỖI) ---
             if ('serviceWorker' in navigator) {
                 
                 function urlBase64ToUint8Array(base64String) {
@@ -347,6 +359,7 @@
                     }
                     
                     try {
+                        // 1. Lấy Public Key từ server
                         const response = await fetch('/api/vapid-public-key');
                         if (!response.ok) throw new Error('Không thể lấy VAPID key từ server.');
                         const data = await response.json();
@@ -357,6 +370,7 @@
                              return;
                         }
 
+                        // 2. Đăng ký (Subscribe)
                         const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
                         const subscription = await window.swRegistration.pushManager.subscribe({
                             userVisibleOnly: true,
@@ -364,6 +378,7 @@
                         });
                         console.log('Đã đăng ký Push:', subscription);
 
+                        // 3. Gửi subscription lên server
                         await fetch('/api/subscribe', {
                             method: 'POST',
                             body: JSON.stringify(subscription),
@@ -665,9 +680,9 @@
             // --- BIẾN LỊCH: Dữ liệu ---
             let noteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
             let appSettings = JSON.parse(localStorage.getItem('myScheduleSettings')) || {
-                notifyTimeNgay: "06:30",
-                notifyTimeDem: "18:30",
-                notifyTimeOff: "09:10"
+                notifyTimeNgay: "06:00",
+                notifyTimeDem: "20:00",
+                notifyTimeOff: "08:00"
             };
             let currentViewDate = new Date(); 
             let lastNotificationSentTime = null; 
@@ -823,7 +838,6 @@
                         const header = document.createElement('div');
                         header.className = 'summary-date-header';
                         
-                        // Cập nhật logic lấy class cho "giãn ca"
                         let shiftClass = 'shift-ngày'; // Mặc định (ngày, đêm)
                         if (shift === 'giãn ca') shiftClass = 'shift-giãn';
                         
@@ -1052,7 +1066,7 @@
                     }
                 });
                 
-                // CẬP NHẬT: Sửa lỗi load lại trang
+                // SỬA LỖI 6: Sửa lỗi load lại trang
                 addNoteForm.addEventListener('submit', (e) => {
                     e.preventDefault(); // <-- SỬA LỖI NÀY
                     const noteText = newNoteInput.value.trim();
@@ -1092,7 +1106,7 @@
                     }
                 });
                 
-                // CẬP NHẬT: Logic xử lý AI đã sửa lỗi
+                // SỬA LỖI 7: Sửa logic AI
                 cal_aiForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     const text = cal_aiInput.value.trim();
@@ -1104,7 +1118,7 @@
                         const response = await fetch('/api/calendar-ai-parse', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            // CẬP NHẬT: Gửi cả 'viewDate' (năm)
+                            // SỬA LỖI: Gửi cả 'viewDate' (năm)
                             body: JSON.stringify({ 
                                 text: text,
                                 viewDate: getLocalDateString(currentViewDate) 
