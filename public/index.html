@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ghichu App</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Ghichu App</title> <script src="https://cdn.tailwindcss.com"></script>
     
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1F2937">
@@ -12,8 +11,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Ghichu App">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-
-    <link rel="prefetch" href="/calendar/" as="document">
 
     <style>
         body {
@@ -43,7 +40,7 @@
             margin-left: 8px;
         }
         
-        /* CSS cho Tab (Tin tức / Lịch) */
+        /* CẬP NHẬT: CSS cho Tab (Tin tức / Lịch) */
         .tab-button {
             color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0;
             padding: 8px 16px; border-radius: 8px;
@@ -52,7 +49,7 @@
             margin-left: 12px;
         }
         .tab-button:hover { background-color: #374151; }
-        .tab-button.active { 
+        .tab-button.active { /* Tab đang được chọn */
             background-color: white; 
             color: #111827; 
             font-weight: 600;
@@ -67,19 +64,9 @@
         }
         #mobile-menu .tab-button:hover { background-color: #5b6676; }
         #mobile-menu .tab-button.active {
-            background-color: #E5E7EB; 
-            color: #1F2937; 
+            background-color: #E5E7EB; /* Sáng hơn */
+            color: #1F2937; /* Tối hơn */
         }
-        
-        /* CSS cho nút Cài đặt (Mobile) */
-        #mobile-menu .settings-button-mobile {
-            display: flex; align-items: center; width: 100%; text-align: left; 
-            padding: 10px 16px; border-radius: 6px; font-weight: 500; 
-            color: #D1D5DB; margin-left: 0;
-        }
-        #mobile-menu .settings-button-mobile:hover { background-color: #4B5563; }
-        #mobile-menu .settings-button-mobile svg { margin-right: 10px; width: 20px; height: 20px; }
-        
         
         /* CSS cho Feed (cũ) */
         .feed-button { color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
@@ -167,48 +154,6 @@
             border-radius: 0.375rem; 
             padding: 0.25rem 0.5rem; 
         }
-        
-        /* CSS Tóm tắt ghi chú (mới) */
-        .note-summary-item {
-            border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
-            padding-bottom: 0.75rem; /* pb-3 */
-        }
-        .note-summary-item:last-child {
-            border-bottom: none;
-        }
-        .summary-date-header {
-            font-size: 1rem; /* text-base */
-            font-weight: 600; /* font-semibold */
-            color: #1f2937; /* text-gray-900 */
-            display: flex;
-            align-items: center;
-        }
-        .summary-notes {
-            padding-left: 1.5rem; /* pl-6 */
-            margin-top: 0.25rem; /* mt-1 */
-            list-style-type: disc;
-            color: #4b5563; /* text-gray-600 */
-            font-size: 0.9em;
-        }
-        .summary-notes li {
-            padding-left: 0.25rem; /* pl-1 */
-        }
-        .summary-shift {
-            font-size: 0.75rem; /* text-xs */
-            font-weight: 700; /* font-bold */
-            padding: 2px 8px;
-            border-radius: 9999px; /* rounded-full */
-            margin-left: 0.5rem; /* ml-2 */
-            margin-right: 0.25rem; /* mr-1 */
-        }
-        .shift-ngày, .shift-đêm {
-            color: #1d4ed8; /* text-blue-700 */
-            background-color: #dbeafe; /* bg-blue-100 */
-        }
-        .shift-giãn { /* (Phải khớp với logic JS) */
-            color: #a16207; /* text-yellow-700 */
-            background-color: #fef9c3; /* bg-yellow-100 */
-        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -222,6 +167,7 @@
                  <button id="news-tab-btn" class="tab-button active text-xl font-bold !ml-0">
                      Tin Tức
                  </button>
+                 
                  <div class="hidden sm:flex items-center">
                     <div id="feed-nav" class="flex space-x-2 overflow-x-auto py-1">
                          <button class="feed-button active px-4 py-2 rounded-lg" data-rss="https://vnexpress.net/rss/tin-moi-nhat.rss" data-source="VnExpress">VnExpress</button>
@@ -236,39 +182,47 @@
                     <button id="refresh-feed-button" class="refresh-button" title="Tải lại tin tức">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                     </button>
-                    <button id="settings-btn" class="refresh-button hidden" title="Cài đặt">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0..."></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    </button>
                  </div>
+
                  <div class="sm:hidden flex items-center space-x-2"> 
                      <button id="refresh-feed-button-mobile" class="refresh-button" title="Tải lại tin tức">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                      </button>
-                     <button id="settings-btn-mobile" class="refresh-button hidden" title="Cài đặt">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0..."></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                     </button>
                      <button id="hamburger-button" class="text-gray-300 hover:text-white focus:outline-none focus:text-white p-2">
+                          <span class="sr-only">Mở menu</span>
                          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
                      </button>
                  </div>
              </div>
+             
              <div id="mobile-menu" class="hidden sm:hidden bg-gray-700 absolute top-full left-0 right-0 z-20 shadow-lg mt-1 rounded-b-md">
+                 <div class="px-2 pt-2 pb-3 space-y-1">
+                     <button id="calendar-tab-btn-mobile" class="tab-button">Lịch Làm Việc</button>
+                     <div class="border-t border-gray-600 my-2"></div>
+                     <button class="feed-button active" data-rss="https://vnexpress.net/rss/tin-moi-nhat.rss" data-source="VnExpress">VnExpress</button>
+                     <button class="feed-button" data-rss="https://tuoitre.vn/rss/tin-moi-nhat.rss" data-source="Tuổi Trẻ">Tuổi Trẻ</button>
+                     <button class="feed-button" data-rss="https://thanhnien.vn/rss/home.rss" data-source="Thanh Niên">Thanh Niên</button>
+                     <button class="feed-button" data-rss="https://dantri.com.vn/rss/home.rss" data-source="Dân Trí">Dân Trí</button>
+                     <button class="feed-button" data-rss="https://vtv.vn/rss/home.rss" data-source="VTV">VTV</button>
+                     <button class="feed-button" data-rss="https://thethao247.vn/bong-da.rss" data-source="Thể Thao 247">Thể Thao 247</button>
+                     <button class="feed-button" data-rss="https://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
                  </div>
+             </div>
         </nav>
-        <div id="clock-container" class="text-center pb-3 text-sm text-gray-400 hidden">
-            <span id="calendar-date">...</span>
-            <span id="calendar-time" class="ml-2 font-semibold">...</span>
-        </div>
     </header>
 
     <main id="news-main" class="container mx-auto p-4 md:p-8">
-        </main>
+        <div id="loading-spinner" class="flex justify-center items-center h-64">
+            <div class="spinner border-t-blue-500" style="width: 50px; height: 50px;"></div>
+        </div>
+        <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+    </main>
     
     <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
         <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6">
             <h2 class="text-xl font-bold text-white mb-4">Thêm Nhanh (AI)</h2>
-            <form id="calendar-ai-form" class="flex space-x-2">
-                <input type="text" id="calendar-ai-input" placeholder="Ví dụ: Quang 30/10, Họp 15/11..." class="flex-grow p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+            <form id="ai-form" class="flex space-x-2">
+                <input type="text" id="ai-input" placeholder="Ví dụ: Quang 30/10, Họp 15/11..." class="flex-grow p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-lg transition-colors flex-shrink-0">Phân tích</button>
             </form>
         </section>
@@ -300,22 +254,54 @@
                 </div>
             </div>
         </section>
-        
-        <section id="note-summary-container" class="bg-white text-gray-900 rounded-lg shadow-lg p-4 md:p-6 mt-6 hidden">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Tổng kết Ghi chú trong tháng</h2>
-            <ul id="note-summary-list" class="space-y-3">
-                </ul>
-        </section>
     </main>
 
-    <div id="summary-modal" class="hidden ...">
+    <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-white">Bản Tóm Tắt AI</h2>
+                <button id="close-summary-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+            <div id="summary-content-wrapper" class="min-h-[200px]">
+                 <div class="text-gray-200 space-y-4">
+                      <h3 id="summary-title" class="text-lg font-semibold text-white"></h3>
+                      <p id="summary-text" class="whitespace-pre-wrap leading-relaxed"></p>
+                 </div>
+            </div>
         </div>
-    <button id="chat-fab" class="fixed ...">
-        </button>
-    <div id="chat-modal" class="hidden ...">
+    </div>
+    <button id="chat-fab" class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center z-40 transition-transform transform hover:scale-110">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+    </button>
+    <div id="chat-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+             <div class="flex justify-between items-center mb-4">
+                 <h2 class="text-2xl font-bold text-white">Em là Tèo biết tuốt</h2>
+                 <button id="close-chat-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+             </div>
+             <div id="chat-display" class="min-h-[200px] bg-gray-900 p-4 rounded-lg mb-4 overflow-y-auto flex-grow flex flex-col">
+                 <div class="model-bubble">Chào đại ca, Tèo xin trả lời bất kỳ câu hỏi nào của đại ca?</div>
+             </div>
+             <form id="chat-form" class="flex space-x-2">
+                 <input type="text" id="chat-input" placeholder="Hôm nay đại ca thấy thế nào..." class="flex-grow p-3 rounded-lg focus:outline-none">
+                 <button type="submit" id="send-chat-button" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" /></svg>
+                 </button>
+             </form>
         </div>
+    </div>
     <div id="summary-toast" class="hidden">
+        <button id="toast-close-button">&times;</button>
+        <div class="flex items-center">
+            <div id="toast-icon" class="flex-shrink-0 w-6 h-6">
+                </div>
+            <div class="ml-3">
+                <p id="toast-main-message" class="font-semibold"></p>
+                <p id="toast-title" class="text-sm text-gray-300 line-clamp-2"></p>
+                <p id="toast-cta" class="text-xs mt-2 text-blue-200">Nhấn để xem</p>
+            </div>
         </div>
+    </div>
 
     <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full">
@@ -345,7 +331,6 @@
                     <span>Báo <strong>Giãn Ca</strong> lúc:</span>
                     <input type="time" id="notify-time-off" value="08:00">
                 </label>
-                
             </fieldset>
         </div>
     </div>
@@ -372,82 +357,20 @@
         </div>
     </div>
     
-    
     <script type="module">
-        // SỬA LỖI 5: Di chuyển toàn bộ code vào trong DOMContentLoaded
         document.addEventListener('DOMContentLoaded', () => {
 
-            // --- ĐĂNG KÝ SERVICE WORKER (ĐÃ SỬA LỖI) ---
+            // --- ĐĂNG KÝ SERVICE WORKER ---
             if ('serviceWorker' in navigator) {
-                
-                function urlBase64ToUint8Array(base64String) {
-                    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-                    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-                    const rawData = window.atob(base64);
-                    const outputArray = new Uint8Array(rawData.length);
-                    for (let i = 0; i < rawData.length; ++i) {
-                        outputArray[i] = rawData.charCodeAt(i);
-                    }
-                    return outputArray;
-                }
-                
-                async function subscribeUserToPush() {
-                    if (!window.swRegistration) {
-                        console.error("Service worker chưa sẵn sàng.");
-                        return;
-                    }
-                    
-                    try {
-                        // 1. Lấy Public Key từ server
-                        const response = await fetch('/api/vapid-public-key');
-                        if (!response.ok) throw new Error('Không thể lấy VAPID key từ server.');
-                        const data = await response.json();
-                        const vapidPublicKey = data.publicKey;
-
-                        if (!vapidPublicKey || !vapidPublicKey.startsWith('B')) {
-                             alert("LỖI: Server không trả về VAPID Public Key hợp lệ.");
-                             return;
-                        }
-
-                        // 2. Đăng ký (Subscribe)
-                        const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
-                        const subscription = await window.swRegistration.pushManager.subscribe({
-                            userVisibleOnly: true,
-                            applicationServerKey: applicationServerKey
-                        });
-                        console.log('Đã đăng ký Push:', subscription);
-
-                        // 3. Gửi subscription lên server
-                        await fetch('/api/subscribe', {
-                            method: 'POST',
-                            body: JSON.stringify(subscription),
-                            headers: {
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        console.log('Đã gửi subscription lên server.');
-                        alert('Đã bật thông báo đẩy thành công!');
-
-                    } catch (err) {
-                        console.error('Không thể đăng ký Push:', err);
-                        alert('Lỗi khi bật thông báo đẩy. Bạn đã cấp quyền chưa?');
-                    }
-                }
-                
-                window.subscribeUserToPush = subscribeUserToPush;
-
                 navigator.serviceWorker.register('/service-worker.js')
-                    .then(reg => {
-                        console.log('Main Service Worker Registered!', reg);
-                        window.swRegistration = reg; 
-                    })
+                    .then(reg => console.log('Main Service Worker Registered!', reg))
                     .catch(err => console.error('Main Service Worker registration failed:', err));
             }
 
             // ===================================================================
             // PHẦN 1: LOGIC VÀ BIẾN CỦA TRANG TIN TỨC (NEWS)
             // ===================================================================
-            
+
             const newsMain = document.getElementById('news-main');
             const newsGrid = document.getElementById('news-grid');
             const loadingSpinner = document.getElementById('loading-spinner');
@@ -470,33 +393,64 @@
             const toastIcon = document.getElementById('toast-icon');
             const toastMainMessage = document.getElementById('toast-main-message');
             const toastCta = document.getElementById('toast-cta');
+            
             const refreshFeedButton = document.getElementById('refresh-feed-button');
             const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
+
             const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
             const iconCheck = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
             const iconError = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+
             const clientRssCache = new Map();
             let chatHistory = [];
             let summaryEventSource = null;
             let completedSummary = { title: '', text: '' };
             let toastTimeoutId = null;
+
+            // (Hàm callGeminiAPIStreaming giữ nguyên)
             function callGeminiAPIStreaming(prompt, title) {
-                if (summaryEventSource) { summaryEventSource.close(); }
+                if (summaryEventSource) {
+                    summaryEventSource.close();
+                }
                 let currentSummaryText = '';
                 const encodedPrompt = encodeURIComponent(prompt);
                 const streamUrl = `/summarize-stream?prompt=${encodedPrompt}`;
                 summaryEventSource = new EventSource(streamUrl);
                 summaryEventSource.onopen = () => console.log("Kết nối stream tóm tắt thành công!");
-                summaryEventSource.onerror = (error) => { console.error("Lỗi kết nối EventSource:", error); showToast("Lỗi tóm tắt", "Không thể kết nối server.", 'error', null, 5000); if (summaryEventSource) summaryEventSource.close(); summaryEventSource = null; };
+                summaryEventSource.onerror = (error) => {
+                    console.error("Lỗi kết nối EventSource:", error);
+                    showToast("Lỗi tóm tắt", "Không thể kết nối server.", 'error', null, 5000); 
+                    if (summaryEventSource) summaryEventSource.close();
+                    summaryEventSource = null;
+                };
                 summaryEventSource.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
-                        if (data.text) { currentSummaryText += data.text; }
-                        else if (data.error) { console.error("Lỗi từ stream:", data.error); currentSummaryText += `\n\n[Lỗi: ${data.error}]`; if (summaryEventSource) summaryEventSource.close(); summaryEventSource = null; showToast("Lỗi tóm tắt", data.error, 'error', null, 5000); }
-                        else if (data.done) { console.log("Stream tóm tắt hoàn thành."); if (summaryEventSource) summaryEventSource.close(); summaryEventSource = null; completedSummary = { title: title, text: currentSummaryText }; showSummaryReadyNotification(title); }
-                    } catch (e) { console.error("Lỗi phân tích dữ liệu stream:", e, event.data); if (summaryEventSource) summaryEventSource.close(); summaryEventSource = null; showToast("Lỗi tóm tắt", "Dữ liệu trả về không hợp lệ.", 'error', null, 5000); }
+                        if (data.text) {
+                            currentSummaryText += data.text;
+                        } else if (data.error) {
+                            console.error("Lỗi từ stream:", data.error);
+                            currentSummaryText += `\n\n[Lỗi: ${data.error}]`;
+                            if (summaryEventSource) summaryEventSource.close();
+                            summaryEventSource = null;
+                            showToast("Lỗi tóm tắt", data.error, 'error', null, 5000);
+                        } else if (data.done) {
+                            console.log("Stream tóm tắt hoàn thành.");
+                            if (summaryEventSource) summaryEventSource.close();
+                            summaryEventSource = null;
+                            completedSummary = { title: title, text: currentSummaryText };
+                            showSummaryReadyNotification(title); 
+                        }
+                    } catch (e) {
+                        console.error("Lỗi phân tích dữ liệu stream:", e, event.data);
+                        if (summaryEventSource) summaryEventSource.close();
+                        summaryEventSource = null;
+                        showToast("Lỗi tóm tắt", "Dữ liệu trả về không hợp lệ.", 'error', null, 5000);
+                    }
                 };
             }
+            
+            // (Hàm callChatAPI giữ nguyên)
             async function callChatAPI() {
                 const loadingBubble = document.createElement('div');
                 loadingBubble.className = 'model-bubble';
@@ -504,8 +458,15 @@
                 chatDisplay.appendChild(loadingBubble);
                 chatDisplay.scrollTop = chatDisplay.scrollHeight;
                 try {
-                    const response = await fetch('/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ history: chatHistory }) });
-                    if (!response.ok) { const errorText = await response.text(); throw new Error(`Lỗi server: ${errorText}`); }
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ history: chatHistory })
+                    });
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Lỗi server: ${errorText}`);
+                    }
                     const result = await response.json();
                     const answer = result.answer;
                     chatHistory.push({ role: "model", parts: [{ text: answer }] });
@@ -519,12 +480,28 @@
                     errorBubble.style.backgroundColor = '#991B1B';
                     errorBubble.textContent = `Lỗi: ${error.message}`;
                     chatDisplay.appendChild(errorBubble);
-                } finally { chatDisplay.scrollTop = chatDisplay.scrollHeight; }
+                } finally {
+                    chatDisplay.scrollTop = chatDisplay.scrollHeight;
+                }
             }
+
+            // (Hàm fetchRSS giữ nguyên)
             async function fetchRSS(rssUrl, sourceName, { display = true, force = false } = {}) {
-                if (display) { loadingSpinner.classList.remove('hidden'); newsGrid.innerHTML = ''; }
-                if (force) { clientRssCache.delete(rssUrl); console.log(`[CACHE] Đã xóa ${rssUrl} do yêu cầu Tải lại.`); }
-                if (clientRssCache.has(rssUrl)) { if (display) { displayArticles(clientRssCache.get(rssUrl), sourceName); loadingSpinner.classList.add('hidden'); } return; }
+                if (display) {
+                    loadingSpinner.classList.remove('hidden');
+                    newsGrid.innerHTML = '';
+                }
+                if (force) {
+                    clientRssCache.delete(rssUrl);
+                    console.log(`[CACHE] Đã xóa ${rssUrl} do yêu cầu Tải lại.`);
+                }
+                if (clientRssCache.has(rssUrl)) {
+                    if (display) {
+                        displayArticles(clientRssCache.get(rssUrl), sourceName);
+                        loadingSpinner.classList.add('hidden');
+                    }
+                    return;
+                }
                 try {
                     const response = await fetch(`/get-rss?url=${encodeURIComponent(rssUrl)}`);
                     if (!response.ok) throw new Error('Lỗi server (RSS)');
@@ -534,27 +511,42 @@
                     if (xmlDoc.getElementsByTagName("parsererror").length) throw new Error("Lỗi phân tích XML");
                     let items;
                     const itemNodes = xmlDoc.querySelectorAll("item");
-                    if (itemNodes.length === 0) { const entryNodes = xmlDoc.querySelectorAll("entry"); if (entryNodes.length > 0) items = Array.from(entryNodes); else throw new Error("Không tìm thấy bài viết"); }
-                    else { items = Array.from(itemNodes); }
+                    if (itemNodes.length === 0) {
+                        const entryNodes = xmlDoc.querySelectorAll("entry");
+                        if (entryNodes.length > 0) items = Array.from(entryNodes);
+                        else throw new Error("Không tìm thấy bài viết");
+                    } else {
+                         items = Array.from(itemNodes);
+                    }
                     clientRssCache.set(rssUrl, items);
                     if (display) displayArticles(items, sourceName);
-                } catch (error) { console.error(`Lỗi tải RSS ${sourceName}:`, error); if (display) newsGrid.innerHTML = `<p class="text-red-400 col-span-full text-center">${error.message}</p>`; }
-                finally { if (display) loadingSpinner.classList.add('hidden'); }
+                } catch (error) {
+                    console.error(`Lỗi tải RSS ${sourceName}:`, error);
+                    if (display) newsGrid.innerHTML = `<p class="text-red-400 col-span-full text-center">${error.message}</p>`;
+                } finally {
+                    if (display) loadingSpinner.classList.add('hidden');
+                }
             }
+
+            // (Hàm displayArticles giữ nguyên)
             function displayArticles(items, sourceName) {
                 newsGrid.innerHTML = '';
                 items.forEach(item => {
                     const title = item.querySelector("title")?.textContent || "Không có tiêu đề";
                     let description = item.querySelector("description")?.textContent || item.querySelector("summary")?.textContent || item.querySelector("content")?.textContent || "";
                     let link = item.querySelector("link")?.textContent || "#";
-                    if (link === "#" && item.querySelector("link")?.hasAttribute("href")) { link = item.querySelector("link")?.getAttribute("href") || "#"; }
+                    if (link === "#" && item.querySelector("link")?.hasAttribute("href")) {
+                        link = item.querySelector("link")?.getAttribute("href") || "#";
+                    }
                     const pubDate = item.querySelector("pubDate")?.textContent || item.querySelector("updated")?.textContent || "";
                     const descParser = new DOMParser();
                     const descDoc = descParser.parseFromString(`<!doctype html><body>${description}`, 'text/html');
                     const img = descDoc.querySelector("img");
                     const imgSrc = img ? img.src : "https://placehold.co/600x400/374151/9CA3AF?text=Tin+Tuc";
                     let descriptionText = descDoc.body.textContent.trim() || "Không có mô tả.";
-                    if (descriptionText.startsWith(title)) { descriptionText = descriptionText.substring(title.length).trim(); }
+                    if (descriptionText.startsWith(title)) {
+                        descriptionText = descriptionText.substring(title.length).trim();
+                    }
                     const card = document.createElement('a');
                     card.href = link;
                     card.className = "bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-[1.03] hover:shadow-blue-500/20 block";
@@ -572,12 +564,22 @@
                             </div>
                         </div>
                     `;
-                     card.addEventListener('click', (e) => { if (e.target.closest('.summary-btn')) { return; } });
+                     card.addEventListener('click', (e) => {
+                         if (e.target.closest('.summary-btn')) {
+                             return;
+                         }
+                     });
                     const summaryButton = card.querySelector('.summary-btn');
-                    summaryButton.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); handleSummaryClick(title, descriptionText); });
+                    summaryButton.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSummaryClick(title, descriptionText);
+                    });
                     newsGrid.appendChild(card);
                 });
             }
+
+            // (Hàm handleFeedButtonClick giữ nguyên)
             function handleFeedButtonClick(e) {
                  const clickedButton = e.target.closest('.feed-button');
                  if (!clickedButton || clickedButton.classList.contains('active')) return;
@@ -589,41 +591,91 @@
                  fetchRSS(rssUrl, sourceName);
                  mobileMenu.classList.add('hidden');
             }
+
+            // (Hàm handleSummaryClick giữ nguyên)
             function handleSummaryClick(title, description) {
-                if (!description || description === "Không có mô tả.") { showToast("Không thể tóm tắt", "Bài viết không có đủ nội dung.", 'error', null, 4000); return; }
-                const prompt = `Tóm tắt nội dung sau đây trong khoảng 200 từ:\nTiêu đề: ${title}\nNội dung: ${description}`;
+                if (!description || description === "Không có mô tả.") {
+                     showToast("Không thể tóm tắt", "Bài viết không có đủ nội dung.", 'error', null, 4000);
+                    return;
+                }
+                const prompt = `Tóm tắt nội dung sau đây trong khoảng 200 từ:
+                Tiêu đề: ${title}
+                Nội dung: ${description}`;
                 callGeminiAPIStreaming(prompt, title);
                 showToast("Đang tóm tắt...", title.substring(0, 50) + "...", 'loading', null, 5000);
             }
+
+            // (Hàm showToast, hideToast, showSummaryReadyNotification giữ nguyên)
              function showToast(mainMessage, detailMessage, state = 'ready', onClickAction, autoHideDelay = null) {
                  if (toastTimeoutId) clearTimeout(toastTimeoutId);
                  toastMainMessage.textContent = mainMessage;
                  toastTitle.textContent = detailMessage;
                  summaryToast.classList.remove('toast-loading', 'bg-blue-600', 'bg-red-600');
-                 if (state === 'loading') { toastIcon.innerHTML = iconSpinner; summaryToast.classList.add('toast-loading'); summaryToast.style.cursor = 'default'; toastCta.style.display = 'none'; summaryToast.onclick = null; }
-                 else if (state === 'ready') { toastIcon.innerHTML = iconCheck; summaryToast.classList.add('bg-blue-600'); summaryToast.style.cursor = 'pointer'; toastCta.style.display = 'block'; summaryToast.onclick = onClickAction; }
-                 else if (state === 'error') { toastIcon.innerHTML = iconError; summaryToast.classList.add('bg-red-600'); summaryToast.style.cursor = 'default'; toastCta.style.display = 'none'; summaryToast.onclick = null; }
+                 if (state === 'loading') {
+                     toastIcon.innerHTML = iconSpinner;
+                     summaryToast.classList.add('toast-loading'); 
+                     summaryToast.style.cursor = 'default';
+                     toastCta.style.display = 'none';
+                     summaryToast.onclick = null;
+                 } else if (state === 'ready') {
+                     toastIcon.innerHTML = iconCheck;
+                     summaryToast.classList.add('bg-blue-600'); 
+                     summaryToast.style.cursor = 'pointer';
+                     toastCta.style.display = 'block';
+                     summaryToast.onclick = onClickAction;
+                 } else if (state === 'error') {
+                     toastIcon.innerHTML = iconError;
+                     summaryToast.classList.add('bg-red-600'); 
+                     summaryToast.style.cursor = 'default';
+                     toastCta.style.display = 'none';
+                     summaryToast.onclick = null;
+                 }
                  summaryToast.classList.remove('hidden');
                  setTimeout(() => summaryToast.classList.add('show'), 50);
-                 if (autoHideDelay) { toastTimeoutId = setTimeout(hideToast, autoHideDelay); }
+                 if (autoHideDelay) {
+                     toastTimeoutId = setTimeout(hideToast, autoHideDelay);
+                 }
              }
              function hideToast() {
                   if (toastTimeoutId) clearTimeout(toastTimeoutId);
                   toastTimeoutId = null;
                   summaryToast.classList.remove('show');
-                  setTimeout(() => { summaryToast.classList.add('hidden'); summaryToast.classList.remove('toast-loading', 'bg-blue-600', 'bg-red-600'); }, 300);
+                  setTimeout(() => {
+                      summaryToast.classList.add('hidden');
+                      summaryToast.classList.remove('toast-loading', 'bg-blue-600', 'bg-red-600');
+                  }, 300);
                   summaryToast.onclick = null;
              }
              function showSummaryReadyNotification(title) {
-                  showToast("Tóm tắt đã sẵn sàng!", title.substring(0, 50) + "...", 'ready', () => { summaryTitleElement.textContent = completedSummary.title; summaryTextElement.textContent = completedSummary.text; summaryModal.classList.remove('hidden'); hideToast(); }, null );
+                  showToast(
+                      "Tóm tắt đã sẵn sàng!",
+                      title.substring(0, 50) + "...",
+                      'ready', 
+                      () => { 
+                          summaryTitleElement.textContent = completedSummary.title;
+                          summaryTextElement.textContent = completedSummary.text;
+                          summaryModal.classList.remove('hidden');
+                          hideToast();
+                      },
+                      null 
+                  );
              }
+
+            // (Hàm renderChatHistory, handleSendChat, resetChat, prewarmCache giữ nguyên)
             function renderChatHistory() {
                 chatDisplay.innerHTML = '';
-                if (chatHistory.length === 0) { chatDisplay.innerHTML = `<div class="model-bubble">Chào đại ca, Tèo xin trả lời bất kỳ câu hỏi nào của đại ca?</div>`; return; }
+                if (chatHistory.length === 0) {
+                     chatDisplay.innerHTML = `<div class="model-bubble">Chào đại ca, Tèo xin trả lời bất kỳ câu hỏi nào của đại ca?</div>`;
+                     return;
+                }
                 chatHistory.forEach(message => {
                     const bubble = document.createElement('div');
                     bubble.className = 'chat-bubble';
-                    if (message.role === 'user') { bubble.classList.add('user-bubble'); } else { bubble.classList.add('model-bubble'); }
+                    if (message.role === 'user') {
+                        bubble.classList.add('user-bubble');
+                    } else {
+                        bubble.classList.add('model-bubble');
+                    }
                     bubble.style.whiteSpace = "pre-wrap";
                     bubble.textContent = message.parts[0].text;
                     chatDisplay.appendChild(bubble);
@@ -650,6 +702,8 @@
                     fetchRSS(feed.dataset.rss, feed.dataset.source, { display: false });
                 });
             }
+
+            // (Hàm handleRefreshClick giữ nguyên)
             function handleRefreshClick() {
                 console.log("Đang yêu cầu tải lại...");
                 const activeButton = feedNav.querySelector('.feed-button.active');
@@ -663,6 +717,7 @@
             
             // ===================================================================
             // PHẦN 2: LOGIC VÀ BIẾN CỦA TRANG LỊCH (CALENDAR)
+            // (Toàn bộ mã từ public/calendar/app.js được dán vào đây)
             // ===================================================================
 
             // --- HÀM LỊCH: SỬA LỖI MÚI GIỜ ---
@@ -682,17 +737,16 @@
 
             // --- BIẾN LỊCH: Lấy DOM ---
             const calendarMain = document.getElementById('calendar-main');
-            const cal_dateEl = document.getElementById('calendar-date'); 
-            const cal_timeEl = document.getElementById('calendar-time');
-            const cal_aiForm = document.getElementById('calendar-ai-form'); 
-            const cal_aiInput = document.getElementById('calendar-ai-input'); 
+            const cal_dateEl = document.getElementById('date'); // Đổi tên tránh xung đột
+            const cal_timeEl = document.getElementById('time');
+            const cal_aiForm = document.getElementById('ai-form');
+            const cal_aiInput = document.getElementById('ai-input');
             const calendarBody = document.getElementById('calendar-body');
             const currentMonthYearEl = document.getElementById('current-month-year');
             const prevMonthBtn = document.getElementById('prev-month-btn');
             const nextMonthBtn = document.getElementById('next-month-btn');
             
             const settingsBtn = document.getElementById('settings-btn');
-            const settingsBtnMobile = document.getElementById('settings-btn-mobile');
             const settingsModal = document.getElementById('settings-modal');
             const closeModalBtn = document.getElementById('close-modal');
             const notifyButton = document.getElementById('notify-button');
@@ -707,9 +761,6 @@
             const noteList = document.getElementById('note-list');
             const addNoteForm = document.getElementById('add-note-form');
             const newNoteInput = document.getElementById('new-note-input');
-            
-            const noteSummaryContainer = document.getElementById('note-summary-container');
-            const summaryList = document.getElementById('note-summary-list');
 
             let currentEditingDateStr = null;
 
@@ -766,13 +817,8 @@
                 notifyTimeDem.value = appSettings.notifyTimeDem;
                 notifyTimeOff.value = appSettings.notifyTimeOff;
             }
-            
-            function openSettingsModal() {
-                loadSettings(); 
-                settingsModal.style.display = 'flex';
-            }
 
-            // --- HÀM LỊCH: Vẽ Lịch (Đã thêm Tóm tắt) ---
+            // --- HÀM LỊCH: Vẽ Lịch ---
             function renderCalendar(date) {
                 calendarBody.innerHTML = '';
                 const year = date.getFullYear();
@@ -789,7 +835,6 @@
 
                 const todayStr = getLocalDateString(new Date());
 
-                // (Vòng lặp for (let i = 0...) vẽ 42 ô ngày giữ nguyên)
                 for (let i = 0; i < 42; i++) {
                     const dayCell = document.createElement('div');
                     dayCell.className = "bg-white rounded-lg p-2 min-h-[100px] flex flex-col justify-start relative cursor-pointer hover:bg-gray-50 transition-colors border border-gray-200";
@@ -851,56 +896,6 @@
                     }
                     calendarBody.appendChild(dayCell);
                 }
-                
-                // Logic tạo Tóm tắt Ghi chú
-                summaryList.innerHTML = ''; 
-                let hasNotes = false;
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
-                const daysArray = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-
-                for (let day = 1; day <= daysInMonth; day++) {
-                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    const notes = noteData[dateStr] || [];
-                    
-                    if (notes.length > 0) {
-                        hasNotes = true;
-                        const shift = getShiftForDate(dateStr);
-                        const dateObj = new Date(dateStr + "T12:00:00");
-                        const dayName = daysArray[dateObj.getDay()];
-                        
-                        const li = document.createElement('li');
-                        li.className = 'note-summary-item';
-                        
-                        const header = document.createElement('div');
-                        header.className = 'summary-date-header';
-                        
-                        let shiftClass = 'shift-ngày'; // Mặc định (ngày, đêm)
-                        if (shift === 'giãn ca') shiftClass = 'shift-giãn';
-                        
-                        header.innerHTML = `
-                            <span class="font-bold">${dayName} ${day}/${month + 1}</span>
-                            <span class="summary-shift ${shiftClass}">${shift}</span>:
-                        `; 
-                        
-                        const noteListEl = document.createElement('ul');
-                        noteListEl.className = 'summary-notes';
-                        notes.forEach(noteText => {
-                            const noteLi = document.createElement('li');
-                            noteLi.textContent = noteText;
-                            noteListEl.appendChild(noteLi);
-                        });
-                        
-                        li.appendChild(header);
-                        li.appendChild(noteListEl);
-                        summaryList.appendChild(li);
-                    }
-                }
-                
-                if (hasNotes) {
-                    noteSummaryContainer.classList.remove('hidden');
-                } else {
-                    noteSummaryContainer.classList.add('hidden');
-                }
             }
 
             // --- HÀM LỊCH: Modal Ghi chú ---
@@ -939,7 +934,50 @@
 
             // --- HÀM LỊCH: Thông báo ---
             function checkDailyShiftNotification() {
-                // (Logic này đã được chuyển lên server.js)
+                if (Notification.permission !== "granted") return; 
+                const now = new Date();
+                const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                
+                if (currentTimeStr === "00:00") {
+                    lastNotificationSentTime = null;
+                }
+                if (lastNotificationSentTime === currentTimeStr) return;
+
+                const todayStr = getLocalDateString(now);
+                const todayShift = getShiftForDate(todayStr);
+                let shiftDisplayName = ""; 
+                let timeToAlert = ""; 
+
+                if (todayShift === 'ngày') {
+                    shiftDisplayName = "Ca Ngày";
+                    timeToAlert = appSettings.notifyTimeNgay;
+                } else if (todayShift === 'đêm') {
+                    shiftDisplayName = "Ca Đêm";
+                    timeToAlert = appSettings.notifyTimeDem;
+                } else if (todayShift === 'giãn ca') {
+                    shiftDisplayName = "Giãn Ca";
+                    timeToAlert = appSettings.notifyTimeOff;
+                } else if (todayShift === 'off') {
+                    shiftDisplayName = "Ngày Nghỉ";
+                    timeToAlert = appSettings.notifyTimeOff;
+                }
+
+                if (timeToAlert && currentTimeStr === timeToAlert) {
+                    const notes = noteData[todayStr] || [];
+                    let notesString = "";
+                    if (notes.length > 0) {
+                        notesString = " - " + notes.join(', ');
+                    }
+                    const newTitle = "Lịch Luân Phiên";
+                    const newBody = `${shiftDisplayName}${notesString}`; 
+
+                    new Notification(newTitle, {
+                        body: newBody,
+                        icon: "/icons/icon-192x192.png" 
+                    });
+                    
+                    lastNotificationSentTime = currentTimeStr;
+                }
             }
             
             // ===================================================================
@@ -950,34 +988,33 @@
             const newsTabBtn = document.getElementById('news-tab-btn');
             const calendarTabBtn = document.getElementById('calendar-tab-btn');
             const calendarTabBtnMobile = document.getElementById('calendar-tab-btn-mobile');
-            const clockContainer = document.getElementById('clock-container'); 
             
             // --- HÀM TAB: Chuyển tab ---
             function showTab(tabName) {
                 if (tabName === 'news') {
                     newsMain.classList.remove('hidden');
                     calendarMain.classList.add('hidden');
+                    // Cập nhật nút tab
                     newsTabBtn.classList.add('active');
                     calendarTabBtn.classList.remove('active');
                     calendarTabBtnMobile.classList.remove('active');
+                    // Ẩn/hiện nút refresh
                     refreshFeedButton.classList.remove('hidden');
-                    settingsBtn.classList.add('hidden');
-                    feedNav.classList.remove('hidden');
                     refreshFeedButtonMobile.classList.remove('hidden');
-                    settingsBtnMobile.classList.add('hidden');
-                    clockContainer.classList.add('hidden');
+                    // Ẩn/hiện nút cài đặt
+                    settingsBtn.classList.add('hidden');
                 } else if (tabName === 'calendar') {
                     newsMain.classList.add('hidden');
                     calendarMain.classList.remove('hidden');
+                    // Cập nhật nút tab
                     newsTabBtn.classList.remove('active');
                     calendarTabBtn.classList.add('active');
                     calendarTabBtnMobile.classList.add('active');
+                    // Ẩn/hiện nút refresh
                     refreshFeedButton.classList.add('hidden');
-                    settingsBtn.classList.remove('hidden');
-                    feedNav.classList.add('hidden');
                     refreshFeedButtonMobile.classList.add('hidden');
-                    settingsBtnMobile.classList.remove('hidden');
-                    clockContainer.classList.remove('hidden');
+                    // Ẩn/hiện nút cài đặt
+                    settingsBtn.classList.remove('hidden');
                 }
             }
 
@@ -1046,13 +1083,12 @@
                 updateCalendarClock();
                 setInterval(updateCalendarClock, 1000);
                 loadSettings();
-                
-                // (Đã xóa setInterval(checkDaily...))
+                setInterval(checkDailyShiftNotification, 60000);
 
-                // Gắn sự kiện cho Cài đặt (cả 2 nút)
-                settingsBtn.addEventListener('click', openSettingsModal);
-                settingsBtnMobile.addEventListener('click', openSettingsModal);
-                
+                settingsBtn.addEventListener('click', () => {
+                    loadSettings(); 
+                    settingsModal.style.display = 'flex';
+                });
                 closeModalBtn.addEventListener('click', () => {
                     settingsModal.style.display = 'none';
                 });
@@ -1073,16 +1109,19 @@
                     appSettings.notifyTimeOff = e.target.value;
                     saveSettings();
                 });
-                
-                // Nút Bật Thông Báo
                 notifyButton.addEventListener('click', () => {
-                    if (typeof window.subscribeUserToPush === 'function') {
-                        window.subscribeUserToPush();
-                    } else {
-                        alert("Lỗi: Không tìm thấy hàm đăng ký thông báo.");
+                    if (!("Notification" in window)) {
+                        alert("Trình duyệt này không hỗ trợ thông báo.");
+                    } else if (Notification.permission === "granted") {
+                        new Notification("Đã bật!", { body: "Bạn đã bật thông báo thành công!" });
+                    } else if (Notification.permission !== "denied") {
+                        Notification.requestPermission().then(permission => {
+                            if (permission === "granted") {
+                                new Notification("Cảm ơn!", { body: "Thông báo đã được bật!" });
+                            }
+                        });
                     }
                 });
-                
                 prevMonthBtn.addEventListener('click', () => {
                     currentViewDate.setMonth(currentViewDate.getMonth() - 1);
                     renderCalendar(currentViewDate);
@@ -1101,10 +1140,8 @@
                         currentEditingDateStr = null;
                     }
                 });
-                
-                // SỬA LỖI 5: Sửa lỗi load lại trang
                 addNoteForm.addEventListener('submit', (e) => {
-                    e.preventDefault(); // <-- SỬA LỖI NÀY
+                    e.preventDefault();
                     const noteText = newNoteInput.value.trim();
                     if (!noteText || !currentEditingDateStr) return;
                     if (!Array.isArray(noteData[currentEditingDateStr])) {
@@ -1116,7 +1153,6 @@
                     renderCalendar(currentViewDate); 
                     newNoteInput.value = ''; 
                 });
-                
                 noteList.addEventListener('click', (e) => {
                     const target = e.target;
                     const index = target.dataset.index;
@@ -1141,8 +1177,6 @@
                         }
                     }
                 });
-                
-                // SỬA LỖI 6: Logic xử lý AI đã sửa lỗi
                 cal_aiForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     const text = cal_aiInput.value.trim();
@@ -1154,47 +1188,26 @@
                         const response = await fetch('/api/calendar-ai-parse', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            // SỬA LỖI: Gửi cả 'viewDate' (năm)
-                            body: JSON.stringify({ 
-                                text: text,
-                                viewDate: getLocalDateString(currentViewDate) 
-                            })
+                            body: JSON.stringify({ text: text })
                         });
-                        
-                        const updatesData = await response.json(); 
-                        
-                        let updatesList = [];
-                        
-                        // SỬA LỖI: Chấp nhận cả Array và Object
-                        if (Array.isArray(updatesData)) {
-                            updatesList = updatesData;
-                        } else if (typeof updatesData === 'object' && updatesData !== null && updatesData.date) {
-                            updatesList = [updatesData]; // Tự bọc lại
-                        } else if (updatesData.error) {
-                             throw new Error(`Lỗi từ AI: ${updatesData.error}`);
-                        } else {
-                            throw new Error("AI không trả về định dạng mảng hoặc đối tượng hợp lệ.");
-                        }
-
-                        updatesList.forEach(update => {
-                            const dateStr = update.date;
-                            const noteText = update.note;
-                            
-                            // Thêm kiểm tra định dạng ngày (an toàn)
-                            if (dateStr && noteText && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                                if (!Array.isArray(noteData[dateStr])) {
-                                    noteData[dateStr] = []; 
+                        const updates = await response.json(); 
+                        if (Array.isArray(updates)) {
+                            updates.forEach(update => {
+                                const dateStr = update.date;
+                                const noteText = update.note;
+                                if (dateStr && noteText) {
+                                    if (!Array.isArray(noteData[dateStr])) {
+                                        noteData[dateStr] = []; 
+                                    }
+                                    noteData[dateStr].push(noteText); 
                                 }
-                                noteData[dateStr].push(noteText); 
-                            } else {
-                                console.warn("AI trả về ngày không hợp lệ, bỏ qua:", dateStr);
-                            }
-                        });
-                        
-                        saveNoteData(); 
-                        renderCalendar(currentViewDate); 
-                        cal_aiInput.value = ''; 
-
+                            });
+                            saveNoteData(); 
+                            renderCalendar(currentViewDate); 
+                            cal_aiInput.value = ''; 
+                        } else {
+                            throw new Error("AI không trả về định dạng mảng.");
+                        }
                     } catch (err) {
                         console.error('Lỗi gọi AI API (Lịch):', err);
                         alert('Không thể phân tích. Vui lòng kiểm tra lại prompt và API key.');
