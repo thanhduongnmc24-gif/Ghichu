@@ -254,7 +254,14 @@
                 </div>
             </div>
         </section>
-    </main>
+
+        <section id="monthly-note-summary" class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mt-6">
+            <h2 class="text-xl font-bold text-white mb-4">Tổng kết Ghi chú Tháng</h2>
+            <div id="monthly-note-list" class="space-y-3">
+                <p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>
+            </div>
+        </section>
+        </main>
 
     <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
@@ -746,7 +753,7 @@
             const prevMonthBtn = document.getElementById('prev-month-btn');
             const nextMonthBtn = document.getElementById('next-month-btn');
             
-            const settingsBtn = document.getElementById('settings-btn');
+            const settingsBtn = document.getElementById('settings-btn'); // SẼ LÀ NULL, ĐÃ SỬA LỖI BÊN DƯỚI
             const settingsModal = document.getElementById('settings-modal');
             const closeModalBtn = document.getElementById('close-modal');
             const notifyButton = document.getElementById('notify-button');
@@ -802,13 +809,14 @@
 
             // --- HÀM LỊCH: Đồng hồ ---
             function updateCalendarClock() {
-                const now = new Date();
-                const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-                const dayName = days[now.getDay()];
-                const dateStr = `${dayName}, ${now.toLocaleDateString('vi-VN')}`;
-                const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-                cal_dateEl.textContent = dateStr;
-                cal_timeEl.textContent = timeStr;
+                // Tắt đồng hồ vì không có DOM
+                // const now = new Date();
+                // const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+                // const dayName = days[now.getDay()];
+                // const dateStr = `${dayName}, ${now.toLocaleDateString('vi-VN')}`;
+                // const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+                // cal_dateEl.textContent = dateStr;
+                // cal_timeEl.textContent = timeStr;
             }
 
             // --- HÀM LỊCH: Modal Cài đặt ---
@@ -896,7 +904,59 @@
                     }
                     calendarBody.appendChild(dayCell);
                 }
+                
+                // === GỌI HÀM TÓM TẮT MỚI ===
+                renderMonthlyNoteSummary(date); 
+                // ==========================
+
             }
+
+            // === HÀM MỚI: TÓM TẮT GHI CHÚ HÀNG THÁNG ===
+            function renderMonthlyNoteSummary(date) {
+                const monthlyNoteList = document.getElementById('monthly-note-list');
+                if (!monthlyNoteList) return; 
+
+                monthlyNoteList.innerHTML = ''; 
+                
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                
+                const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+                let hasNotes = false; 
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const currentDate = new Date(year, month, day);
+                    const dateStr = getLocalDateString(currentDate); 
+                    
+                    const notes = noteData[dateStr] || []; 
+
+                    if (notes.length > 0) {
+                        hasNotes = true;
+                        
+                        const dayName = daysOfWeek[currentDate.getDay()]; 
+                        const dateDisplay = `${currentDate.getDate()}/${currentDate.getMonth() + 1}`; 
+                        const shift = getShiftForDate(dateStr); 
+                        
+                        let shiftDisplay = shift; 
+                        if (shift === 'ngày' || shift === 'đêm') {
+                            shiftDisplay = `ca ${shift}`; 
+                        }
+
+                        notes.forEach(noteText => {
+                            const noteElement = document.createElement('p');
+                            noteElement.className = 'text-gray-200 p-2 bg-gray-700 rounded-md text-sm';
+                            noteElement.textContent = `${dayName} ngày ${dateDisplay} (${shiftDisplay}): ${noteText}`;
+                            monthlyNoteList.appendChild(noteElement);
+                        });
+                    }
+                }
+
+                if (!hasNotes) {
+                    monthlyNoteList.innerHTML = `<p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>`;
+                }
+            }
+            // === KẾT THÚC HÀM MỚI ===
 
             // --- HÀM LỊCH: Modal Ghi chú ---
             function openNoteModal(dateStr) {
@@ -999,10 +1059,10 @@
                     calendarTabBtn.classList.remove('active');
                     calendarTabBtnMobile.classList.remove('active');
                     // Ẩn/hiện nút refresh
-                    refreshFeedButton.classList.remove('hidden');
-                    refreshFeedButtonMobile.classList.remove('hidden');
-                    // Ẩn/hiện nút cài đặt
-                    settingsBtn.classList.add('hidden');
+                    refreshFeedButton.style.display = 'flex';
+                    refreshFeedButtonMobile.style.display = 'flex';
+                    // Ẩn nút cài đặt (nếu có)
+                    if (settingsBtn) settingsBtn.style.display = 'none';
                 } else if (tabName === 'calendar') {
                     newsMain.classList.add('hidden');
                     calendarMain.classList.remove('hidden');
@@ -1011,10 +1071,10 @@
                     calendarTabBtn.classList.add('active');
                     calendarTabBtnMobile.classList.add('active');
                     // Ẩn/hiện nút refresh
-                    refreshFeedButton.classList.add('hidden');
-                    refreshFeedButtonMobile.classList.add('hidden');
-                    // Ẩn/hiện nút cài đặt
-                    settingsBtn.classList.remove('hidden');
+                    refreshFeedButton.style.display = 'none';
+                    refreshFeedButtonMobile.style.display = 'none';
+                    // Ẩn/hiện nút cài đặt (nếu có)
+                    if (settingsBtn) settingsBtn.style.display = 'flex';
                 }
             }
 
@@ -1080,15 +1140,21 @@
             // --- KHỞI ĐỘNG (LỊCH) ---
             (async () => {
                 renderCalendar(currentViewDate);
-                updateCalendarClock();
-                setInterval(updateCalendarClock, 1000);
+                // Tắt đồng hồ vì không có DOM
+                // updateCalendarClock();
+                // setInterval(updateCalendarClock, 1000);
                 loadSettings();
                 setInterval(checkDailyShiftNotification, 60000);
 
-                settingsBtn.addEventListener('click', () => {
-                    loadSettings(); 
-                    settingsModal.style.display = 'flex';
-                });
+                // === SỬA LỖI: KIỂM TRA NÚT CÀI ĐẶT TRƯỚC KHI GẮN SỰ KIỆN ===
+                if (settingsBtn) { 
+                    settingsBtn.addEventListener('click', () => {
+                        loadSettings(); 
+                        settingsModal.style.display = 'flex';
+                    });
+                }
+                // === KẾT THÚC SỬA LỖI ===
+
                 closeModalBtn.addEventListener('click', () => {
                     settingsModal.style.display = 'none';
                 });
@@ -1178,7 +1244,7 @@
                     }
                 });
                 cal_aiForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
+                    e.preventDefault(); // Dòng này sẽ chạy được sau khi sửa lỗi JS
                     const text = cal_aiInput.value.trim();
                     if (!text) return;
                     cal_aiInput.disabled = true;
