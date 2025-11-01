@@ -167,6 +167,47 @@
             border-radius: 0.375rem; 
             padding: 0.25rem 0.5rem; 
         }
+        /* CSS Tóm tắt ghi chú (mới) */
+        .note-summary-item {
+            border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+            padding-bottom: 0.75rem; /* pb-3 */
+        }
+        .note-summary-item:last-child {
+            border-bottom: none;
+        }
+        .summary-date-header {
+            font-size: 1rem; /* text-base */
+            font-weight: 600; /* font-semibold */
+            color: #1f2937; /* text-gray-900 */
+            display: flex;
+            align-items: center;
+        }
+        .summary-notes {
+            padding-left: 1.5rem; /* pl-6 */
+            margin-top: 0.25rem; /* mt-1 */
+            list-style-type: disc;
+            color: #4b5563; /* text-gray-600 */
+            font-size: 0.9em;
+        }
+        .summary-notes li {
+            padding-left: 0.25rem; /* pl-1 */
+        }
+        .summary-shift {
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 700; /* font-bold */
+            padding: 2px 8px;
+            border-radius: 9999px; /* rounded-full */
+            margin-left: 0.5rem; /* ml-2 */
+            margin-right: 0.25rem; /* mr-1 */
+        }
+        .shift-ngày, .shift-đêm {
+            color: #1d4ed8; /* text-blue-700 */
+            background-color: #dbeafe; /* bg-blue-100 */
+        }
+        .shift-giãn { /* (Phải khớp với logic JS) */
+            color: #a16207; /* text-yellow-700 */
+            background-color: #fef9c3; /* bg-yellow-100 */
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -220,11 +261,7 @@
     </header>
 
     <main id="news-main" class="container mx-auto p-4 md:p-8">
-        <div id="loading-spinner" class="flex justify-center items-center h-64">
-            <div class="spinner border-t-blue-500" style="width: 50px; height: 50px;"></div>
-        </div>
-        <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
-    </main>
+        </main>
     
     <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
         <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6">
@@ -262,7 +299,7 @@
                 </div>
             </div>
         </section>
-
+        
         <section id="note-summary-container" class="bg-white text-gray-900 rounded-lg shadow-lg p-4 md:p-6 mt-6 hidden">
             <h2 class="text-xl font-bold text-gray-900 mb-4">Tổng kết Ghi chú trong tháng</h2>
             <ul id="note-summary-list" class="space-y-3">
@@ -270,11 +307,11 @@
         </section>
     </main>
 
-    <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+    <div id="summary-modal" class="hidden ...">
         </div>
-    <button id="chat-fab" class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center z-40 transition-transform transform hover:scale-110">
+    <button id="chat-fab" class="fixed ...">
         </button>
-    <div id="chat-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+    <div id="chat-modal" class="hidden ...">
         </div>
     <div id="summary-toast" class="hidden">
         </div>
@@ -670,8 +707,7 @@
             const noteList = document.getElementById('note-list');
             const addNoteForm = document.getElementById('add-note-form');
             const newNoteInput = document.getElementById('new-note-input');
-
-            // CẬP NHẬT 3: Lấy DOM Tóm tắt
+            
             const noteSummaryContainer = document.getElementById('note-summary-container');
             const summaryList = document.getElementById('note-summary-list');
 
@@ -736,7 +772,7 @@
                 settingsModal.style.display = 'flex';
             }
 
-            // --- HÀM LỊCH: Vẽ Lịch (CẬP NHẬT 4: Thêm tóm tắt) ---
+            // --- HÀM LỊCH: Vẽ Lịch (Đã thêm Tóm tắt) ---
             function renderCalendar(date) {
                 calendarBody.innerHTML = '';
                 const year = date.getFullYear();
@@ -816,7 +852,7 @@
                     calendarBody.appendChild(dayCell);
                 }
                 
-                // CẬP NHẬT: Logic tạo Tóm tắt Ghi chú
+                // Logic tạo Tóm tắt Ghi chú
                 summaryList.innerHTML = ''; 
                 let hasNotes = false;
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -1066,7 +1102,7 @@
                     }
                 });
                 
-                // SỬA LỖI 6: Sửa lỗi load lại trang
+                // SỬA LỖI 5: Sửa lỗi load lại trang
                 addNoteForm.addEventListener('submit', (e) => {
                     e.preventDefault(); // <-- SỬA LỖI NÀY
                     const noteText = newNoteInput.value.trim();
@@ -1106,7 +1142,7 @@
                     }
                 });
                 
-                // SỬA LỖI 7: Sửa logic AI
+                // SỬA LỖI 6: Logic xử lý AI đã sửa lỗi
                 cal_aiForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     const text = cal_aiInput.value.trim();
