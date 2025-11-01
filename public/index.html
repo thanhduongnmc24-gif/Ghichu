@@ -180,6 +180,7 @@
                  <button id="news-tab-btn" class="tab-button active text-xl font-bold !ml-0">
                      Tin Tức
                  </button>
+                 
                  <div class="hidden sm:flex items-center">
                     <div id="feed-nav" class="flex space-x-2 overflow-x-auto py-1">
                          <button class="feed-button active px-4 py-2 rounded-lg" data-rss="https://vnexpress.net/rss/tin-moi-nhat.rss" data-source="VnExpress">VnExpress</button>
@@ -195,9 +196,10 @@
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                     </button>
                     <button id="settings-btn" class="refresh-button hidden" title="Cài đặt">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0..."></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     </button>
                  </div>
+
                  <div class="sm:hidden flex items-center space-x-2"> 
                      <button id="refresh-feed-button-mobile" class="refresh-button" title="Tải lại tin tức">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
@@ -206,13 +208,27 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0..."></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                      </button>
                      <button id="hamburger-button" class="text-gray-300 hover:text-white focus:outline-none focus:text-white p-2">
+                          <span class="sr-only">Mở menu</span>
                          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
                      </button>
                  </div>
              </div>
+             
              <div id="mobile-menu" class="hidden sm:hidden bg-gray-700 absolute top-full left-0 right-0 z-20 shadow-lg mt-1 rounded-b-md">
+                 <div class="px-2 pt-2 pb-3 space-y-1">
+                     <button id="calendar-tab-btn-mobile" class="tab-button">Lịch Làm Việc</button>
+                     <div class="border-t border-gray-600 my-2"></div>
+                     <button class="feed-button active" data-rss="https://vnexpress.net/rss/tin-moi-nhat.rss" data-source="VnExpress">VnExpress</button>
+                     <button class="feed-button" data-rss="https://tuoitre.vn/rss/tin-moi-nhat.rss" data-source="Tuổi Trẻ">Tuổi Trẻ</button>
+                     <button class="feed-button" data-rss="https://thanhnien.vn/rss/home.rss" data-source="Thanh Niên">Thanh Niên</button>
+                     <button class="feed-button" data-rss="https://dantri.com.vn/rss/home.rss" data-source="Dân Trí">Dân Trí</button>
+                     <button class="feed-button" data-rss="https://vtv.vn/rss/home.rss" data-source="VTV">VTV</button>
+                     <button class="feed-button" data-rss="https://thethao247.vn/bong-da.rss" data-source="Thể Thao 247">Thể Thao 247</button>
+                     <button class="feed-button" data-rss="https://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
                  </div>
+             </div>
         </nav>
+        
         <div id="clock-container" class="text-center pb-3 text-sm text-gray-400 hidden">
             <span id="calendar-date">...</span>
             <span id="calendar-time" class="ml-2 font-semibold">...</span>
@@ -220,24 +236,113 @@
     </header>
 
     <main id="news-main" class="container mx-auto p-4 md:p-8">
-        </main>
+        <div id="loading-spinner" class="flex justify-center items-center h-64">
+            <div class="spinner border-t-blue-500" style="width: 50px; height: 50px;"></div>
+        </div>
+        <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+    </main>
     
     <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
-        </main>
+        <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6">
+            <h2 class="text-xl font-bold text-white mb-4">Thêm Nhanh (AI)</h2>
+            <form id="calendar-ai-form" class="flex space-x-2">
+                <input type="text" id="calendar-ai-input" placeholder="Ví dụ: Quang 30/10, Họp 15/11..." class="flex-grow p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-lg transition-colors flex-shrink-0">Phân tích</button>
+            </form>
+        </section>
 
-    <div id="summary-modal" class="hidden ...">
+        <section id="calendar-container" class="bg-white text-gray-900 rounded-lg shadow-lg p-4 md:p-6">
+            <div id="calendar-header" class="flex justify-between items-center mb-4">
+                <button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <h2 id="current-month-year" class="text-xl md:text-2xl font-bold text-gray-900">Tháng 10 2025</h2>
+                <button id="next-month-btn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <div class="min-w-[700px]"> 
+                    <div id="calendar-weekdays" class="grid grid-cols-7 gap-1 md:gap-2 mb-2">
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T2</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T3</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T4</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T5</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T6</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T7</div>
+                        <div class="weekday sunday bg-gray-100 text-red-600 font-semibold text-sm p-3 rounded-lg text-center">CN</div>
+                    </div>
+                    <div id="calendar-body" class="grid grid-cols-7 gap-1 md:gap-2">
+                        </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         </div>
-    <button id="chat-fab" class="fixed ...">
+    <button id="chat-fab" class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center z-40 transition-transform transform hover:scale-110">
         </button>
-    <div id="chat-modal" class="hidden ...">
+    <div id="chat-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         </div>
     <div id="summary-toast" class="hidden">
         </div>
 
-    <div id="settings-modal" class="hidden ...">
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Cài đặt</h2>
+                <button id="close-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+            
+            <fieldset class="border border-gray-600 p-4 rounded-lg">
+                <legend class="text-lg font-semibold text-white px-2">Thông báo</legend>
+                <button id="notify-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Bật Thông Báo (Toàn cục)</button>
+                <p class="text-sm text-gray-400 mt-2 mb-4">Cho phép ứng dụng gửi thông báo trên trình duyệt này.</p>
+                
+                <hr class="border-gray-600 my-4">
+                
+                <h3 class="text-md font-semibold text-white mb-3">Giờ báo thức theo ca:</h3>
+                
+                <label class="time-setting-label">
+                    <span>Báo ca <strong>Ngày</strong> lúc:</span>
+                    <input type="time" id="notify-time-ngay" value="06:00">
+                </label>
+                <label class="time-setting-label">
+                    <span>Báo ca <strong>Đêm</strong> lúc:</span>
+                    <input type="time" id="notify-time-dem" value="20:00">
+                </label>
+                <label class="time-setting-label">
+                    <span>Báo <strong>Giãn Ca</strong> lúc:</span>
+                    <input type="time" id="notify-time-off" value="08:00">
+                </label>
+                
+            </fieldset>
         </div>
-    <div id="note-modal" class="hidden ...">
+    </div>
+    <div id="note-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col">
+            <span id="close-note-modal" class="absolute top-3 right-4 text-gray-400 hover:text-white text-3xl cursor-pointer">&times;</span>
+            <h2 id="note-modal-title" class="text-2xl font-bold text-white mb-2">Cập nhật (Ngày...)</h2>
+            
+            <p id="modal-shift-info" class="bg-gray-700 p-3 rounded-lg text-gray-200 text-center font-semibold mb-4">
+                Ca tự động: <strong>...</strong>
+            </p>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Ghi chú hiện có:</label>
+            <div id="note-list-wrapper" class="flex-grow overflow-y-auto bg-gray-900 p-3 rounded-lg min-h-[100px] max-h-[200px] mb-4">
+                <ul id="note-list" class="space-y-2">
+                    </ul>
+            </div>
+            <form id="add-note-form">
+                <label for="new-note-input" class="block text-sm font-medium text-gray-300 mb-2">Thêm ghi chú mới:</label>
+                <div class="flex space-x-2">
+                    <input type="text" id="new-note-input" placeholder="Nhập ghi chú mới..." autocomplete="off" class="flex-grow p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Thêm</button>
+                </div>
+            </form>
         </div>
+    </div>
     
     
     <script type="module">
@@ -956,6 +1061,8 @@
                         }
                     }
                 });
+                
+                // CẬP NHẬT: Logic xử lý AI đã sửa lỗi
                 cal_aiForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
                     const text = cal_aiInput.value.trim();
@@ -970,10 +1077,11 @@
                             body: JSON.stringify({ text: text })
                         });
                         
-                        // CẬP NHẬT: Logic kiểm tra lỗi mới
                         const updatesData = await response.json(); 
                         
                         let updatesList = [];
+                        
+                        // SỬA LỖI: Chấp nhận cả Array và Object
                         if (Array.isArray(updatesData)) {
                             updatesList = updatesData;
                         } else if (typeof updatesData === 'object' && updatesData !== null && updatesData.date) {
@@ -987,11 +1095,15 @@
                         updatesList.forEach(update => {
                             const dateStr = update.date;
                             const noteText = update.note;
-                            if (dateStr && noteText) {
+                            
+                            // Thêm kiểm tra định dạng ngày (an toàn)
+                            if (dateStr && noteText && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
                                 if (!Array.isArray(noteData[dateStr])) {
                                     noteData[dateStr] = []; 
                                 }
                                 noteData[dateStr].push(noteText); 
+                            } else {
+                                console.warn("AI trả về ngày không hợp lệ, bỏ qua:", dateStr);
                             }
                         });
                         
