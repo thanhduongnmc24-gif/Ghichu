@@ -911,7 +911,7 @@
 
             }
 
-            // === HÀM MỚI: TÓM TẮT GHI CHÚ HÀNG THÁNG ===
+           // === HÀM MỚI: TÓM TẮT GHI CHÚ HÀNG THÁNG (ĐÃ CẬP NHẬT) ===
             function renderMonthlyNoteSummary(date) {
                 const monthlyNoteList = document.getElementById('monthly-note-list');
                 if (!monthlyNoteList) return; 
@@ -943,12 +943,29 @@
                             shiftDisplay = `ca ${shift}`; 
                         }
 
-                        notes.forEach(noteText => {
-                            const noteElement = document.createElement('p');
-                            noteElement.className = 'text-gray-200 p-2 bg-gray-700 rounded-md text-sm';
-                            noteElement.textContent = `${dayName} ngày ${dateDisplay} (${shiftDisplay}): ${noteText}`;
-                            monthlyNoteList.appendChild(noteElement);
-                        });
+                        // === BẮT ĐẦU THAY ĐỔI LOGIC ===
+                        
+                        // 1. Tạo tiền tố (prefix) cho ngày
+                        const datePrefix = `${dayName} ngày ${dateDisplay} (${shiftDisplay}): `;
+
+                        // 2. Xử lý ghi chú ĐẦU TIÊN (luôn hiển thị đầy đủ)
+                        const firstNoteElement = document.createElement('p');
+                        firstNoteElement.className = 'text-gray-200 p-2 bg-gray-700 rounded-md text-sm';
+                        firstNoteElement.textContent = datePrefix + notes[0]; // Gắn tiền tố + nội dung
+                        monthlyNoteList.appendChild(firstNoteElement);
+
+                        // 3. Xử lý các ghi chú CÒN LẠI (chỉ nội dung, có lề trái)
+                        if (notes.length > 1) {
+                            // Lặp từ ghi chú thứ 2 trở đi
+                            notes.slice(1).forEach(noteText => {
+                                const subsequentNoteElement = document.createElement('p');
+                                // Thêm class 'pl-12' (padding-left: 3rem) của Tailwind để tạo "khoảng trống"
+                                subsequentNoteElement.className = 'text-gray-200 p-2 bg-gray-700 rounded-md text-sm pl-12';
+                                subsequentNoteElement.textContent = noteText; // Chỉ hiển thị nội dung ghi chú
+                                monthlyNoteList.appendChild(subsequentNoteElement);
+                            });
+                        }
+                        // === KẾT THÚC THAY ĐỔI LOGIC ===
                     }
                 }
 
@@ -956,7 +973,7 @@
                     monthlyNoteList.innerHTML = `<p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>`;
                 }
             }
-            // === KẾT THÚC HÀM MỚI ===
+            // === KẾT THÚC HÀM ===
 
             // --- HÀM LỊCH: Modal Ghi chú ---
             function openNoteModal(dateStr) {
