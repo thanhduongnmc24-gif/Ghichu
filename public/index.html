@@ -28,7 +28,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        /* CSS cho nút Tải lại */
         .refresh-button {
              color: #D1D5DB; padding: 8px;
              border-radius: 8px; transition: all 0.2s;
@@ -40,7 +39,6 @@
             margin-left: 8px;
         }
         
-        /* CẬP NHẬT: CSS cho Tab (Tin tức / Lịch) */
         .tab-button {
             color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0;
             padding: 8px 16px; border-radius: 8px;
@@ -49,14 +47,13 @@
             margin-left: 12px;
         }
         .tab-button:hover { background-color: #374151; }
-        .tab-button.active { /* Tab đang được chọn */
+        .tab-button.active { 
             background-color: white; 
             color: #111827; 
             font-weight: 600;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         }
         
-        /* CSS cho Menu Mobile (cập nhật) */
         #mobile-menu .tab-button { 
             display: block; width: 100%; text-align: left; padding: 10px 16px; 
             border: none; margin-left: 0; color: #E5E7EB; font-weight: 600; 
@@ -64,18 +61,16 @@
         }
         #mobile-menu .tab-button:hover { background-color: #5b6676; }
         #mobile-menu .tab-button.active {
-            background-color: #E5E7EB; /* Sáng hơn */
-            color: #1F2937; /* Tối hơn */
+            background-color: #E5E7EB; 
+            color: #1F2937; 
         }
         
-        /* CSS cho Feed (cũ) */
         .feed-button { color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0; }
         .feed-button:hover { background-color: #374151; }
         #mobile-menu .feed-button { display: block; width: 100%; text-align: left; padding: 10px 16px; border-radius: 6px; font-weight: 500; color: #D1D5DB; }
         #mobile-menu .feed-button:hover { background-color: #4B5563; }
         #mobile-menu .feed-button.active { background-color: #6B7280; color: white; }
         
-        /* (Các CSS khác giữ nguyên) */
         #chat-input { background-color: #374151; color: white; border: 1px solid #4B5563; }
         #chat-input:focus { outline: none; border-color: #3B82F6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); }
         .chat-bubble { max-width: 80%; padding: 10px 16px; border-radius: 16px; margin-bottom: 8px; line-height: 1.5; }
@@ -122,7 +117,6 @@
               color: white;
           }
           
-        /* CSS cho Lịch (Nền Sáng) */
         .day-note-list {
             margin-top: 4px;
             padding-left: 16px; 
@@ -155,13 +149,11 @@
             padding: 0.25rem 0.5rem; 
         }
         
-        /* (MỚI) CSS Cho nút thông báo */
         #notify-button.subscribed {
-            background-color: #D9534F; /* Màu đỏ (hủy) */
+            background-color: #D9534F; 
             hover:bg-red-700;
         }
 
-        /* CSS cho Tổng kết Ghi chú (Grid) */
         .day-note-grid-group {
             grid-template-columns: auto 1fr;
         }
@@ -198,14 +190,14 @@
                     </button>
                     
                     <button id="settings-btn" class="refresh-button hidden" title="Cài đặt Lịch">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M11.49 3.17c-.12-.02-.24-.03-.36-.03h-2.26c-.12 0-.24.01-.36.03l-.79.12c-1.2.18-2.27 1.25-2.45 2.45l-.12.79c-.02.12-.03.24-.03.36v2.26c0 .12.01.24.03.36l.12.79c.18 1.2 1.25 2.27 2.45 2.45l.79.12c.12.02.24.03.36.03h2.26c.12 0 .24-.01.36-.03l.79-.12c1.2-.18 2.27-1.25 2.45-2.45l.12-.79c.02-.12.03-.24.03-.36V6.9c0-.12-.01-.24-.03-.36l-.12-.79A2.695 2.695 0 0 0 12.28 3.3l-.79-.12ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M11.49 3.17c-.12-.02-.24-.03-.36-.03h-2.26c-.12 0-.24.01-.36.03l-.79.12c-1.2.18-2.27 1.25-2.45 2.45l-.12.79c-.02.12-.03.24-.03.36v2.26c0 .12.01.24.03.36l.12.79c.18 1.2 1.25 2.27 2.45 2.45l.79.12c.12.02.24.03.36.03h2.26c.12 0 .24-.01.36-.03l.79-.12c1.2-.18 2.27-1.25 2.45-2.45l.12-.79c.02-.12.03-.24.03-.36V6.9c0-.12-.01-.24-.03-.36l-.12-.79A2.695 2.695 0 0 0 12.28 3.3l-.79-.12ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" /></svg>
                     </button>
                     </div>
 
                  <div class="sm:hidden flex items-center space-x-2"> 
                      
                      <button id="settings-btn-mobile" class="refresh-button hidden" title="Cài đặt Lịch">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M11.49 3.17c-.12-.02-.24-.03-.36-.03h-2.26c-.12 0-.24.01-.36.03l-.79.12c-1.2.18-2.27 1.25-2.45 2.45l-.12.79c-.02.12-.03.24-.03.36v2.26c0 .12.01.24.03.36l.12.79c.18 1.2 1.25 2.27 2.45 2.45l.79.12c.12.02.24.03.36.03h2.26c.12 0 .24-.01.36-.03l.79-.12c1.2-.18 2.27-1.25 2.45-2.45l.12-.79c.02-.12.03-.24.03-.36V6.9c0-.12-.01-.24-.03-.36l-.12-.79A2.695 2.695 0 0 0 12.28 3.3l-.79-.12ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M11.49 3.17c-.12-.02-.24-.03-.36-.03h-2.26c-.12 0-.24.01-.36.03l-.79.12c-1.2.18-2.27 1.25-2.45 2.45l-.12.79c-.02.12-.03.24-.03.36v2.26c0 .12.01.24.03.36l.12.79c.18 1.2 1.25 2.27 2.45 2.45l.79.12c.12.02.24.03.36.03h2.26c.12 0 .24-.01.36-.03l.79-.12c1.2-.18 2.27-1.25 2.45-2.45l.12-.79c.02-.12.03-.24.03-.36V6.9c0-.12-.01-.24-.03-.36l-.12-.79A2.695 2.695 0 0 0 12.28 3.3l-.79-.12ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" /></svg>
                      </button>
                      <button id="refresh-feed-button-mobile" class="refresh-button" title="Tải lại tin tức">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
@@ -393,20 +385,18 @@
     <script type="module">
         document.addEventListener('DOMContentLoaded', () => {
 
-            let swRegistration = null; // (MỚI) Biến lưu Service Worker
-            let vapidPublicKey = null; // (MỚI) Biến lưu VAPID Key
+            let swRegistration = null; 
+            let vapidPublicKey = null; 
 
             // --- ĐĂNG KÝ SERVICE WORKER ---
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/service-worker.js')
                     .then(async reg => {
                         console.log('Main Service Worker Registered!', reg);
-                        swRegistration = reg; // Lưu lại
+                        swRegistration = reg; 
                         
-                        // (MỚI) Lấy VAPID key từ server
                         await getVapidPublicKey();
                         
-                        // (MỚI) Kiểm tra trạng thái đăng ký thông báo
                         checkNotificationStatus();
                     })
                     .catch(err => console.error('Main Service Worker registration failed:', err));
@@ -453,7 +443,6 @@
             let completedSummary = { title: '', text: '' };
             let toastTimeoutId = null;
 
-            // (Hàm callGeminiAPIStreaming giữ nguyên)
             function callGeminiAPIStreaming(prompt, title) {
                 if (summaryEventSource) {
                     summaryEventSource.close();
@@ -496,7 +485,6 @@
                 };
             }
             
-            // (Hàm callChatAPI giữ nguyên)
             async function callChatAPI() {
                 const loadingBubble = document.createElement('div');
                 loadingBubble.className = 'model-bubble';
@@ -531,7 +519,6 @@
                 }
             }
 
-            // (Hàm fetchRSS giữ nguyên)
             async function fetchRSS(rssUrl, sourceName, { display = true, force = false } = {}) {
                 if (display) {
                     loadingSpinner.classList.remove('hidden');
@@ -574,7 +561,6 @@
                 }
             }
 
-            // (Hàm displayArticles giữ nguyên)
             function displayArticles(items, sourceName) {
                 newsGrid.innerHTML = '';
                 items.forEach(item => {
@@ -625,7 +611,6 @@
                 });
             }
 
-            // (Hàm handleFeedButtonClick giữ nguyên)
             function handleFeedButtonClick(e) {
                  const clickedButton = e.target.closest('.feed-button');
                  if (!clickedButton || clickedButton.classList.contains('active')) return;
@@ -638,7 +623,6 @@
                  mobileMenu.classList.add('hidden');
             }
 
-            // (Hàm handleSummaryClick giữ nguyên)
             function handleSummaryClick(title, description) {
                 if (!description || description === "Không có mô tả.") {
                      showToast("Không thể tóm tắt", "Bài viết không có đủ nội dung.", 'error', null, 4000);
@@ -651,7 +635,6 @@
                 showToast("Đang tóm tắt...", title.substring(0, 50) + "...", 'loading', null, 5000);
             }
 
-            // (Hàm showToast, hideToast, showSummaryReadyNotification giữ nguyên)
              function showToast(mainMessage, detailMessage, state = 'ready', onClickAction, autoHideDelay = null) {
                  if (toastTimeoutId) clearTimeout(toastTimeoutId);
                  toastMainMessage.textContent = mainMessage;
@@ -707,7 +690,6 @@
                   );
              }
 
-            // (Hàm renderChatHistory, handleSendChat, resetChat, prewarmCache giữ nguyên)
             function renderChatHistory() {
                 chatDisplay.innerHTML = '';
                 if (chatHistory.length === 0) {
@@ -749,7 +731,6 @@
                 });
             }
 
-            // (Hàm handleRefreshClick giữ nguyên)
             function handleRefreshClick() {
                 console.log("Đang yêu cầu tải lại...");
                 const activeButton = feedNav.querySelector('.feed-button.active');
@@ -765,7 +746,6 @@
             // PHẦN 2: LOGIC VÀ BIẾN CỦA TRANG LỊCH (CALENDAR)
             // ===================================================================
 
-            // --- HÀM LỊCH: SỬA LỖI MÚI GIỜ ---
             function getLocalDateString(date) {
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -773,14 +753,12 @@
                 return `${year}-${month}-${day}`;
             }
             
-            // --- HÀM LỊCH: Tính toán số ngày ---
             function dateToDays(dateStr) {
                 const [year, month, day] = dateStr.split('-').map(Number);
                 const date = new Date(year, month - 1, day);
                 return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
             }
 
-            // --- BIẾN LỊCH: Lấy DOM ---
             const calendarMain = document.getElementById('calendar-main');
             const cal_aiForm = document.getElementById('ai-form');
             const cal_aiInput = document.getElementById('ai-input');
@@ -794,7 +772,6 @@
             const settingsModal = document.getElementById('settings-modal');
             const closeModalBtn = document.getElementById('close-modal');
             
-            // (MỚI) Các biến cho Thông báo
             const notifyButton = document.getElementById('notify-button');
             const notifyTimeNgay = document.getElementById('notify-time-ngay');
             const notifyTimeDem = document.getElementById('notify-time-dem');
@@ -810,7 +787,6 @@
 
             let currentEditingDateStr = null;
 
-            // --- BIẾN LỊCH: Dữ liệu ---
             let noteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
             let appSettings = JSON.parse(localStorage.getItem('myScheduleSettings')) || {
                 notifyTimeNgay: "06:00",
@@ -818,13 +794,11 @@
                 notifyTimeOff: "08:00"
             };
             let currentViewDate = new Date(); 
-            // (MỚI) ĐÃ XÓA: let lastNotificationSentTime = null; 
 
-            // --- BIẾN LỊCH: Chu kỳ Ca ---
             const EPOCH_DAYS = dateToDays('2025-10-26');
             const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
 
-            // --- HÀM LỊCH: Lưu Dữ liệu ---
+            // (CẬP NHẬT) Hàm Lưu Ghi chú (Thêm đồng bộ)
             function saveNoteData() {
                 const cleanData = {};
                 for (const date in noteData) {
@@ -833,14 +807,18 @@
                     }
                 }
                 localStorage.setItem('myScheduleNotes', JSON.stringify(cleanData));
+                
+                // (MỚI) Gửi ghi chú cập nhật lên server
+                syncNotesToServer().catch(err => console.error('Lỗi đồng bộ ghi chú:', err));
             }
+
+            // (CẬP NHẬT) Hàm Lưu Cài đặt (Thêm đồng bộ)
             function saveSettings() {
                 localStorage.setItem('myScheduleSettings', JSON.stringify(appSettings));
-                // (MỚI) Khi lưu settings, nếu đã đăng ký thì gửi lại server
+                // Khi lưu settings, nếu đã đăng ký thì gửi lại server
                 updateSubscriptionSettings();
             }
             
-            // --- HÀM LỊCH: Tính Ca ---
             function getShiftForDate(dateStr) {
                 const currentDays = dateToDays(dateStr);
                 const diffDays = currentDays - EPOCH_DAYS;
@@ -848,14 +826,13 @@
                 return SHIFT_PATTERN[patternIndex];
             }
 
-            // --- HÀM LỊCH: Modal Cài đặt ---
             function loadSettings() {
                 notifyTimeNgay.value = appSettings.notifyTimeNgay;
                 notifyTimeDem.value = appSettings.notifyTimeDem;
                 notifyTimeOff.value = appSettings.notifyTimeOff;
             }
 
-            // --- HÀM LỊCH: Vẽ Lịch (Không thay đổi) ---
+            // (Hàm renderCalendar, renderMonthlyNoteSummary, openNoteModal, renderNoteList không thay đổi)
             function renderCalendar(date) {
                 calendarBody.innerHTML = '';
                 const year = date.getFullYear();
@@ -937,7 +914,6 @@
                 renderMonthlyNoteSummary(date); 
             }
             
-            // --- HÀM LỊCH: TÓM TẮT GHI CHÚ HÀNG THÁNG (Không thay đổi) ---
             function renderMonthlyNoteSummary(date) {
                 const monthlyNoteList = document.getElementById('monthly-note-list');
                 if (!monthlyNoteList) return; 
@@ -1004,8 +980,6 @@
                 }
             }
 
-
-            // --- HÀM LỊCH: Modal Ghi chú (Không thay đổi) ---
             function openNoteModal(dateStr) {
                 const date = new Date(dateStr + 'T12:00:00'); 
                 noteModal.style.display = 'flex';
@@ -1039,9 +1013,8 @@
                 });
             }
 
-            // --- (MỚI) HÀM LỊCH: Các hàm Thông báo Push ---
+            // --- (CẬP NHẬT) HÀM LỊCH: Các hàm Thông báo Push ---
             
-            // (MỚI) Hàm tiện ích chuyển đổi VAPID key
             function urlBase64ToUint8Array(base64String) {
                 const padding = '='.repeat((4 - base64String.length % 4) % 4);
                 const base64 = (base64String + padding)
@@ -1055,7 +1028,6 @@
                 return outputArray;
             }
 
-            // (MỚI) Lấy VAPID key từ server
             async function getVapidPublicKey() {
                 try {
                     const response = await fetch('/vapid-public-key');
@@ -1066,7 +1038,6 @@
                 }
             }
 
-            // (MỚI) Kiểm tra trạng thái đăng ký khi tải trang
             async function checkNotificationStatus() {
                 if (!swRegistration) return;
                 const subscription = await swRegistration.pushManager.getSubscription();
@@ -1081,7 +1052,7 @@
                 }
             }
 
-            // (MỚI) Hàm chính: Đăng ký hoặc Hủy đăng ký
+            // (CẬP NHẬT) Hàm Đăng ký (Thêm gửi noteData)
             async function handleSubscribeClick() {
                 if (!swRegistration || !vapidPublicKey) {
                     alert("Service Worker hoặc VAPID Key chưa sẵn sàng. Vui lòng thử lại.");
@@ -1097,7 +1068,6 @@
                     try {
                         const unsubscribed = await existingSubscription.unsubscribe();
                         if (unsubscribed) {
-                            // Gửi yêu cầu xóa khỏi server DB
                             await fetch('/unsubscribe', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -1115,7 +1085,6 @@
                     console.log("Đang đăng ký mới...");
                     notifyButton.disabled = true;
                     
-                    // 1. Xin quyền
                     const permission = await Notification.requestPermission();
                     if (permission !== 'granted') {
                         alert("Đại ca đã từ chối quyền thông báo. Vui lòng bật thủ công trong cài đặt trình duyệt.");
@@ -1123,7 +1092,6 @@
                         return;
                     }
 
-                    // 2. Đăng ký với Push Manager
                     try {
                         const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
                         const subscription = await swRegistration.pushManager.subscribe({
@@ -1131,21 +1099,29 @@
                             applicationServerKey: applicationServerKey
                         });
                         
-                        // 3. Lấy settings hiện tại
+                        // Lấy settings hiện tại
                         const settings = {
                             notifyTimeNgay: notifyTimeNgay.value,
                             notifyTimeDem: notifyTimeDem.value,
                             notifyTimeOff: notifyTimeOff.value
                         };
                         
-                        // 4. Gửi subscription và settings lên server
+                        // (MỚI) Lấy ghi chú hiện tại
+                        const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
+                        const noteData = JSON.parse(noteDataStr);
+                        
+                        // Gửi subscription, settings, VÀ noteData lên server
                         await fetch('/subscribe', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ subscription: subscription, settings: settings })
+                            body: JSON.stringify({ 
+                                subscription: subscription, 
+                                settings: settings,
+                                noteData: noteData // (MỚI)
+                            })
                         });
                         
-                        console.log("Đã đăng ký và gửi lên server.");
+                        console.log("Đã đăng ký và gửi (cả ghi chú) lên server.");
                         alert("Đã bật thông báo thành công!");
 
                     } catch (err) {
@@ -1155,21 +1131,19 @@
                 }
                 
                 notifyButton.disabled = false;
-                checkNotificationStatus(); // Cập nhật lại nút
+                checkNotificationStatus(); 
             }
 
-            // (MỚI) Hàm này được gọi khi người dùng thay đổi giờ (lưu trong saveSettings)
+            // (CẬP NHẬT) Hàm Cập nhật Cài đặt (Thêm gửi noteData)
             async function updateSubscriptionSettings() {
                 if (!swRegistration) return;
                 const subscription = await swRegistration.pushManager.getSubscription();
                 
-                // Nếu người dùng chưa đăng ký, không làm gì cả
                 if (!subscription) {
                     console.log("Chưa đăng ký, không cần cập nhật settings.");
                     return;
                 }
                 
-                // Nếu đã đăng ký, gửi cài đặt mới lên server
                 console.log("Đang cập nhật settings (giờ) lên server...");
                 try {
                     const settings = {
@@ -1177,33 +1151,64 @@
                         notifyTimeDem: notifyTimeDem.value,
                         notifyTimeOff: notifyTimeOff.value
                     };
+
+                    // (MỚI) Lấy ghi chú hiện tại
+                    const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
+                    const noteData = JSON.parse(noteDataStr);
                     
-                    await fetch('/subscribe', {
-                        method: 'POST', // Vẫn gọi /subscribe
+                    await fetch('/subscribe', { // Vẫn gọi /subscribe (nó sẽ tự cập nhật)
+                        method: 'POST', 
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ subscription: subscription, settings: settings })
+                        body: JSON.stringify({ 
+                            subscription: subscription, 
+                            settings: settings,
+                            noteData: noteData // (MỚI)
+                        })
                     });
-                    console.log("Đã cập nhật settings trên server.");
+                    console.log("Đã cập nhật settings (và ghi chú) trên server.");
                 } catch (err) {
                     console.error("Lỗi khi cập nhật settings:", err);
                 }
             }
 
+            // (MỚI) Hàm đồng bộ Ghi chú (gọi khi saveNoteData)
+            async function syncNotesToServer() {
+                if (!swRegistration) return;
+                const subscription = await swRegistration.pushManager.getSubscription();
+                
+                // Nếu người dùng chưa đăng ký thông báo, không cần đồng bộ
+                if (!subscription) {
+                    return;
+                }
+                
+                console.log("Đang đồng bộ ghi chú lên server...");
+                try {
+                    const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
+                    const noteData = JSON.parse(noteDataStr);
+                    
+                    await fetch('/update-notes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            endpoint: subscription.endpoint, 
+                            noteData: noteData
+                        })
+                    });
+                    console.log("Đồng bộ ghi chú thành công.");
+                } catch (err) {
+                    console.error("Lỗi khi đồng bộ ghi chú:", err);
+                }
+            }
 
-            // --- (MỚI) ĐÃ XÓA: checkDailyShiftNotification()
-            // --- (MỚI) ĐÃ XÓA: setInterval(checkDailyShiftNotification, 60000);
-            
 
             // ===================================================================
             // PHẦN 3: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG)
             // ===================================================================
 
-            // --- BIẾN TAB ---
             const newsTabBtn = document.getElementById('news-tab-btn');
             const calendarTabBtn = document.getElementById('calendar-tab-btn');
             const calendarTabBtnMobile = document.getElementById('calendar-tab-btn-mobile');
             
-            // --- HÀM TAB: Chuyển tab (Đã CẬP NHẬT) ---
             function showTab(tabName) {
                 if (tabName === 'news') {
                     newsMain.classList.remove('hidden');
@@ -1231,13 +1236,11 @@
                 }
             }
 
-
-            // --- GẮN SỰ KIỆN CHO TAB ---
             newsTabBtn.addEventListener('click', () => showTab('news'));
             calendarTabBtn.addEventListener('click', () => showTab('calendar'));
             calendarTabBtnMobile.addEventListener('click', () => {
                 showTab('calendar');
-                mobileMenu.classList.add('hidden'); // Đóng menu mobile
+                mobileMenu.classList.add('hidden'); 
             });
 
             // --- KHỞI ĐỘNG (TIN TỨC) ---
@@ -1296,8 +1299,6 @@
                 renderCalendar(currentViewDate);
                 loadSettings();
                 
-                // (MỚI) ĐÃ XÓA setInterval(checkDailyShiftNotification, 60000);
-
                 const openSettingsModal = () => {
                     loadSettings(); 
                     settingsModal.style.display = 'flex';
@@ -1318,10 +1319,10 @@
                     }
                 });
 
-                // (MỚI) Gắn sự kiện cho các input thời gian
+                // (CẬP NHẬT) Các sự kiện này sẽ tự động đồng bộ
                 notifyTimeNgay.addEventListener('change', (e) => {
                     appSettings.notifyTimeNgay = e.target.value;
-                    saveSettings(); // saveSettings sẽ tự động gọi updateSubscriptionSettings
+                    saveSettings(); 
                 });
                 notifyTimeDem.addEventListener('change', (e) => {
                     appSettings.notifyTimeDem = e.target.value;
@@ -1332,7 +1333,6 @@
                     saveSettings();
                 });
                 
-                // (MỚI) Gắn sự kiện cho nút Thông báo
                 notifyButton.addEventListener('click', handleSubscribeClick);
 
                 // (Các sự kiện Lịch còn lại giữ nguyên)
@@ -1354,6 +1354,8 @@
                         currentEditingDateStr = null;
                     }
                 });
+                
+                // (CẬP NHẬT) Submit form sẽ tự gọi saveNoteData -> tự đồng bộ
                 addNoteForm.addEventListener('submit', (e) => {
                     e.preventDefault();
                     const noteText = newNoteInput.value.trim();
@@ -1362,11 +1364,13 @@
                         noteData[currentEditingDateStr] = [];
                     }
                     noteData[currentEditingDateStr].push(noteText);
-                    saveNoteData();
+                    saveNoteData(); // <--- Sẽ tự động gọi syncNotesToServer
                     renderNoteList(currentEditingDateStr); 
                     renderCalendar(currentViewDate); 
                     newNoteInput.value = ''; 
                 });
+                
+                // (CẬP NHẬT) Click (sửa/xóa) sẽ tự gọi saveNoteData -> tự đồng bộ
                 noteList.addEventListener('click', (e) => {
                     const target = e.target;
                     const index = target.dataset.index;
@@ -1377,7 +1381,7 @@
                         const newText = prompt("Sửa ghi chú:", oldText);
                         if (newText !== null && newText.trim() !== "") {
                             noteData[currentEditingDateStr][index] = newText.trim();
-                            saveNoteData();
+                            saveNoteData(); // <--- Sẽ tự động gọi syncNotesToServer
                             renderNoteList(currentEditingDateStr);
                             renderCalendar(currentViewDate);
                         }
@@ -1385,12 +1389,14 @@
                     if (target.classList.contains('delete-note')) {
                         if (confirm(`Bạn có chắc muốn xóa ghi chú: "${notes[index]}"?`)) {
                             noteData[currentEditingDateStr].splice(index, 1);
-                            saveNoteData();
+                            saveNoteData(); // <--- Sẽ tự động gọi syncNotesToServer
                             renderNoteList(currentEditingDateStr);
                             renderCalendar(currentViewDate);
                         }
                     }
                 });
+                
+                // (CẬP NHẬT) AI Form sẽ tự gọi saveNoteData -> tự đồng bộ
                 cal_aiForm.addEventListener('submit', async (e) => {
                     e.preventDefault(); 
                     const text = cal_aiInput.value.trim();
@@ -1416,7 +1422,7 @@
                                     noteData[dateStr].push(noteText); 
                                 }
                             });
-                            saveNoteData(); 
+                            saveNoteData(); // <--- Sẽ tự động gọi syncNotesToServer
                             renderCalendar(currentViewDate); 
                             cal_aiInput.value = ''; 
                         } else {
@@ -1433,14 +1439,13 @@
             })();
             
             // --- KHỞI ĐỘNG (TAB) ---
-            // (MỚI) Xử lý hash URL để mở tab Lịch
             if (window.location.hash === '#calendar') {
                 showTab('calendar');
             } else {
-                showTab('news'); // Mặc định là Tin tức
+                showTab('news'); 
             }
 
-        }); // Kết thúc DOMContentLoaded
+        }); 
     </script>
 </body>
 </html>
