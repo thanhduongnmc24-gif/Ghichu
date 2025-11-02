@@ -2,9 +2,11 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import cors from 'cors';
-import path from 'path'; // Thêm 'path'
-import { fileURLToPath } from 'url'; // Thêm để lấy __dirname trong ESM
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import webpush from 'web-push'; // (MỚI) Thêm web-push
+import pg from 'pg'; // (MỚI) Thêm pg (PostgreSQL)
 
 // ----- CÀI ĐẶT CACHE (RSS) -----
 const cache = new Map();
@@ -14,20 +16,16 @@ const CACHE_DURATION_MS = 3 * 60 * 1000; // 3 phút
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Cấu hình __dirname cho ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // --- Middleware ---
 app.use(cors());
 app.use(express.json());
-// CẬP NHẬT: Serve file tĩnh từ thư mục 'public'
-app.use(express.static(path.join(__dirname, 'public'))); 
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Lấy API Key từ Biến Môi Trường
+// --- CÀI ĐẶT GOOGLE AI ---
 const API_KEY = process.env.GEMINI_API_KEY;
-
-// Khởi tạo client Google AI
 let genAI;
 if (API_KEY) {
     genAI = new GoogleGenerativeAI(API_KEY);
@@ -35,11 +33,58 @@ if (API_KEY) {
     console.error("Thiếu GEMINI_API_KEY trong biến môi trường!");
 }
 
+// ----- (MỚI) CÀI ĐẶT WEB PUSH -----
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT;
+
+if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_SUBJECT) {
+    console.error("Thiếu VAPID keys! Thông báo PUSH sẽ không hoạt động.");
+} else {
+    webpush.setVapidDetails(
+        VAPID_SUBJECT,
+        VAPID_PUBLIC_KEY,
+        VAPID_PRIVATE_KEY
+    );
+    console.log("Web Push đã được cấu hình.");
+}
+
+// ----- (MỚI) CÀI ĐẶT DATABASE (PostgreSQL) -----
+const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false // Cần thiết cho kết nối Render
+    }
+});
+
+// (MỚI) Hàm tự động tạo bảng nếu chưa tồn tại
+(async () => {
+    const client = await pool.connect();
+    try {
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS subscriptions (
+                id SERIAL PRIMARY KEY,
+                endpoint TEXT NOT NULL UNIQUE,
+                keys JSONB NOT NULL,
+                settings JSONB NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log("Bảng 'subscriptions' đã sẵn sàng.");
+    } catch (err) {
+        console.error("Lỗi khi tạo bảng subscriptions:", err);
+    } finally {
+        client.release();
+    }
+})();
+
 
 // ----- CÁC ENDPOINT CỦA TIN TỨC -----
+// (Không thay đổi - Giữ nguyên Endpoint 1, 2, 3)
 
 // Endpoint 1: Lấy RSS feed (Không thay đổi)
 app.get('/get-rss', async (req, res) => {
+    // ... (Giữ nguyên code)
     const rssUrl = req.query.url;
     if (!rssUrl) return res.status(400).send('Thiếu tham số url');
 
@@ -75,6 +120,7 @@ app.get('/get-rss', async (req, res) => {
 
 // Endpoint 2: Tóm tắt AI (Streaming - Không thay đổi)
 app.get('/summarize-stream', async (req, res) => {
+    // ... (Giữ nguyên code)
     const { prompt } = req.query; 
 
     if (!prompt) return res.status(400).send('Thiếu prompt');
@@ -121,6 +167,7 @@ app.get('/summarize-stream', async (req, res) => {
 
 // Endpoint 3: Chat AI (Không thay đổi)
 app.post('/chat', async (req, res) => {
+    // ... (Giữ nguyên code)
     const { history } = req.body;
 
     if (!history || history.length === 0) {
@@ -170,6 +217,7 @@ app.post('/chat', async (req, res) => {
 
 // ----- ENDPOINT CỦA LỊCH LÀM VIỆC (Không thay đổi) -----
 app.post('/api/calendar-ai-parse', async (req, res) => {
+    // ... (Giữ nguyên code)
     const text = req.body.text || "";
     if (!text) {
         return res.status(400).json({ error: 'Không có văn bản' });
@@ -229,10 +277,191 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
 });
 
 
+// ----- (MỚI) CÁC ENDPOINT CHO PUSH NOTIFICATION -----
+
+// (MỚI) Endpoint 1: Gửi VAPID Public Key cho client
+app.get('/vapid-public-key', (req, res) => {
+    if (!VAPID_PUBLIC_KEY) {
+        return res.status(500).send("VAPID Public Key chưa được cấu hình trên server.");
+    }
+    res.send(VAPID_PUBLIC_KEY);
+});
+
+// (MỚI) Endpoint 2: Đăng ký nhận thông báo (Sử dụng DB)
+app.post('/subscribe', async (req, res) => {
+    const { subscription, settings } = req.body;
+    if (!subscription || !settings || !subscription.endpoint || !subscription.keys) {
+        return res.status(400).send("Thiếu thông tin subscription hoặc settings.");
+    }
+
+    const { endpoint, keys } = subscription;
+
+    // Sử dụng UPSERT (INSERT ... ON CONFLICT ... DO UPDATE)
+    // Nếu endpoint đã tồn tại, nó sẽ cập nhật 'settings'
+    // Nếu chưa, nó sẽ tạo record mới
+    const query = `
+        INSERT INTO subscriptions (endpoint, keys, settings)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (endpoint)
+        DO UPDATE SET settings = $3;
+    `;
+    
+    try {
+        await pool.query(query, [endpoint, keys, settings]);
+        console.log("Đã lưu/cập nhật subscription:", endpoint);
+        res.status(201).json({ success: true });
+    } catch (error) {
+        console.error("Lỗi khi lưu subscription vào DB:", error);
+        res.status(500).send("Lỗi máy chủ khi lưu subscription.");
+    }
+});
+
+// (MỚI) Endpoint 3: Hủy đăng ký (Sử dụng DB)
+app.post('/unsubscribe', async (req, res) => {
+    const { endpoint } = req.body;
+    if (!endpoint) {
+        return res.status(400).send("Thiếu thông tin endpoint.");
+    }
+    
+    const query = "DELETE FROM subscriptions WHERE endpoint = $1";
+    
+    try {
+        const result = await pool.query(query, [endpoint]);
+        if (result.rowCount > 0) {
+            console.log("Đã xóa subscription:", endpoint);
+        } else {
+            console.log("Không tìm thấy subscription để xóa:", endpoint);
+        }
+        res.status(200).json({ success: true });
+    } catch (error) {
+        console.error("Lỗi khi hủy đăng ký subscription:", error);
+        res.status(500).send("Lỗi máy chủ khi hủy đăng ký.");
+    }
+});
+
+
+// ----- (MỚI) LOGIC GỬI THÔNG BÁO (CHẠY TRÊN SERVER) -----
+
+// (MỚI) Sao chép logic tính ca từ client
+const EPOCH_DAYS = dateToDays('2025-10-26');
+const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
+
+function dateToDays(dateStr) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
+}
+
+function getShiftForDate(dateStr) {
+    const currentDays = dateToDays(dateStr);
+    const diffDays = currentDays - EPOCH_DAYS;
+    const patternIndex = (diffDays % SHIFT_PATTERN.length + SHIFT_PATTERN.length) % SHIFT_PATTERN.length;
+    return SHIFT_PATTERN[patternIndex];
+}
+
+// (MỚI) Lấy ngày giờ hiện tại ở múi giờ Hà Nội
+function getHanoiTime() {
+    const now = new Date();
+    const options = { timeZone: 'Asia/Ho_Chi_Minh' };
+    
+    const timeFormatter = new Intl.DateTimeFormat('en-GB', { ...options, hour: '2-digit', minute: '2-digit', hour12: false });
+    const timeStr = timeFormatter.format(now); // "06:00"
+
+    const dateFormatter = new Intl.DateTimeFormat('en-CA', { ...options, year: 'numeric', month: '2-digit', day: '2-digit' });
+    const dateStr = dateFormatter.format(now); // "2025-10-31"
+    
+    return { timeStr, dateStr };
+}
+
+// (MỚI) Hàm xóa subscription hết hạn khỏi DB
+async function deleteSubscription(endpoint) {
+    console.log("Đang xóa sub hết hạn:", endpoint);
+    try {
+        await pool.query("DELETE FROM subscriptions WHERE endpoint = $1", [endpoint]);
+    } catch (err) {
+        console.error("Lỗi khi xóa sub hết hạn:", err);
+    }
+}
+
+// (MỚI) Hàm kiểm tra và gửi thông báo
+let lastNotificationCheckTime = null;
+
+async function checkAndSendNotifications() {
+    const { timeStr, dateStr } = getHanoiTime();
+
+    // Chỉ chạy 1 lần mỗi phút
+    if (timeStr === lastNotificationCheckTime) {
+        return;
+    }
+    lastNotificationCheckTime = timeStr;
+    
+    // 1. Tính ca của hôm nay
+    const todayShift = getShiftForDate(dateStr);
+    
+    // 2. Đọc danh sách đăng ký từ DB
+    let subscriptions;
+    try {
+        const result = await pool.query("SELECT endpoint, keys, settings FROM subscriptions");
+        subscriptions = result.rows;
+    } catch (error) {
+        console.error("Không thể đọc subscriptions từ DB:", error);
+        return;
+    }
+
+    if (subscriptions.length === 0) {
+        // console.log("Không có ai đăng ký thông báo.");
+        return;
+    }
+    
+    console.log(`[Notify Check] ${timeStr} | Ca hôm nay: ${todayShift} | Subs: ${subscriptions.length}`);
+
+    // 3. Lặp qua từng người đăng ký
+    const notificationPayload = JSON.stringify({
+        title: "Lịch Luân Phiên",
+        body: `Hôm nay là ca ${todayShift.toUpperCase()}. Chúc đại ca một ngày tốt lành!`
+    });
+
+    const sendPromises = subscriptions.map(sub => {
+        const { endpoint, keys, settings } = sub;
+        
+        let timeToAlert = null;
+        if (todayShift === 'ngày') timeToAlert = settings.notifyTimeNgay;
+        else if (todayShift === 'đêm') timeToAlert = settings.notifyTimeDem;
+        else if (todayShift === 'giãn ca') timeToAlert = settings.notifyTimeOff;
+
+        // 4. So sánh giờ
+        if (timeToAlert && timeStr === timeToAlert) {
+            console.log(`Đang gửi thông báo ${todayShift} đến:`, endpoint);
+            
+            const pushSubscription = {
+                endpoint: endpoint,
+                keys: keys
+            };
+            
+            return webpush.sendNotification(pushSubscription, notificationPayload)
+                .catch(err => {
+                    if (err.statusCode === 410 || err.statusCode === 404) {
+                        // 410/404 = GONE (Đăng ký đã hết hạn hoặc không hợp lệ)
+                        deleteSubscription(endpoint);
+                    } else {
+                        console.error("Lỗi khi gửi push:", err);
+                    }
+                });
+        }
+        return Promise.resolve();
+    });
+    
+    await Promise.all(sendPromises);
+}
+
+// (MỚI) Khởi chạy vòng lặp kiểm tra thông báo trên server
+// Chạy mỗi 60 giây (60000ms)
+setInterval(checkAndSendNotifications, 60000);
+
+
 // ----- CÁC ROUTE TRANG -----
 
 // CẬP NHẬT: Tất cả các route không xác định sẽ trỏ về index.html
-// Điều này xử lý cả trang chủ ('/') và các trang con (PWA)
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -241,4 +470,6 @@ app.get('*', (req, res) => {
 // --- Khởi động Server ---
 app.listen(PORT, () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);
+    // (MỚI) Chạy kiểm tra ngay khi khởi động
+    checkAndSendNotifications(); 
 });
