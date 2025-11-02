@@ -39,16 +39,7 @@
         .sm\:flex .refresh-button {
             margin-left: 8px;
         }
-        /* CSS cho Tổng kết Ghi chú (Sử dụng Grid) */
-        .day-note-grid-group {
-            /* 2 cột: [auto] = rộng vừa đủ chữ (tiền tố), [1fr] = lấp đầy phần còn lại */
-            grid-template-columns: auto 1fr;
-        }
-
-        .note-content-indented {
-            /* Quan trọng: Buộc phần tử này bắt đầu ở cột 2 */
-            grid-column-start: 2;
-        }
+        
         /* CẬP NHẬT: CSS cho Tab (Tin tức / Lịch) */
         .tab-button {
             color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0;
@@ -163,6 +154,14 @@
             border-radius: 0.375rem; 
             padding: 0.25rem 0.5rem; 
         }
+
+        /* CSS cho Tổng kết Ghi chú (Grid) */
+        .day-note-grid-group {
+            grid-template-columns: auto 1fr;
+        }
+        .note-content-indented {
+            grid-column-start: 2;
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -191,9 +190,17 @@
                     <button id="refresh-feed-button" class="refresh-button" title="Tải lại tin tức">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                     </button>
-                 </div>
+                    
+                    <button id="settings-btn" class="refresh-button hidden" title="Cài đặt Lịch">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M11.49 3.17c-.12-.02-.24-.03-.36-.03h-2.26c-.12 0-.24.01-.36.03l-.79.12c-1.2.18-2.27 1.25-2.45 2.45l-.12.79c-.02.12-.03.24-.03.36v2.26c0 .12.01.24.03.36l.12.79c.18 1.2 1.25 2.27 2.45 2.45l.79.12c.12.02.24.03.36.03h2.26c.12 0 .24-.01.36-.03l.79-.12c1.2-.18 2.27-1.25 2.45-2.45l.12-.79c.02-.12.03-.24.03-.36V6.9c0-.12-.01-.24-.03-.36l-.12-.79A2.695 2.695 0 0 0 12.28 3.3l-.79-.12ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" /></svg>
+                    </button>
+                    </div>
 
                  <div class="sm:hidden flex items-center space-x-2"> 
+                     
+                     <button id="settings-btn-mobile" class="refresh-button hidden" title="Cài đặt Lịch">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M11.49 3.17c-.12-.02-.24-.03-.36-.03h-2.26c-.12 0-.24.01-.36.03l-.79.12c-1.2.18-2.27 1.25-2.45 2.45l-.12.79c-.02.12-.03.24-.03.36v2.26c0 .12.01.24.03.36l.12.79c.18 1.2 1.25 2.27 2.45 2.45l.79.12c.12.02.24.03.36.03h2.26c.12 0 .24-.01.36-.03l.79-.12c1.2-.18 2.27-1.25 2.45-2.45l.12-.79c.02-.12.03-.24.03-.36V6.9c0-.12-.01-.24-.03-.36l-.12-.79A2.695 2.695 0 0 0 12.28 3.3l-.79-.12ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" /></svg>
+                     </button>
                      <button id="refresh-feed-button-mobile" class="refresh-button" title="Tải lại tin tức">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                      </button>
@@ -270,7 +277,8 @@
                 <p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>
             </div>
         </section>
-        </main>
+
+    </main>
 
     <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
@@ -733,7 +741,6 @@
             
             // ===================================================================
             // PHẦN 2: LOGIC VÀ BIẾN CỦA TRANG LỊCH (CALENDAR)
-            // (Toàn bộ mã từ public/calendar/app.js được dán vào đây)
             // ===================================================================
 
             // --- HÀM LỊCH: SỬA LỖI MÚI GIỜ ---
@@ -753,7 +760,7 @@
 
             // --- BIẾN LỊCH: Lấy DOM ---
             const calendarMain = document.getElementById('calendar-main');
-            const cal_dateEl = document.getElementById('date'); // Đổi tên tránh xung đột
+            const cal_dateEl = document.getElementById('date'); 
             const cal_timeEl = document.getElementById('time');
             const cal_aiForm = document.getElementById('ai-form');
             const cal_aiInput = document.getElementById('ai-input');
@@ -762,7 +769,10 @@
             const prevMonthBtn = document.getElementById('prev-month-btn');
             const nextMonthBtn = document.getElementById('next-month-btn');
             
-            const settingsBtn = document.getElementById('settings-btn'); // SẼ LÀ NULL, ĐÃ SỬA LỖI BÊN DƯỚI
+            // === JS NÚT CÀI ĐẶT (ĐÃ THÊM mobile) ===
+            const settingsBtn = document.getElementById('settings-btn');
+            const settingsBtnMobile = document.getElementById('settings-btn-mobile'); 
+            
             const settingsModal = document.getElementById('settings-modal');
             const closeModalBtn = document.getElementById('close-modal');
             const notifyButton = document.getElementById('notify-button');
@@ -820,12 +830,7 @@
             function updateCalendarClock() {
                 // Tắt đồng hồ vì không có DOM
                 // const now = new Date();
-                // const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-                // const dayName = days[now.getDay()];
-                // const dateStr = `${dayName}, ${now.toLocaleDateString('vi-VN')}`;
-                // const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-                // cal_dateEl.textContent = dateStr;
-                // cal_timeEl.textContent = timeStr;
+                // ...
             }
 
             // --- HÀM LỊCH: Modal Cài đặt ---
@@ -914,28 +919,21 @@
                     calendarBody.appendChild(dayCell);
                 }
                 
-                // === GỌI HÀM TÓM TẮT MỚI ===
                 renderMonthlyNoteSummary(date); 
-                // ==========================
-
             }
-
-
-
-            // --- HÀM LỊCH: Hiển thị tóm tắt ghi chú hàng tháng (Cập nhật Grid đồng nhất) ---
+            
+            // --- HÀM LỊCH: TÓM TẮT GHI CHÚ HÀNG THÁNG (ĐÃ SỬA LỖI SYNTAX) ---
             function renderMonthlyNoteSummary(date) {
                 const monthlyNoteList = document.getElementById('monthly-note-list');
                 if (!monthlyNoteList) return; 
 
-                monthlyNoteList.innerHTML = ''; // Xóa nội dung cũ
+                monthlyNoteList.innerHTML = ''; 
                 
                 const year = date.getFullYear();
                 const month = date.getMonth();
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
                 const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
                 
-                // 1. Thu thập tất cả các ngày có ghi chú TRƯỚC
-                // Điều này quan trọng để quyết định xem có nên dùng layout Grid hay không
                 const daysWithNotes = []; 
                 for (let day = 1; day <= daysInMonth; day++) {
                     const currentDate = new Date(year, month, day);
@@ -951,7 +949,6 @@
                             shiftDisplay = `ca ${shift}`; 
                         }
                         const datePrefix = `${dayName} ngày ${dateDisplay} (${shiftDisplay}): `;
-                        // Thêm dữ liệu đã xử lý vào mảng
                         daysWithNotes.push({ 
                             datePrefix: datePrefix, 
                             notes: notes 
@@ -959,54 +956,41 @@
                     }
                 }
 
-                // 2. Quyết định cách hiển thị
                 if (daysWithNotes.length === 0) {
-                    // TRƯỜNG HỢP 1: KHÔNG CÓ GHI CHÚ
-                    // Hoàn nguyên về layout block (không dùng grid)
                     monthlyNoteList.style.display = 'block';
                     monthlyNoteList.className = ''; 
                     monthlyNoteList.style.gridTemplateColumns = '';
                     monthlyNoteList.innerHTML = `<p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>`;
                 
                 } else {
-                    // TRƯỜNG HỢP 2: CÓ GHI CHÚ
-                    // Áp dụng layout Grid cho toàn bộ danh sách
                     monthlyNoteList.style.display = 'grid';
-                    // 'gap-2' (0.5rem) tạo khoảng cách giữa các ngày
                     monthlyNoteList.className = 'grid gap-2'; 
-                    // Cột 1: tự động dãn theo nội dung RỘNG NHẤT
-                    // Cột 2: lấp đầy phần còn lại
                     monthlyNoteList.style.gridTemplateColumns = 'auto 1fr';
 
-                    // Lặp qua mảng đã thu thập
                     daysWithNotes.forEach(dayData => {
                         
-                        // Tạo Ô 1 (Wrapper cho Tiền tố)
                         const prefixWrapper = document.createElement('div');
-                        // Thêm bo góc, p-2 (padding), và không xuống dòng
                         prefixWrapper.className = 'bg-gray-700 rounded-md text-gray-200 text-sm p-2 whitespace-nowrap';
                         prefixWrapper.textContent = dayData.datePrefix;
                         
-                        // Tạo Ô 2 (Wrapper cho tất cả Ghi chú)
                         const contentWrapper = document.createElement('div');
-                        // Thêm bo góc và 'divide-y' để tạo đường kẻ ngang
                         contentWrapper.className = 'bg-gray-700 rounded-md text-sm text-gray-200 divide-y divide-gray-600'; 
                         
-                        // Lặp qua các ghi chú của ngày này
                         dayData.notes.forEach(noteText => {
                             const noteEl = document.createElement('p');
-                            noteEl.className = 'p-2'; // Thêm padding cho từng ghi chú
+                            noteEl.className = 'p-2'; 
                             noteEl.textContent = noteText;
                             contentWrapper.appendChild(noteEl);
-Dòng 898                        });
+                            // === ĐÃ XÓA DÒNG LỖI "Dòng 898" TẠI ĐÂY ===
+                        });
 
-                        // Gắn 2 ô (2 cột) này vào Grid cha
                         monthlyNoteList.appendChild(prefixWrapper);
                         monthlyNoteList.appendChild(contentWrapper);
                     });
                 }
             }
-            // === KẾT THÚC HÀM THAY THẾ ===
+            // === KẾT THÚC HÀM ===
+
 
             // --- HÀM LỊCH: Modal Ghi chú ---
             function openNoteModal(dateStr) {
@@ -1099,7 +1083,7 @@ Dòng 898                        });
             const calendarTabBtn = document.getElementById('calendar-tab-btn');
             const calendarTabBtnMobile = document.getElementById('calendar-tab-btn-mobile');
             
-            // --- HÀM TAB: Chuyển tab ---
+            // --- HÀM TAB: Chuyển tab (ĐÃ CẬP NHẬT) ---
             function showTab(tabName) {
                 if (tabName === 'news') {
                     newsMain.classList.remove('hidden');
@@ -1108,11 +1092,14 @@ Dòng 898                        });
                     newsTabBtn.classList.add('active');
                     calendarTabBtn.classList.remove('active');
                     calendarTabBtnMobile.classList.remove('active');
-                    // Ẩn/hiện nút refresh
+                    
+                    // HIỆN Refresh
                     refreshFeedButton.style.display = 'flex';
                     refreshFeedButtonMobile.style.display = 'flex';
-                    // Ẩn nút cài đặt (nếu có)
+                    // ẨN Cài đặt
                     if (settingsBtn) settingsBtn.style.display = 'none';
+                    if (settingsBtnMobile) settingsBtnMobile.style.display = 'none'; // <-- Cập nhật
+
                 } else if (tabName === 'calendar') {
                     newsMain.classList.add('hidden');
                     calendarMain.classList.remove('hidden');
@@ -1120,13 +1107,16 @@ Dòng 898                        });
                     newsTabBtn.classList.remove('active');
                     calendarTabBtn.classList.add('active');
                     calendarTabBtnMobile.classList.add('active');
-                    // Ẩn/hiện nút refresh
+                    
+                    // ẨN Refresh
                     refreshFeedButton.style.display = 'none';
                     refreshFeedButtonMobile.style.display = 'none';
-                    // Ẩn/hiện nút cài đặt (nếu có)
+                    // HIỆN Cài đặt
                     if (settingsBtn) settingsBtn.style.display = 'flex';
+                    if (settingsBtnMobile) settingsBtnMobile.style.display = 'flex'; // <-- Cập nhật
                 }
             }
+
 
             // --- GẮN SỰ KIỆN CHO TAB ---
             newsTabBtn.addEventListener('click', () => showTab('news'));
@@ -1190,20 +1180,23 @@ Dòng 898                        });
             // --- KHỞI ĐỘNG (LỊCH) ---
             (async () => {
                 renderCalendar(currentViewDate);
-                // Tắt đồng hồ vì không có DOM
-                // updateCalendarClock();
+                // updateCalendarClock(); // Tắt vì không có DOM
                 // setInterval(updateCalendarClock, 1000);
                 loadSettings();
                 setInterval(checkDailyShiftNotification, 60000);
 
-                // === SỬA LỖI: KIỂM TRA NÚT CÀI ĐẶT TRƯỚC KHI GẮN SỰ KIỆN ===
+                // === JS NÚT CÀI ĐẶT (ĐÃ CẬP NHẬT) ===
+                const openSettingsModal = () => {
+                    loadSettings(); 
+                    settingsModal.style.display = 'flex';
+                };
                 if (settingsBtn) { 
-                    settingsBtn.addEventListener('click', () => {
-                        loadSettings(); 
-                        settingsModal.style.display = 'flex';
-                    });
+                    settingsBtn.addEventListener('click', openSettingsModal);
                 }
-                // === KẾT THÚC SỬA LỖI ===
+                if (settingsBtnMobile) { 
+                    settingsBtnMobile.addEventListener('click', openSettingsModal);
+                }
+                // === KẾT THÚC ===
 
                 closeModalBtn.addEventListener('click', () => {
                     settingsModal.style.display = 'none';
@@ -1294,7 +1287,7 @@ Dòng 898                        });
                     }
                 });
                 cal_aiForm.addEventListener('submit', async (e) => {
-                    e.preventDefault(); // Dòng này sẽ chạy được sau khi sửa lỗi JS
+                    e.preventDefault(); 
                     const text = cal_aiInput.value.trim();
                     if (!text) return;
                     cal_aiInput.disabled = true;
