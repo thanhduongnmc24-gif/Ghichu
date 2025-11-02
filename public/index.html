@@ -154,6 +154,12 @@
             border-radius: 0.375rem; 
             padding: 0.25rem 0.5rem; 
         }
+        
+        /* (MỚI) CSS Cho nút thông báo */
+        #notify-button.subscribed {
+            background-color: #D9534F; /* Màu đỏ (hủy) */
+            hover:bg-red-700;
+        }
 
         /* CSS cho Tổng kết Ghi chú (Grid) */
         .day-note-grid-group {
@@ -335,13 +341,15 @@
             </div>
             
             <fieldset class="border border-gray-600 p-4 rounded-lg">
-                <legend class="text-lg font-semibold text-white px-2">Thông báo</legend>
-                <button id="notify-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Bật Thông Báo (Toàn cục)</button>
-                <p class="text-sm text-gray-400 mt-2 mb-4">Cho phép ứng dụng gửi thông báo trên trình duyệt này.</p>
+                <legend class="text-lg font-semibold text-white px-2">Thông báo Push</legend>
+                <button id="notify-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                    Bật Thông Báo
+                </button>
+                <p class="text-sm text-gray-400 mt-2 mb-4">Cho phép máy chủ gửi thông báo ngay cả khi đã đóng ứng dụng.</p>
                 
                 <hr class="border-gray-600 my-4">
                 
-                <h3 class="text-md font-semibold text-white mb-3">Giờ báo thức theo ca:</h3>
+                <h3 class="text-md font-semibold text-white mb-3">Giờ báo thức (sẽ gửi lên server):</h3>
                 
                 <label class="time-setting-label">
                     <span>Báo ca <strong>Ngày</strong> lúc:</span>
@@ -358,6 +366,7 @@
             </fieldset>
         </div>
     </div>
+    
     <div id="note-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col">
             <span id="close-note-modal" class="absolute top-3 right-4 text-gray-400 hover:text-white text-3xl cursor-pointer">&times;</span>
@@ -384,16 +393,29 @@
     <script type="module">
         document.addEventListener('DOMContentLoaded', () => {
 
+            let swRegistration = null; // (MỚI) Biến lưu Service Worker
+            let vapidPublicKey = null; // (MỚI) Biến lưu VAPID Key
+
             // --- ĐĂNG KÝ SERVICE WORKER ---
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/service-worker.js')
-                    .then(reg => console.log('Main Service Worker Registered!', reg))
+                    .then(async reg => {
+                        console.log('Main Service Worker Registered!', reg);
+                        swRegistration = reg; // Lưu lại
+                        
+                        // (MỚI) Lấy VAPID key từ server
+                        await getVapidPublicKey();
+                        
+                        // (MỚI) Kiểm tra trạng thái đăng ký thông báo
+                        checkNotificationStatus();
+                    })
                     .catch(err => console.error('Main Service Worker registration failed:', err));
             }
 
             // ===================================================================
             // PHẦN 1: LOGIC VÀ BIẾN CỦA TRANG TIN TỨC (NEWS)
             // ===================================================================
+            // (Tất cả DOM và hàm của Tin Tức giữ nguyên y hệt file cũ)
 
             const newsMain = document.getElementById('news-main');
             const newsGrid = document.getElementById('news-grid');
@@ -760,8 +782,6 @@
 
             // --- BIẾN LỊCH: Lấy DOM ---
             const calendarMain = document.getElementById('calendar-main');
-            const cal_dateEl = document.getElementById('date'); 
-            const cal_timeEl = document.getElementById('time');
             const cal_aiForm = document.getElementById('ai-form');
             const cal_aiInput = document.getElementById('ai-input');
             const calendarBody = document.getElementById('calendar-body');
@@ -769,12 +789,12 @@
             const prevMonthBtn = document.getElementById('prev-month-btn');
             const nextMonthBtn = document.getElementById('next-month-btn');
             
-            // === JS NÚT CÀI ĐẶT (ĐÃ THÊM mobile) ===
             const settingsBtn = document.getElementById('settings-btn');
             const settingsBtnMobile = document.getElementById('settings-btn-mobile'); 
-            
             const settingsModal = document.getElementById('settings-modal');
             const closeModalBtn = document.getElementById('close-modal');
+            
+            // (MỚI) Các biến cho Thông báo
             const notifyButton = document.getElementById('notify-button');
             const notifyTimeNgay = document.getElementById('notify-time-ngay');
             const notifyTimeDem = document.getElementById('notify-time-dem');
@@ -798,7 +818,7 @@
                 notifyTimeOff: "08:00"
             };
             let currentViewDate = new Date(); 
-            let lastNotificationSentTime = null; 
+            // (MỚI) ĐÃ XÓA: let lastNotificationSentTime = null; 
 
             // --- BIẾN LỊCH: Chu kỳ Ca ---
             const EPOCH_DAYS = dateToDays('2025-10-26');
@@ -816,6 +836,8 @@
             }
             function saveSettings() {
                 localStorage.setItem('myScheduleSettings', JSON.stringify(appSettings));
+                // (MỚI) Khi lưu settings, nếu đã đăng ký thì gửi lại server
+                updateSubscriptionSettings();
             }
             
             // --- HÀM LỊCH: Tính Ca ---
@@ -826,13 +848,6 @@
                 return SHIFT_PATTERN[patternIndex];
             }
 
-            // --- HÀM LỊCH: Đồng hồ ---
-            function updateCalendarClock() {
-                // Tắt đồng hồ vì không có DOM
-                // const now = new Date();
-                // ...
-            }
-
             // --- HÀM LỊCH: Modal Cài đặt ---
             function loadSettings() {
                 notifyTimeNgay.value = appSettings.notifyTimeNgay;
@@ -840,7 +855,7 @@
                 notifyTimeOff.value = appSettings.notifyTimeOff;
             }
 
-            // --- HÀM LỊCH: Vẽ Lịch ---
+            // --- HÀM LỊCH: Vẽ Lịch (Không thay đổi) ---
             function renderCalendar(date) {
                 calendarBody.innerHTML = '';
                 const year = date.getFullYear();
@@ -922,7 +937,7 @@
                 renderMonthlyNoteSummary(date); 
             }
             
-            // --- HÀM LỊCH: TÓM TẮT GHI CHÚ HÀNG THÁNG (ĐÃ SỬA LỖI SYNTAX) ---
+            // --- HÀM LỊCH: TÓM TẮT GHI CHÚ HÀNG THÁNG (Không thay đổi) ---
             function renderMonthlyNoteSummary(date) {
                 const monthlyNoteList = document.getElementById('monthly-note-list');
                 if (!monthlyNoteList) return; 
@@ -981,7 +996,6 @@
                             noteEl.className = 'p-2'; 
                             noteEl.textContent = noteText;
                             contentWrapper.appendChild(noteEl);
-                            // === ĐÃ XÓA DÒNG LỖI "Dòng 898" TẠI ĐÂY ===
                         });
 
                         monthlyNoteList.appendChild(prefixWrapper);
@@ -989,10 +1003,9 @@
                     });
                 }
             }
-            // === KẾT THÚC HÀM ===
 
 
-            // --- HÀM LỊCH: Modal Ghi chú ---
+            // --- HÀM LỊCH: Modal Ghi chú (Không thay đổi) ---
             function openNoteModal(dateStr) {
                 const date = new Date(dateStr + 'T12:00:00'); 
                 noteModal.style.display = 'flex';
@@ -1026,54 +1039,161 @@
                 });
             }
 
-            // --- HÀM LỊCH: Thông báo ---
-            function checkDailyShiftNotification() {
-                if (Notification.permission !== "granted") return; 
-                const now = new Date();
-                const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                
-                if (currentTimeStr === "00:00") {
-                    lastNotificationSentTime = null;
+            // --- (MỚI) HÀM LỊCH: Các hàm Thông báo Push ---
+            
+            // (MỚI) Hàm tiện ích chuyển đổi VAPID key
+            function urlBase64ToUint8Array(base64String) {
+                const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                const base64 = (base64String + padding)
+                    .replace(/-/g, '+')
+                    .replace(/_/g, '/');
+                const rawData = window.atob(base64);
+                const outputArray = new Uint8Array(rawData.length);
+                for (let i = 0; i < rawData.length; ++i) {
+                    outputArray[i] = rawData.charCodeAt(i);
                 }
-                if (lastNotificationSentTime === currentTimeStr) return;
+                return outputArray;
+            }
 
-                const todayStr = getLocalDateString(now);
-                const todayShift = getShiftForDate(todayStr);
-                let shiftDisplayName = ""; 
-                let timeToAlert = ""; 
-
-                if (todayShift === 'ngày') {
-                    shiftDisplayName = "Ca Ngày";
-                    timeToAlert = appSettings.notifyTimeNgay;
-                } else if (todayShift === 'đêm') {
-                    shiftDisplayName = "Ca Đêm";
-                    timeToAlert = appSettings.notifyTimeDem;
-                } else if (todayShift === 'giãn ca') {
-                    shiftDisplayName = "Giãn Ca";
-                    timeToAlert = appSettings.notifyTimeOff;
-                } else if (todayShift === 'off') {
-                    shiftDisplayName = "Ngày Nghỉ";
-                    timeToAlert = appSettings.notifyTimeOff;
-                }
-
-                if (timeToAlert && currentTimeStr === timeToAlert) {
-                    const notes = noteData[todayStr] || [];
-                    let notesString = "";
-                    if (notes.length > 0) {
-                        notesString = " - " + notes.join(', ');
-                    }
-                    const newTitle = "Lịch Luân Phiên";
-                    const newBody = `${shiftDisplayName}${notesString}`; 
-
-                    new Notification(newTitle, {
-                        body: newBody,
-                        icon: "/icons/icon-192x192.png" 
-                    });
-                    
-                    lastNotificationSentTime = currentTimeStr;
+            // (MỚI) Lấy VAPID key từ server
+            async function getVapidPublicKey() {
+                try {
+                    const response = await fetch('/vapid-public-key');
+                    vapidPublicKey = await response.text();
+                    console.log("Đã lấy VAPID Public Key.");
+                } catch (err) {
+                    console.error("Lỗi khi lấy VAPID Public Key:", err);
                 }
             }
+
+            // (MỚI) Kiểm tra trạng thái đăng ký khi tải trang
+            async function checkNotificationStatus() {
+                if (!swRegistration) return;
+                const subscription = await swRegistration.pushManager.getSubscription();
+                if (subscription) {
+                    console.log("Người dùng đã đăng ký.");
+                    notifyButton.textContent = "Tắt Thông Báo";
+                    notifyButton.classList.add('subscribed');
+                } else {
+                    console.log("Người dùng chưa đăng ký.");
+                    notifyButton.textContent = "Bật Thông Báo";
+                    notifyButton.classList.remove('subscribed');
+                }
+            }
+
+            // (MỚI) Hàm chính: Đăng ký hoặc Hủy đăng ký
+            async function handleSubscribeClick() {
+                if (!swRegistration || !vapidPublicKey) {
+                    alert("Service Worker hoặc VAPID Key chưa sẵn sàng. Vui lòng thử lại.");
+                    return;
+                }
+                
+                const existingSubscription = await swRegistration.pushManager.getSubscription();
+
+                if (existingSubscription) {
+                    // --- ĐANG HỦY ĐĂNG KÝ ---
+                    console.log("Đang hủy đăng ký...");
+                    notifyButton.disabled = true;
+                    try {
+                        const unsubscribed = await existingSubscription.unsubscribe();
+                        if (unsubscribed) {
+                            // Gửi yêu cầu xóa khỏi server DB
+                            await fetch('/unsubscribe', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ endpoint: existingSubscription.endpoint })
+                            });
+                            console.log("Đã hủy đăng ký thành công.");
+                            alert("Đã tắt thông báo.");
+                        }
+                    } catch (err) {
+                        console.error("Lỗi khi hủy đăng ký:", err);
+                        alert("Lỗi khi tắt thông báo.");
+                    }
+                } else {
+                    // --- ĐANG ĐĂNG KÝ MỚI ---
+                    console.log("Đang đăng ký mới...");
+                    notifyButton.disabled = true;
+                    
+                    // 1. Xin quyền
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') {
+                        alert("Đại ca đã từ chối quyền thông báo. Vui lòng bật thủ công trong cài đặt trình duyệt.");
+                        notifyButton.disabled = false;
+                        return;
+                    }
+
+                    // 2. Đăng ký với Push Manager
+                    try {
+                        const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+                        const subscription = await swRegistration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: applicationServerKey
+                        });
+                        
+                        // 3. Lấy settings hiện tại
+                        const settings = {
+                            notifyTimeNgay: notifyTimeNgay.value,
+                            notifyTimeDem: notifyTimeDem.value,
+                            notifyTimeOff: notifyTimeOff.value
+                        };
+                        
+                        // 4. Gửi subscription và settings lên server
+                        await fetch('/subscribe', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ subscription: subscription, settings: settings })
+                        });
+                        
+                        console.log("Đã đăng ký và gửi lên server.");
+                        alert("Đã bật thông báo thành công!");
+
+                    } catch (err) {
+                        console.error("Lỗi khi đăng ký push:", err);
+                        alert("Lỗi khi bật thông báo. Key hoặc Service Worker có vấn đề.");
+                    }
+                }
+                
+                notifyButton.disabled = false;
+                checkNotificationStatus(); // Cập nhật lại nút
+            }
+
+            // (MỚI) Hàm này được gọi khi người dùng thay đổi giờ (lưu trong saveSettings)
+            async function updateSubscriptionSettings() {
+                if (!swRegistration) return;
+                const subscription = await swRegistration.pushManager.getSubscription();
+                
+                // Nếu người dùng chưa đăng ký, không làm gì cả
+                if (!subscription) {
+                    console.log("Chưa đăng ký, không cần cập nhật settings.");
+                    return;
+                }
+                
+                // Nếu đã đăng ký, gửi cài đặt mới lên server
+                console.log("Đang cập nhật settings (giờ) lên server...");
+                try {
+                    const settings = {
+                        notifyTimeNgay: notifyTimeNgay.value,
+                        notifyTimeDem: notifyTimeDem.value,
+                        notifyTimeOff: notifyTimeOff.value
+                    };
+                    
+                    await fetch('/subscribe', {
+                        method: 'POST', // Vẫn gọi /subscribe
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ subscription: subscription, settings: settings })
+                    });
+                    console.log("Đã cập nhật settings trên server.");
+                } catch (err) {
+                    console.error("Lỗi khi cập nhật settings:", err);
+                }
+            }
+
+
+            // --- (MỚI) ĐÃ XÓA: checkDailyShiftNotification()
+            // --- (MỚI) ĐÃ XÓA: setInterval(checkDailyShiftNotification, 60000);
             
+
             // ===================================================================
             // PHẦN 3: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG)
             // ===================================================================
@@ -1083,37 +1203,31 @@
             const calendarTabBtn = document.getElementById('calendar-tab-btn');
             const calendarTabBtnMobile = document.getElementById('calendar-tab-btn-mobile');
             
-            // --- HÀM TAB: Chuyển tab (ĐÃ CẬP NHẬT) ---
+            // --- HÀM TAB: Chuyển tab (Đã CẬP NHẬT) ---
             function showTab(tabName) {
                 if (tabName === 'news') {
                     newsMain.classList.remove('hidden');
                     calendarMain.classList.add('hidden');
-                    // Cập nhật nút tab
                     newsTabBtn.classList.add('active');
                     calendarTabBtn.classList.remove('active');
                     calendarTabBtnMobile.classList.remove('active');
                     
-                    // HIỆN Refresh
                     refreshFeedButton.style.display = 'flex';
                     refreshFeedButtonMobile.style.display = 'flex';
-                    // ẨN Cài đặt
                     if (settingsBtn) settingsBtn.style.display = 'none';
-                    if (settingsBtnMobile) settingsBtnMobile.style.display = 'none'; // <-- Cập nhật
+                    if (settingsBtnMobile) settingsBtnMobile.style.display = 'none'; 
 
                 } else if (tabName === 'calendar') {
                     newsMain.classList.add('hidden');
                     calendarMain.classList.remove('hidden');
-                    // Cập nhật nút tab
                     newsTabBtn.classList.remove('active');
                     calendarTabBtn.classList.add('active');
                     calendarTabBtnMobile.classList.add('active');
                     
-                    // ẨN Refresh
                     refreshFeedButton.style.display = 'none';
                     refreshFeedButtonMobile.style.display = 'none';
-                    // HIỆN Cài đặt
                     if (settingsBtn) settingsBtn.style.display = 'flex';
-                    if (settingsBtnMobile) settingsBtnMobile.style.display = 'flex'; // <-- Cập nhật
+                    if (settingsBtnMobile) settingsBtnMobile.style.display = 'flex'; 
                 }
             }
 
@@ -1180,12 +1294,10 @@
             // --- KHỞI ĐỘNG (LỊCH) ---
             (async () => {
                 renderCalendar(currentViewDate);
-                // updateCalendarClock(); // Tắt vì không có DOM
-                // setInterval(updateCalendarClock, 1000);
                 loadSettings();
-                setInterval(checkDailyShiftNotification, 60000);
+                
+                // (MỚI) ĐÃ XÓA setInterval(checkDailyShiftNotification, 60000);
 
-                // === JS NÚT CÀI ĐẶT (ĐÃ CẬP NHẬT) ===
                 const openSettingsModal = () => {
                     loadSettings(); 
                     settingsModal.style.display = 'flex';
@@ -1196,7 +1308,6 @@
                 if (settingsBtnMobile) { 
                     settingsBtnMobile.addEventListener('click', openSettingsModal);
                 }
-                // === KẾT THÚC ===
 
                 closeModalBtn.addEventListener('click', () => {
                     settingsModal.style.display = 'none';
@@ -1206,9 +1317,11 @@
                         settingsModal.style.display = 'none';
                     }
                 });
+
+                // (MỚI) Gắn sự kiện cho các input thời gian
                 notifyTimeNgay.addEventListener('change', (e) => {
                     appSettings.notifyTimeNgay = e.target.value;
-                    saveSettings();
+                    saveSettings(); // saveSettings sẽ tự động gọi updateSubscriptionSettings
                 });
                 notifyTimeDem.addEventListener('change', (e) => {
                     appSettings.notifyTimeDem = e.target.value;
@@ -1218,19 +1331,11 @@
                     appSettings.notifyTimeOff = e.target.value;
                     saveSettings();
                 });
-                notifyButton.addEventListener('click', () => {
-                    if (!("Notification" in window)) {
-                        alert("Trình duyệt này không hỗ trợ thông báo.");
-                    } else if (Notification.permission === "granted") {
-                        new Notification("Đã bật!", { body: "Bạn đã bật thông báo thành công!" });
-                    } else if (Notification.permission !== "denied") {
-                        Notification.requestPermission().then(permission => {
-                            if (permission === "granted") {
-                                new Notification("Cảm ơn!", { body: "Thông báo đã được bật!" });
-                            }
-                        });
-                    }
-                });
+                
+                // (MỚI) Gắn sự kiện cho nút Thông báo
+                notifyButton.addEventListener('click', handleSubscribeClick);
+
+                // (Các sự kiện Lịch còn lại giữ nguyên)
                 prevMonthBtn.addEventListener('click', () => {
                     currentViewDate.setMonth(currentViewDate.getMonth() - 1);
                     renderCalendar(currentViewDate);
@@ -1328,7 +1433,12 @@
             })();
             
             // --- KHỞI ĐỘNG (TAB) ---
-            showTab('news'); // Hiển thị tab Tin Tức làm mặc định
+            // (MỚI) Xử lý hash URL để mở tab Lịch
+            if (window.location.hash === '#calendar') {
+                showTab('calendar');
+            } else {
+                showTab('news'); // Mặc định là Tin tức
+            }
 
         }); // Kết thúc DOMContentLoaded
     </script>
