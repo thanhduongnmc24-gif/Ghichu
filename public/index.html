@@ -381,7 +381,7 @@
         </div>
     </div>
     
-    <script type="module">
+   <script type="module">
         document.addEventListener('DOMContentLoaded', () => {
 
             // --- ĐĂNG KÝ SERVICE WORKER ---
@@ -390,9 +390,57 @@
                     .then(reg => console.log('Main Service Worker Registered!', reg))
                     .catch(err => console.error('Main Service Worker registration failed:', err));
             }
+            
+            // ===================================================================
+            // PHẦN 0: TRÌNH TRỢ GIÚP INDEXEDDB (MỚI)
+            // Chúng ta dùng cái này thay cho localStorage
+            // ===================================================================
+            const dbName = 'GhichuAppDB';
+            const storeName = 'keyval';
 
+            function openDB() {
+                return new Promise((resolve, reject) => {
+                    // Mở CSDL, phiên bản 1
+                    const request = indexedDB.open(dbName, 1);
+                    
+                    // Được gọi khi CSDL cần được tạo hoặc nâng cấp
+                    request.onupgradeneeded = event => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(storeName)) {
+                            db.createObjectStore(storeName); // Tạo 1 "bảng" (object store)
+                        }
+                    };
+                    request.onsuccess = event => resolve(event.target.result);
+                    request.onerror = event => reject(event.target.error);
+                });
+            }
+
+            async function dbGet(key) {
+                const db = await openDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(storeName, 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.get(key);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async function dbSet(key, value) {
+                const db = await openDB();
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(storeName, 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.put(value, key);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+            
+            
             // ===================================================================
             // PHẦN 1: LOGIC VÀ BIẾN CỦA TRANG TIN TỨC (NEWS)
+            // (Không thay đổi)
             // ===================================================================
 
             const newsMain = document.getElementById('news-main');
@@ -741,6 +789,7 @@
             
             // ===================================================================
             // PHẦN 2: LOGIC VÀ BIẾN CỦA TRANG LỊCH (CALENDAR)
+            // (Đã cập nhật để dùng indexedDB)
             // ===================================================================
 
             // --- HÀM LỊCH: SỬA LỖI MÚI GIỜ ---
@@ -758,10 +807,8 @@
                 return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
             }
 
-            // --- BIẾN LỊCH: Lấy DOM ---
+            // --- BIẾN LỊCH: Lấy DOM (Đã thêm nút Cài đặt mobile) ---
             const calendarMain = document.getElementById('calendar-main');
-            const cal_dateEl = document.getElementById('date'); 
-            const cal_timeEl = document.getElementById('time');
             const cal_aiForm = document.getElementById('ai-form');
             const cal_aiInput = document.getElementById('ai-input');
             const calendarBody = document.getElementById('calendar-body');
@@ -769,7 +816,6 @@
             const prevMonthBtn = document.getElementById('prev-month-btn');
             const nextMonthBtn = document.getElementById('next-month-btn');
             
-            // === JS NÚT CÀI ĐẶT (ĐÃ THÊM mobile) ===
             const settingsBtn = document.getElementById('settings-btn');
             const settingsBtnMobile = document.getElementById('settings-btn-mobile'); 
             
@@ -790,32 +836,31 @@
 
             let currentEditingDateStr = null;
 
-            // --- BIẾN LỊCH: Dữ liệu ---
-            let noteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
-            let appSettings = JSON.parse(localStorage.getItem('myScheduleSettings')) || {
-                notifyTimeNgay: "06:00",
-                notifyTimeDem: "20:00",
-                notifyTimeOff: "08:00"
-            };
+            // --- BIẾN LỊCH: Dữ liệu (Sẽ được tải async từ indexedDB) ---
+            let noteData = {}; // Tải sau
+            let appSettings = {}; // Tải sau
             let currentViewDate = new Date(); 
-            let lastNotificationSentTime = null; 
 
             // --- BIẾN LỊCH: Chu kỳ Ca ---
             const EPOCH_DAYS = dateToDays('2025-10-26');
             const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
 
-            // --- HÀM LỊCH: Lưu Dữ liệu ---
-            function saveNoteData() {
+            // --- HÀM LỊCH: Lưu Dữ liệu (CẬP NHẬT: Dùng dbSet, async) ---
+            async function saveNoteData() {
                 const cleanData = {};
                 for (const date in noteData) {
                     if (Array.isArray(noteData[date]) && noteData[date].length > 0) {
                         cleanData[date] = noteData[date];
                     }
                 }
-                localStorage.setItem('myScheduleNotes', JSON.stringify(cleanData));
+                // Thay vì localStorage.setItem
+                await dbSet('myScheduleNotes', cleanData);
+                console.log('Đã lưu Ghi chú vào indexedDB');
             }
-            function saveSettings() {
-                localStorage.setItem('myScheduleSettings', JSON.stringify(appSettings));
+            async function saveSettings() {
+                // Thay vì localStorage.setItem
+                await dbSet('myScheduleSettings', appSettings);
+                console.log('Đã lưu Cài đặt vào indexedDB');
             }
             
             // --- HÀM LỊCH: Tính Ca ---
@@ -826,18 +871,17 @@
                 return SHIFT_PATTERN[patternIndex];
             }
 
-            // --- HÀM LỊCH: Đồng hồ ---
+            // --- HÀM LỊCH: Đồng hồ (Đã tắt) ---
             function updateCalendarClock() {
-                // Tắt đồng hồ vì không có DOM
-                // const now = new Date();
-                // ...
+                // (Không có DOM, không chạy)
             }
 
             // --- HÀM LỊCH: Modal Cài đặt ---
             function loadSettings() {
-                notifyTimeNgay.value = appSettings.notifyTimeNgay;
-                notifyTimeDem.value = appSettings.notifyTimeDem;
-                notifyTimeOff.value = appSettings.notifyTimeOff;
+                // Đọc từ biến toàn cục (đã được tải từ indexedDB)
+                notifyTimeNgay.value = appSettings.notifyTimeNgay || "06:00";
+                notifyTimeDem.value = appSettings.notifyTimeDem || "20:00";
+                notifyTimeOff.value = appSettings.notifyTimeOff || "08:00";
             }
 
             // --- HÀM LỊCH: Vẽ Lịch ---
@@ -922,7 +966,7 @@
                 renderMonthlyNoteSummary(date); 
             }
             
-            // --- HÀM LỊCH: TÓM TẮT GHI CHÚ HÀNG THÁNG (ĐÃ SỬA LỖI SYNTAX) ---
+            // --- HÀM LỊCH: TÓM TẮT GHI CHÚ HÀNG THÁNG (Đã sửa lỗi) ---
             function renderMonthlyNoteSummary(date) {
                 const monthlyNoteList = document.getElementById('monthly-note-list');
                 if (!monthlyNoteList) return; 
@@ -958,7 +1002,7 @@
 
                 if (daysWithNotes.length === 0) {
                     monthlyNoteList.style.display = 'block';
-                    monthlyNoteList.className = ''; 
+                    monthlyNoteList.className = 'space-y-3'; // Hoàn nguyên về class cũ
                     monthlyNoteList.style.gridTemplateColumns = '';
                     monthlyNoteList.innerHTML = `<p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>`;
                 
@@ -981,7 +1025,6 @@
                             noteEl.className = 'p-2'; 
                             noteEl.textContent = noteText;
                             contentWrapper.appendChild(noteEl);
-                            // === ĐÃ XÓA DÒNG LỖI "Dòng 898" TẠI ĐÂY ===
                         });
 
                         monthlyNoteList.appendChild(prefixWrapper);
@@ -989,7 +1032,6 @@
                     });
                 }
             }
-            // === KẾT THÚC HÀM ===
 
 
             // --- HÀM LỊCH: Modal Ghi chú ---
@@ -1026,53 +1068,9 @@
                 });
             }
 
-            // --- HÀM LỊCH: Thông báo ---
-            function checkDailyShiftNotification() {
-                if (Notification.permission !== "granted") return; 
-                const now = new Date();
-                const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                
-                if (currentTimeStr === "00:00") {
-                    lastNotificationSentTime = null;
-                }
-                if (lastNotificationSentTime === currentTimeStr) return;
-
-                const todayStr = getLocalDateString(now);
-                const todayShift = getShiftForDate(todayStr);
-                let shiftDisplayName = ""; 
-                let timeToAlert = ""; 
-
-                if (todayShift === 'ngày') {
-                    shiftDisplayName = "Ca Ngày";
-                    timeToAlert = appSettings.notifyTimeNgay;
-                } else if (todayShift === 'đêm') {
-                    shiftDisplayName = "Ca Đêm";
-                    timeToAlert = appSettings.notifyTimeDem;
-                } else if (todayShift === 'giãn ca') {
-                    shiftDisplayName = "Giãn Ca";
-                    timeToAlert = appSettings.notifyTimeOff;
-                } else if (todayShift === 'off') {
-                    shiftDisplayName = "Ngày Nghỉ";
-                    timeToAlert = appSettings.notifyTimeOff;
-                }
-
-                if (timeToAlert && currentTimeStr === timeToAlert) {
-                    const notes = noteData[todayStr] || [];
-                    let notesString = "";
-                    if (notes.length > 0) {
-                        notesString = " - " + notes.join(', ');
-                    }
-                    const newTitle = "Lịch Luân Phiên";
-                    const newBody = `${shiftDisplayName}${notesString}`; 
-
-                    new Notification(newTitle, {
-                        body: newBody,
-                        icon: "/icons/icon-192x192.png" 
-                    });
-                    
-                    lastNotificationSentTime = currentTimeStr;
-                }
-            }
+            // --- HÀM LỊCH: Thông báo (ĐÃ XÓA) ---
+            // function checkDailyShiftNotification() { ... } // ĐÃ BỊ XÓA
+            
             
             // ===================================================================
             // PHẦN 3: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG)
@@ -1083,37 +1081,31 @@
             const calendarTabBtn = document.getElementById('calendar-tab-btn');
             const calendarTabBtnMobile = document.getElementById('calendar-tab-btn-mobile');
             
-            // --- HÀM TAB: Chuyển tab (ĐÃ CẬP NHẬT) ---
+            // --- HÀM TAB: Chuyển tab (Cập nhật cho nút Cài đặt) ---
             function showTab(tabName) {
                 if (tabName === 'news') {
                     newsMain.classList.remove('hidden');
                     calendarMain.classList.add('hidden');
-                    // Cập nhật nút tab
                     newsTabBtn.classList.add('active');
                     calendarTabBtn.classList.remove('active');
                     calendarTabBtnMobile.classList.remove('active');
                     
-                    // HIỆN Refresh
                     refreshFeedButton.style.display = 'flex';
                     refreshFeedButtonMobile.style.display = 'flex';
-                    // ẨN Cài đặt
                     if (settingsBtn) settingsBtn.style.display = 'none';
-                    if (settingsBtnMobile) settingsBtnMobile.style.display = 'none'; // <-- Cập nhật
+                    if (settingsBtnMobile) settingsBtnMobile.style.display = 'none'; 
 
                 } else if (tabName === 'calendar') {
                     newsMain.classList.add('hidden');
                     calendarMain.classList.remove('hidden');
-                    // Cập nhật nút tab
                     newsTabBtn.classList.remove('active');
                     calendarTabBtn.classList.add('active');
                     calendarTabBtnMobile.classList.add('active');
                     
-                    // ẨN Refresh
                     refreshFeedButton.style.display = 'none';
                     refreshFeedButtonMobile.style.display = 'none';
-                    // HIỆN Cài đặt
                     if (settingsBtn) settingsBtn.style.display = 'flex';
-                    if (settingsBtnMobile) settingsBtnMobile.style.display = 'flex'; // <-- Cập nhật
+                    if (settingsBtnMobile) settingsBtnMobile.style.display = 'flex'; 
                 }
             }
 
@@ -1123,7 +1115,7 @@
             calendarTabBtn.addEventListener('click', () => showTab('calendar'));
             calendarTabBtnMobile.addEventListener('click', () => {
                 showTab('calendar');
-                mobileMenu.classList.add('hidden'); // Đóng menu mobile
+                mobileMenu.classList.add('hidden'); 
             });
 
             // --- KHỞI ĐỘNG (TIN TỨC) ---
@@ -1177,15 +1169,36 @@
                 chatForm.addEventListener('submit', handleSendChat);
             })();
             
-            // --- KHỞI ĐỘNG (LỊCH) ---
+            // --- KHỞI ĐỘNG (LỊCH) (CẬP NHẬT TOÀN BỘ) ---
             (async () => {
-                renderCalendar(currentViewDate);
-                // updateCalendarClock(); // Tắt vì không có DOM
-                // setInterval(updateCalendarClock, 1000);
-                loadSettings();
-                setInterval(checkDailyShiftNotification, 60000);
+                
+                // CẬP NHẬT: Tải dữ liệu từ indexedDB khi khởi động
+                try {
+                    noteData = (await dbGet('myScheduleNotes')) || {};
+                    appSettings = (await dbGet('myScheduleSettings')) || {
+                        notifyTimeNgay: "06:00",
+                        notifyTimeDem: "20:00",
+                        notifyTimeOff: "08:00"
+                    };
+                    console.log('Đã tải dữ liệu từ indexedDB', noteData, appSettings);
+                } catch (err) {
+                    console.error('Không thể tải indexedDB, dùng dữ liệu mặc định:', err);
+                    noteData = {};
+                    appSettings = {
+                        notifyTimeNgay: "06:00",
+                        notifyTimeDem: "20:00",
+                        notifyTimeOff: "08:00"
+                    };
+                }
 
-                // === JS NÚT CÀI ĐẶT (ĐÃ CẬP NHẬT) ===
+                // Chạy logic vẽ lịch và cài đặt sau khi có dữ liệu
+                renderCalendar(currentViewDate);
+                loadSettings();
+                
+                // XÓA: Dòng setInterval đã bị xóa
+                // setInterval(checkDailyShiftNotification, 60000); 
+
+                // Gắn sự kiện cho nút Cài đặt (cho cả mobile và desktop)
                 const openSettingsModal = () => {
                     loadSettings(); 
                     settingsModal.style.display = 'flex';
@@ -1196,7 +1209,6 @@
                 if (settingsBtnMobile) { 
                     settingsBtnMobile.addEventListener('click', openSettingsModal);
                 }
-                // === KẾT THÚC ===
 
                 closeModalBtn.addEventListener('click', () => {
                     settingsModal.style.display = 'none';
@@ -1206,31 +1218,85 @@
                         settingsModal.style.display = 'none';
                     }
                 });
+                
+                // Cập nhật sự kiện thay đổi cài đặt (giờ đây nó là async)
                 notifyTimeNgay.addEventListener('change', (e) => {
                     appSettings.notifyTimeNgay = e.target.value;
-                    saveSettings();
+                    saveSettings(); // Gọi hàm async
                 });
                 notifyTimeDem.addEventListener('change', (e) => {
                     appSettings.notifyTimeDem = e.target.value;
-                    saveSettings();
+                    saveSettings(); // Gọi hàm async
                 });
                 notifyTimeOff.addEventListener('change', (e) => {
                     appSettings.notifyTimeOff = e.target.value;
-                    saveSettings();
+                    saveSettings(); // Gọi hàm async
                 });
-                notifyButton.addEventListener('click', () => {
-                    if (!("Notification" in window)) {
-                        alert("Trình duyệt này không hỗ trợ thông báo.");
-                    } else if (Notification.permission === "granted") {
-                        new Notification("Đã bật!", { body: "Bạn đã bật thông báo thành công!" });
-                    } else if (Notification.permission !== "denied") {
-                        Notification.requestPermission().then(permission => {
-                            if (permission === "granted") {
-                                new Notification("Cảm ơn!", { body: "Thông báo đã được bật!" });
-                            }
+                
+                // === CẬP NHẬT: LOGIC NÚT BẬT THÔNG BÁO ===
+                notifyButton.addEventListener('click', async () => {
+                    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                        alert("Trình duyệt này không hỗ trợ Thông báo Đẩy.");
+                        return;
+                    }
+                    
+                    // 1. Yêu cầu quyền
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') {
+                        alert("Bạn chưa cấp quyền thông báo.");
+                        return;
+                    }
+                    
+                    // 2. Lấy Service Worker registration
+                    const reg = await navigator.serviceWorker.ready;
+                    
+                    // 3. Lấy Push Subscription
+                    try {
+                        const subscription = await reg.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            // === QUAN TRỌNG: Bạn PHẢI thay thế key này ===
+                            applicationServerKey: 'YOUR_VAPID_PUBLIC_KEY' 
                         });
+                        
+                        console.log('Đã lấy được Push Subscription:', subscription);
+                        
+                        // 4. Gửi subscription lên server
+                        await sendSubscriptionToServer(subscription);
+                        
+                        alert('Đã bật thông báo đẩy thành công!');
+                        
+                    } catch (err) {
+                        console.error('Không thể đăng ký Push:', err);
+                        if (err.name === 'NotAllowedError') {
+                             alert('Bạn đã chặn thông báo. Vui lòng bật thủ công trong cài đặt trình duyệt.');
+                        } else {
+                             alert('Lỗi khi đăng ký thông báo: ' + err.message);
+                        }
                     }
                 });
+
+                // === HÀM MỚI: Gửi subscription lên server ===
+                async function sendSubscriptionToServer(subscription) {
+                    try {
+                        const response = await fetch('/api/save-subscription', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(subscription),
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Server từ chối lưu subscription.');
+                        }
+                        console.log('Đã gửi subscription lên server thành công.');
+                    } catch (err) {
+                        console.error('Lỗi khi gửi subscription lên server:', err);
+                        // Thông báo cho người dùng có thể hữu ích ở đây
+                    }
+                }
+                
+                // (Các sự kiện lịch còn lại giữ nguyên)
                 prevMonthBtn.addEventListener('click', () => {
                     currentViewDate.setMonth(currentViewDate.getMonth() - 1);
                     renderCalendar(currentViewDate);
@@ -1249,6 +1315,8 @@
                         currentEditingDateStr = null;
                     }
                 });
+                
+                // Sự kiện thêm/xóa/sửa (giờ đây gọi hàm async)
                 addNoteForm.addEventListener('submit', (e) => {
                     e.preventDefault();
                     const noteText = newNoteInput.value.trim();
@@ -1257,7 +1325,7 @@
                         noteData[currentEditingDateStr] = [];
                     }
                     noteData[currentEditingDateStr].push(noteText);
-                    saveNoteData();
+                    saveNoteData(); // Gọi hàm async
                     renderNoteList(currentEditingDateStr); 
                     renderCalendar(currentViewDate); 
                     newNoteInput.value = ''; 
@@ -1272,7 +1340,7 @@
                         const newText = prompt("Sửa ghi chú:", oldText);
                         if (newText !== null && newText.trim() !== "") {
                             noteData[currentEditingDateStr][index] = newText.trim();
-                            saveNoteData();
+                            saveNoteData(); // Gọi hàm async
                             renderNoteList(currentEditingDateStr);
                             renderCalendar(currentViewDate);
                         }
@@ -1280,7 +1348,7 @@
                     if (target.classList.contains('delete-note')) {
                         if (confirm(`Bạn có chắc muốn xóa ghi chú: "${notes[index]}"?`)) {
                             noteData[currentEditingDateStr].splice(index, 1);
-                            saveNoteData();
+                            saveNoteData(); // Gọi hàm async
                             renderNoteList(currentEditingDateStr);
                             renderCalendar(currentViewDate);
                         }
@@ -1311,7 +1379,7 @@
                                     noteData[dateStr].push(noteText); 
                                 }
                             });
-                            saveNoteData(); 
+                            saveNoteData(); // Gọi hàm async
                             renderCalendar(currentViewDate); 
                             cal_aiInput.value = ''; 
                         } else {
