@@ -33,7 +33,7 @@ if (API_KEY) {
     console.error("Thiếu GEMINI_API_KEY trong biến môi trường!");
 }
 
-// ----- (CẬP NHẬT) CÀI ĐẶT WEB PUSH -----
+// ----- CÀI ĐẶT WEB PUSH -----
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT;
@@ -49,7 +49,7 @@ if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_SUBJECT) {
     console.log("Web Push đã được cấu hình.");
 }
 
-// ----- (CẬP NHẬT) CÀI ĐẶT DATABASE (PostgreSQL) -----
+// ----- CÀI ĐẶT DATABASE (PostgreSQL) -----
 const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
@@ -274,7 +274,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
 });
 
 
-// ----- (CẬP NHẬT) CÁC ENDPOINT CHO PUSH NOTIFICATION -----
+// ----- CÁC ENDPOINT CHO PUSH NOTIFICATION (Không thay đổi) -----
 
 // Endpoint 1: Gửi VAPID Public Key (Không thay đổi)
 app.get('/vapid-public-key', (req, res) => {
@@ -284,7 +284,7 @@ app.get('/vapid-public-key', (req, res) => {
     res.send(VAPID_PUBLIC_KEY);
 });
 
-// Endpoint 2: Đăng ký nhận thông báo (CẬP NHẬT: Thêm noteData)
+// Endpoint 2: Đăng ký nhận thông báo (Không thay đổi)
 app.post('/subscribe', async (req, res) => {
     const { subscription, settings, noteData } = req.body;
     if (!subscription || !settings || !subscription.endpoint || !subscription.keys) {
@@ -292,7 +292,7 @@ app.post('/subscribe', async (req, res) => {
     }
 
     const { endpoint, keys } = subscription;
-    const notesToStore = noteData || {}; // Đảm bảo không phải null
+    const notesToStore = noteData || {}; 
 
     const query = `
         INSERT INTO subscriptions (endpoint, keys, settings, notes)
@@ -334,7 +334,7 @@ app.post('/unsubscribe', async (req, res) => {
     }
 });
 
-// (MỚI) Endpoint 4: Cập nhật Ghi chú
+// Endpoint 4: Cập nhật Ghi chú (Không thay đổi)
 app.post('/update-notes', async (req, res) => {
     const { endpoint, noteData } = req.body;
     if (!endpoint || !noteData) {
@@ -388,7 +388,7 @@ async function deleteSubscription(endpoint) {
     }
 }
 
-// (CẬP NHẬT) Hàm kiểm tra và gửi thông báo (Đọc ghi chú)
+// (CẬP NHẬT) Hàm kiểm tra và gửi thông báo (Sửa định dạng ghi chú)
 let lastNotificationCheckTime = null;
 async function checkAndSendNotifications() {
     const { timeStr, dateStr } = getHanoiTime();
@@ -400,7 +400,6 @@ async function checkAndSendNotifications() {
     
     let subscriptions;
     try {
-        // Lấy thêm cột 'notes'
         const result = await pool.query("SELECT endpoint, keys, settings, notes FROM subscriptions");
         subscriptions = result.rows;
     } catch (error) {
@@ -425,20 +424,22 @@ async function checkAndSendNotifications() {
         if (timeToAlert && timeStr === timeToAlert) {
             console.log(`Đang gửi thông báo ${todayShift} đến:`, endpoint);
             
-            // (CẬP NHẬT) Tạo nội dung thông báo tùy chỉnh
+            // (CẬP NHẬT) Tạo nội dung thông báo có xuống dòng
             const notesForToday = (notes && notes[dateStr]) ? notes[dateStr] : [];
             let notesString = "";
             if (notesForToday.length > 0) {
-                notesString = " - Ghi chú: " + notesForToday.join(', ');
+                // Thêm ký tự xuống dòng (\n)
+                notesString = "\nGhi chú:\n" + notesForToday.join('\n');
             }
             
-            // Cắt bớt nếu quá dài (giới hạn 100 ký tự cho an toàn)
-            if (notesString.length > 100) {
-                notesString = notesString.substring(0, 100) + "...";
+            // Cắt bớt nếu quá dài (tăng giới hạn 1 chút)
+            if (notesString.length > 150) {
+                notesString = notesString.substring(0, 150) + "...";
             }
 
             const title = `Lịch Luân Phiên - Ca ${todayShift.toUpperCase()}`;
-            const body = `Hôm nay là ${dateStr}.${notesString}`;
+            // Thêm dấu chấm sau dateStr cho đẹp
+            const body = `${dateStr}.${notesString}`;
             
             const notificationPayload = JSON.stringify({
                 title: title,
