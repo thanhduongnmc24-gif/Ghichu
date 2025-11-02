@@ -1,5 +1,4 @@
 const CACHE_NAME = 'ghichu-app-cache-v1';
-// CẬP NHẬT: Thêm lại các tệp /calendar/ vào cache
 const urlsToCache = [
     '/',
     '/index.html',
@@ -8,7 +7,6 @@ const urlsToCache = [
     '/calendar/index.html',
     '/calendar/app.js',
     '/icons/icon-192x192.png'
-    // (Các tệp CSS/JS của trang Tin Tức là từ CDN nên không cần cache)
 ];
 
 // 1. Cài đặt Service Worker: Mở cache và lưu các tệp
@@ -24,16 +22,12 @@ self.addEventListener('install', event => {
 
 // 2. Fetch: Phản hồi từ Cache trước, nếu không có mới lấy từ Mạng
 self.addEventListener('fetch', event => {
-    
-    // CẬP NHẬT: Logic "Cache First" (Ưu tiên Cache)
     event.respondWith(
         caches.match(event.request)
             .then(response => {
-                // Nếu tìm thấy trong cache, trả về nó (TẢI TỨC THÌ)
                 if (response) {
                     return response;
                 }
-                // Nếu không, fetch từ mạng
                 return fetch(event.request);
             }
         )
@@ -53,5 +47,52 @@ self.addEventListener('activate', event => {
                 })
             );
         })
+    );
+});
+
+// 4. (MỚI) Lắng nghe Push Notification từ Server
+self.addEventListener('push', event => {
+    let data;
+    try {
+        data = event.data.json();
+    } catch (e) {
+        data = { title: 'Thông báo', body: event.data.text() };
+    }
+
+    const title = data.title || 'Ghichu App';
+    const options = {
+        body: data.body || 'Bạn có thông báo mới.',
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-192x192.png', // Dành cho Android
+        vibrate: [100, 50, 100],
+        data: {
+            url: self.registration.scope // URL để mở khi nhấn vào
+        }
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(title, options)
+    );
+});
+
+// 5. (MỚI) Xử lý khi người dùng nhấn vào thông báo
+self.addEventListener('notificationclick', event => {
+    event.notification.close(); // Đóng thông báo
+    
+    // Mở trang Lịch (hoặc trang chủ)
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true })
+            .then(windowClients => {
+                // Kiểm tra xem có tab nào đang mở không
+                const focusedClient = windowClients.find(client => client.focused);
+                if (focusedClient) {
+                    return focusedClient.navigate('/#calendar').then(client => client.focus());
+                }
+                if (windowClients.length > 0) {
+                    return windowClients[0].navigate('/#calendar').then(client => client.focus());
+                }
+                // Nếu không có tab nào mở, mở tab mới
+                return clients.openWindow('/#calendar');
+            })
     );
 });
