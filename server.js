@@ -5,12 +5,12 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import webpush from 'web-push'; // (MỚI) Thêm web-push
-import pg from 'pg'; // (MỚI) Thêm pg (PostgreSQL)
+import webpush from 'web-push'; 
+import pg from 'pg'; 
 
 // ----- CÀI ĐẶT CACHE (RSS) -----
 const cache = new Map();
-const CACHE_DURATION_MS = 3 * 60 * 1000; // 3 phút
+const CACHE_DURATION_MS = 3 * 60 * 1000; 
 
 // --- Cài đặt Server ---
 const app = express();
@@ -33,7 +33,7 @@ if (API_KEY) {
     console.error("Thiếu GEMINI_API_KEY trong biến môi trường!");
 }
 
-// ----- (MỚI) CÀI ĐẶT WEB PUSH -----
+// ----- (CẬP NHẬT) CÀI ĐẶT WEB PUSH -----
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT;
@@ -49,15 +49,15 @@ if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_SUBJECT) {
     console.log("Web Push đã được cấu hình.");
 }
 
-// ----- (MỚI) CÀI ĐẶT DATABASE (PostgreSQL) -----
+// ----- (CẬP NHẬT) CÀI ĐẶT DATABASE (PostgreSQL) -----
 const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        rejectUnauthorized: false // Cần thiết cho kết nối Render
+        rejectUnauthorized: false 
     }
 });
 
-// (MỚI) Hàm tự động tạo bảng nếu chưa tồn tại
+// (CẬP NHẬT) Hàm tự động tạo bảng (thêm cột 'notes')
 (async () => {
     const client = await pool.connect();
     try {
@@ -67,10 +67,11 @@ const pool = new pg.Pool({
                 endpoint TEXT NOT NULL UNIQUE,
                 keys JSONB NOT NULL,
                 settings JSONB NOT NULL,
+                notes JSONB DEFAULT '{}'::jsonb, 
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log("Bảng 'subscriptions' đã sẵn sàng.");
+        console.log("Bảng 'subscriptions' (v2, có notes) đã sẵn sàng.");
     } catch (err) {
         console.error("Lỗi khi tạo bảng subscriptions:", err);
     } finally {
@@ -84,7 +85,6 @@ const pool = new pg.Pool({
 
 // Endpoint 1: Lấy RSS feed (Không thay đổi)
 app.get('/get-rss', async (req, res) => {
-    // ... (Giữ nguyên code)
     const rssUrl = req.query.url;
     if (!rssUrl) return res.status(400).send('Thiếu tham số url');
 
@@ -120,7 +120,6 @@ app.get('/get-rss', async (req, res) => {
 
 // Endpoint 2: Tóm tắt AI (Streaming - Không thay đổi)
 app.get('/summarize-stream', async (req, res) => {
-    // ... (Giữ nguyên code)
     const { prompt } = req.query; 
 
     if (!prompt) return res.status(400).send('Thiếu prompt');
@@ -167,7 +166,6 @@ app.get('/summarize-stream', async (req, res) => {
 
 // Endpoint 3: Chat AI (Không thay đổi)
 app.post('/chat', async (req, res) => {
-    // ... (Giữ nguyên code)
     const { history } = req.body;
 
     if (!history || history.length === 0) {
@@ -217,7 +215,6 @@ app.post('/chat', async (req, res) => {
 
 // ----- ENDPOINT CỦA LỊCH LÀM VIỆC (Không thay đổi) -----
 app.post('/api/calendar-ai-parse', async (req, res) => {
-    // ... (Giữ nguyên code)
     const text = req.body.text || "";
     if (!text) {
         return res.status(400).json({ error: 'Không có văn bản' });
@@ -277,9 +274,9 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
 });
 
 
-// ----- (MỚI) CÁC ENDPOINT CHO PUSH NOTIFICATION -----
+// ----- (CẬP NHẬT) CÁC ENDPOINT CHO PUSH NOTIFICATION -----
 
-// (MỚI) Endpoint 1: Gửi VAPID Public Key cho client
+// Endpoint 1: Gửi VAPID Public Key (Không thay đổi)
 app.get('/vapid-public-key', (req, res) => {
     if (!VAPID_PUBLIC_KEY) {
         return res.status(500).send("VAPID Public Key chưa được cấu hình trên server.");
@@ -287,27 +284,25 @@ app.get('/vapid-public-key', (req, res) => {
     res.send(VAPID_PUBLIC_KEY);
 });
 
-// (MỚI) Endpoint 2: Đăng ký nhận thông báo (Sử dụng DB)
+// Endpoint 2: Đăng ký nhận thông báo (CẬP NHẬT: Thêm noteData)
 app.post('/subscribe', async (req, res) => {
-    const { subscription, settings } = req.body;
+    const { subscription, settings, noteData } = req.body;
     if (!subscription || !settings || !subscription.endpoint || !subscription.keys) {
         return res.status(400).send("Thiếu thông tin subscription hoặc settings.");
     }
 
     const { endpoint, keys } = subscription;
+    const notesToStore = noteData || {}; // Đảm bảo không phải null
 
-    // Sử dụng UPSERT (INSERT ... ON CONFLICT ... DO UPDATE)
-    // Nếu endpoint đã tồn tại, nó sẽ cập nhật 'settings'
-    // Nếu chưa, nó sẽ tạo record mới
     const query = `
-        INSERT INTO subscriptions (endpoint, keys, settings)
-        VALUES ($1, $2, $3)
+        INSERT INTO subscriptions (endpoint, keys, settings, notes)
+        VALUES ($1, $2, $3, $4)
         ON CONFLICT (endpoint)
-        DO UPDATE SET settings = $3;
+        DO UPDATE SET settings = $3, notes = $4;
     `;
     
     try {
-        await pool.query(query, [endpoint, keys, settings]);
+        await pool.query(query, [endpoint, keys, settings, notesToStore]);
         console.log("Đã lưu/cập nhật subscription:", endpoint);
         res.status(201).json({ success: true });
     } catch (error) {
@@ -316,7 +311,7 @@ app.post('/subscribe', async (req, res) => {
     }
 });
 
-// (MỚI) Endpoint 3: Hủy đăng ký (Sử dụng DB)
+// Endpoint 3: Hủy đăng ký (Không thay đổi)
 app.post('/unsubscribe', async (req, res) => {
     const { endpoint } = req.body;
     if (!endpoint) {
@@ -339,41 +334,51 @@ app.post('/unsubscribe', async (req, res) => {
     }
 });
 
+// (MỚI) Endpoint 4: Cập nhật Ghi chú
+app.post('/update-notes', async (req, res) => {
+    const { endpoint, noteData } = req.body;
+    if (!endpoint || !noteData) {
+        return res.status(400).send("Thiếu endpoint hoặc noteData.");
+    }
 
-// ----- (MỚI) LOGIC GỬI THÔNG BÁO (CHẠY TRÊN SERVER) -----
+    const query = "UPDATE subscriptions SET notes = $1 WHERE endpoint = $2";
 
-// (MỚI) Sao chép logic tính ca từ client
+    try {
+        await pool.query(query, [noteData, endpoint]);
+        console.log("Đã đồng bộ ghi chú cho:", endpoint);
+        res.status(200).json({ success: true });
+    } catch (error) {
+        console.error("Lỗi khi cập nhật ghi chú:", error);
+        res.status(500).send("Lỗi máy chủ khi cập nhật ghi chú.");
+    }
+});
+
+
+// ----- (CẬP NHẬT) LOGIC GỬI THÔNG BÁO -----
+
+// Logic tính ca (Không thay đổi)
 const EPOCH_DAYS = dateToDays('2025-10-26');
 const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
-
 function dateToDays(dateStr) {
     const [year, month, day] = dateStr.split('-').map(Number);
     const date = new Date(year, month - 1, day);
     return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
 }
-
 function getShiftForDate(dateStr) {
     const currentDays = dateToDays(dateStr);
     const diffDays = currentDays - EPOCH_DAYS;
     const patternIndex = (diffDays % SHIFT_PATTERN.length + SHIFT_PATTERN.length) % SHIFT_PATTERN.length;
     return SHIFT_PATTERN[patternIndex];
 }
-
-// (MỚI) Lấy ngày giờ hiện tại ở múi giờ Hà Nội
 function getHanoiTime() {
     const now = new Date();
     const options = { timeZone: 'Asia/Ho_Chi_Minh' };
-    
     const timeFormatter = new Intl.DateTimeFormat('en-GB', { ...options, hour: '2-digit', minute: '2-digit', hour12: false });
     const timeStr = timeFormatter.format(now); // "06:00"
-
     const dateFormatter = new Intl.DateTimeFormat('en-CA', { ...options, year: 'numeric', month: '2-digit', day: '2-digit' });
     const dateStr = dateFormatter.format(now); // "2025-10-31"
-    
     return { timeStr, dateStr };
 }
-
-// (MỚI) Hàm xóa subscription hết hạn khỏi DB
 async function deleteSubscription(endpoint) {
     console.log("Đang xóa sub hết hạn:", endpoint);
     try {
@@ -383,25 +388,20 @@ async function deleteSubscription(endpoint) {
     }
 }
 
-// (MỚI) Hàm kiểm tra và gửi thông báo
+// (CẬP NHẬT) Hàm kiểm tra và gửi thông báo (Đọc ghi chú)
 let lastNotificationCheckTime = null;
-
 async function checkAndSendNotifications() {
     const { timeStr, dateStr } = getHanoiTime();
 
-    // Chỉ chạy 1 lần mỗi phút
-    if (timeStr === lastNotificationCheckTime) {
-        return;
-    }
+    if (timeStr === lastNotificationCheckTime) return;
     lastNotificationCheckTime = timeStr;
     
-    // 1. Tính ca của hôm nay
     const todayShift = getShiftForDate(dateStr);
     
-    // 2. Đọc danh sách đăng ký từ DB
     let subscriptions;
     try {
-        const result = await pool.query("SELECT endpoint, keys, settings FROM subscriptions");
+        // Lấy thêm cột 'notes'
+        const result = await pool.query("SELECT endpoint, keys, settings, notes FROM subscriptions");
         subscriptions = result.rows;
     } catch (error) {
         console.error("Không thể đọc subscriptions từ DB:", error);
@@ -409,30 +409,43 @@ async function checkAndSendNotifications() {
     }
 
     if (subscriptions.length === 0) {
-        // console.log("Không có ai đăng ký thông báo.");
         return;
     }
     
     console.log(`[Notify Check] ${timeStr} | Ca hôm nay: ${todayShift} | Subs: ${subscriptions.length}`);
 
-    // 3. Lặp qua từng người đăng ký
-    const notificationPayload = JSON.stringify({
-        title: "Lịch Luân Phiên",
-        body: `Hôm nay là ca ${todayShift.toUpperCase()}. Chúc đại ca một ngày tốt lành!`
-    });
-
     const sendPromises = subscriptions.map(sub => {
-        const { endpoint, keys, settings } = sub;
+        const { endpoint, keys, settings, notes } = sub;
         
         let timeToAlert = null;
         if (todayShift === 'ngày') timeToAlert = settings.notifyTimeNgay;
         else if (todayShift === 'đêm') timeToAlert = settings.notifyTimeDem;
         else if (todayShift === 'giãn ca') timeToAlert = settings.notifyTimeOff;
 
-        // 4. So sánh giờ
         if (timeToAlert && timeStr === timeToAlert) {
             console.log(`Đang gửi thông báo ${todayShift} đến:`, endpoint);
             
+            // (CẬP NHẬT) Tạo nội dung thông báo tùy chỉnh
+            const notesForToday = (notes && notes[dateStr]) ? notes[dateStr] : [];
+            let notesString = "";
+            if (notesForToday.length > 0) {
+                notesString = " - Ghi chú: " + notesForToday.join(', ');
+            }
+            
+            // Cắt bớt nếu quá dài (giới hạn 100 ký tự cho an toàn)
+            if (notesString.length > 100) {
+                notesString = notesString.substring(0, 100) + "...";
+            }
+
+            const title = `Lịch Luân Phiên - Ca ${todayShift.toUpperCase()}`;
+            const body = `Hôm nay là ${dateStr}.${notesString}`;
+            
+            const notificationPayload = JSON.stringify({
+                title: title,
+                body: body
+            });
+            // KẾT THÚC CẬP NHẬT
+
             const pushSubscription = {
                 endpoint: endpoint,
                 keys: keys
@@ -441,7 +454,6 @@ async function checkAndSendNotifications() {
             return webpush.sendNotification(pushSubscription, notificationPayload)
                 .catch(err => {
                     if (err.statusCode === 410 || err.statusCode === 404) {
-                        // 410/404 = GONE (Đăng ký đã hết hạn hoặc không hợp lệ)
                         deleteSubscription(endpoint);
                     } else {
                         console.error("Lỗi khi gửi push:", err);
@@ -454,22 +466,16 @@ async function checkAndSendNotifications() {
     await Promise.all(sendPromises);
 }
 
-// (MỚI) Khởi chạy vòng lặp kiểm tra thông báo trên server
-// Chạy mỗi 60 giây (60000ms)
+// Khởi chạy vòng lặp (Không thay đổi)
 setInterval(checkAndSendNotifications, 60000);
 
-
 // ----- CÁC ROUTE TRANG -----
-
-// CẬP NHẬT: Tất cả các route không xác định sẽ trỏ về index.html
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-
 // --- Khởi động Server ---
 app.listen(PORT, () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);
-    // (MỚI) Chạy kiểm tra ngay khi khởi động
     checkAndSendNotifications(); 
 });
