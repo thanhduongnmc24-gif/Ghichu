@@ -405,8 +405,7 @@
             // ===================================================================
             // PHẦN 1: LOGIC VÀ BIẾN CỦA TRANG TIN TỨC (NEWS)
             // ===================================================================
-            // (Tất cả DOM và hàm của Tin Tức giữ nguyên y hệt file cũ)
-
+            
             const newsMain = document.getElementById('news-main');
             const newsGrid = document.getElementById('news-grid');
             const loadingSpinner = document.getElementById('loading-spinner');
@@ -443,6 +442,7 @@
             let completedSummary = { title: '', text: '' };
             let toastTimeoutId = null;
 
+            // (Các hàm Tin Tức giữ nguyên)
             function callGeminiAPIStreaming(prompt, title) {
                 if (summaryEventSource) {
                     summaryEventSource.close();
@@ -484,7 +484,6 @@
                     }
                 };
             }
-            
             async function callChatAPI() {
                 const loadingBubble = document.createElement('div');
                 loadingBubble.className = 'model-bubble';
@@ -518,7 +517,6 @@
                     chatDisplay.scrollTop = chatDisplay.scrollHeight;
                 }
             }
-
             async function fetchRSS(rssUrl, sourceName, { display = true, force = false } = {}) {
                 if (display) {
                     loadingSpinner.classList.remove('hidden');
@@ -560,7 +558,6 @@
                     if (display) loadingSpinner.classList.add('hidden');
                 }
             }
-
             function displayArticles(items, sourceName) {
                 newsGrid.innerHTML = '';
                 items.forEach(item => {
@@ -610,7 +607,6 @@
                     newsGrid.appendChild(card);
                 });
             }
-
             function handleFeedButtonClick(e) {
                  const clickedButton = e.target.closest('.feed-button');
                  if (!clickedButton || clickedButton.classList.contains('active')) return;
@@ -622,7 +618,6 @@
                  fetchRSS(rssUrl, sourceName);
                  mobileMenu.classList.add('hidden');
             }
-
             function handleSummaryClick(title, description) {
                 if (!description || description === "Không có mô tả.") {
                      showToast("Không thể tóm tắt", "Bài viết không có đủ nội dung.", 'error', null, 4000);
@@ -634,7 +629,6 @@
                 callGeminiAPIStreaming(prompt, title);
                 showToast("Đang tóm tắt...", title.substring(0, 50) + "...", 'loading', null, 5000);
             }
-
              function showToast(mainMessage, detailMessage, state = 'ready', onClickAction, autoHideDelay = null) {
                  if (toastTimeoutId) clearTimeout(toastTimeoutId);
                  toastMainMessage.textContent = mainMessage;
@@ -689,7 +683,6 @@
                       null 
                   );
              }
-
             function renderChatHistory() {
                 chatDisplay.innerHTML = '';
                 if (chatHistory.length === 0) {
@@ -730,7 +723,6 @@
                     fetchRSS(feed.dataset.rss, feed.dataset.source, { display: false });
                 });
             }
-
             function handleRefreshClick() {
                 console.log("Đang yêu cầu tải lại...");
                 const activeButton = feedNav.querySelector('.feed-button.active');
@@ -767,8 +759,7 @@
             const prevMonthBtn = document.getElementById('prev-month-btn');
             const nextMonthBtn = document.getElementById('next-month-btn');
             
-            const settingsBtn = document.getElementById('settings-btn');
-            const settingsBtnMobile = document.getElementById('settings-btn-mobile'); 
+            // (CẬP NHẬT) Đã di chuyển 2 biến settingsBtn ra PHẦN 3
             const settingsModal = document.getElementById('settings-modal');
             const closeModalBtn = document.getElementById('close-modal');
             
@@ -808,14 +799,12 @@
                 }
                 localStorage.setItem('myScheduleNotes', JSON.stringify(cleanData));
                 
-                // (MỚI) Gửi ghi chú cập nhật lên server
                 syncNotesToServer().catch(err => console.error('Lỗi đồng bộ ghi chú:', err));
             }
 
             // (Hàm Lưu Cài đặt (Thêm đồng bộ) - Không thay đổi)
             function saveSettings() {
                 localStorage.setItem('myScheduleSettings', JSON.stringify(appSettings));
-                // Khi lưu settings, nếu đã đăng ký thì gửi lại server
                 updateSubscriptionSettings();
             }
             
@@ -913,7 +902,6 @@
                 
                 renderMonthlyNoteSummary(date); 
             }
-            
             function renderMonthlyNoteSummary(date) {
                 const monthlyNoteList = document.getElementById('monthly-note-list');
                 if (!monthlyNoteList) return; 
@@ -979,7 +967,6 @@
                     });
                 }
             }
-
             function openNoteModal(dateStr) {
                 const date = new Date(dateStr + 'T12:00:00'); 
                 noteModal.style.display = 'flex';
@@ -991,7 +978,6 @@
                 newNoteInput.value = ''; 
                 newNoteInput.focus();
             }
-            
             function renderNoteList(dateStr) {
                 noteList.innerHTML = ''; 
                 const notes = noteData[dateStr] || [];
@@ -1027,7 +1013,6 @@
                 }
                 return outputArray;
             }
-
             async function getVapidPublicKey() {
                 try {
                     const response = await fetch('/vapid-public-key');
@@ -1037,7 +1022,6 @@
                     console.error("Lỗi khi lấy VAPID Public Key:", err);
                 }
             }
-
             async function checkNotificationStatus() {
                 if (!swRegistration) return;
                 const subscription = await swRegistration.pushManager.getSubscription();
@@ -1051,8 +1035,6 @@
                     notifyButton.classList.remove('subscribed');
                 }
             }
-
-            // (Hàm Đăng ký (Thêm gửi noteData) - Không thay đổi)
             async function handleSubscribeClick() {
                 if (!swRegistration || !vapidPublicKey) {
                     alert("Service Worker hoặc VAPID Key chưa sẵn sàng. Vui lòng thử lại.");
@@ -1062,7 +1044,6 @@
                 const existingSubscription = await swRegistration.pushManager.getSubscription();
 
                 if (existingSubscription) {
-                    // --- ĐANG HỦY ĐĂNG KÝ ---
                     console.log("Đang hủy đăng ký...");
                     notifyButton.disabled = true;
                     try {
@@ -1081,7 +1062,6 @@
                         alert("Lỗi khi tắt thông báo.");
                     }
                 } else {
-                    // --- ĐANG ĐĂNG KÝ MỚI ---
                     console.log("Đang đăng ký mới...");
                     notifyButton.disabled = true;
                     
@@ -1099,18 +1079,15 @@
                             applicationServerKey: applicationServerKey
                         });
                         
-                        // Lấy settings hiện tại
                         const settings = {
                             notifyTimeNgay: notifyTimeNgay.value,
                             notifyTimeDem: notifyTimeDem.value,
                             notifyTimeOff: notifyTimeOff.value
                         };
                         
-                        // Lấy ghi chú hiện tại
                         const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
                         const noteData = JSON.parse(noteDataStr);
                         
-                        // Gửi subscription, settings, VÀ noteData lên server
                         await fetch('/subscribe', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -1133,8 +1110,6 @@
                 notifyButton.disabled = false;
                 checkNotificationStatus(); 
             }
-
-            // (Hàm Cập nhật Cài đặt (Thêm gửi noteData) - Không thay đổi)
             async function updateSubscriptionSettings() {
                 if (!swRegistration) return;
                 const subscription = await swRegistration.pushManager.getSubscription();
@@ -1169,8 +1144,6 @@
                     console.error("Lỗi khi cập nhật settings:", err);
                 }
             }
-
-            // (Hàm đồng bộ Ghi chú - Không thay đổi)
             async function syncNotesToServer() {
                 if (!swRegistration) return;
                 const subscription = await swRegistration.pushManager.getSubscription();
@@ -1203,10 +1176,14 @@
             // PHẦN 3: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG)
             // ===================================================================
 
+            // --- (CẬP NHẬT) BIẾN TAB (Đã chuyển settingsBtn vào đây) ---
             const newsTabBtn = document.getElementById('news-tab-btn');
             const calendarTabBtn = document.getElementById('calendar-tab-btn');
             const calendarTabBtnMobile = document.getElementById('calendar-tab-btn-mobile');
+            const settingsBtn = document.getElementById('settings-btn');
+            const settingsBtnMobile = document.getElementById('settings-btn-mobile');
             
+            // --- HÀM TAB: Chuyển tab (Đã CẬP NHẬT) ---
             function showTab(tabName) {
                 if (tabName === 'news') {
                     newsMain.classList.remove('hidden');
@@ -1297,6 +1274,7 @@
                 renderCalendar(currentViewDate);
                 loadSettings();
                 
+                // (CẬP NHẬT) Gắn sự kiện cho các nút Cài đặt (giờ đã dùng biến toàn cục)
                 const openSettingsModal = () => {
                     loadSettings(); 
                     settingsModal.style.display = 'flex';
