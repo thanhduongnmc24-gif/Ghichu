@@ -39,6 +39,12 @@
             margin-left: 8px;
         }
         
+        /* (CẬP NHẬT) Sửa CSS cho icon Cài đặt (w-6 h-6) */
+        #settings-btn svg, #settings-btn-mobile svg {
+            width: 24px; /* w-6 */
+            height: 24px; /* h-6 */
+        }
+        
         .tab-button {
             color: #D1D5DB; font-weight: 500; white-space: nowrap; flex-shrink: 0;
             padding: 8px 16px; border-radius: 8px;
@@ -185,6 +191,7 @@
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
                     </div>
                     <button id="calendar-tab-btn" class="tab-button">Lịch Làm Việc</button>
+                    
                     <button id="refresh-feed-button" class="refresh-button" title="Tải lại tin tức">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                     </button>
@@ -429,8 +436,7 @@
             const toastMainMessage = document.getElementById('toast-main-message');
             const toastCta = document.getElementById('toast-cta');
             
-            const refreshFeedButton = document.getElementById('refresh-feed-button');
-            const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
+            // (CẬP NHẬT) ĐÃ XÓA refreshFeedButton và refreshFeedButtonMobile khỏi đây
 
             const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
             const iconCheck = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
@@ -723,16 +729,8 @@
                     fetchRSS(feed.dataset.rss, feed.dataset.source, { display: false });
                 });
             }
-            function handleRefreshClick() {
-                console.log("Đang yêu cầu tải lại...");
-                const activeButton = feedNav.querySelector('.feed-button.active');
-                if (activeButton) {
-                    const rssUrl = activeButton.dataset.rss;
-                    const sourceName = activeButton.dataset.source;
-                    fetchRSS(rssUrl, sourceName, { display: true, force: true });
-                }
-                mobileMenu.classList.add('hidden');
-            }
+            // (CẬP NHẬT) handleRefreshClick đã được chuyển xuống PHẦN 3
+            
             
             // ===================================================================
             // PHẦN 2: LOGIC VÀ BIẾN CỦA TRANG LỊCH (CALENDAR)
@@ -759,7 +757,6 @@
             const prevMonthBtn = document.getElementById('prev-month-btn');
             const nextMonthBtn = document.getElementById('next-month-btn');
             
-            // (CẬP NHẬT) Đã di chuyển 2 biến settingsBtn ra PHẦN 3
             const settingsModal = document.getElementById('settings-modal');
             const closeModalBtn = document.getElementById('close-modal');
             
@@ -1176,14 +1173,18 @@
             // PHẦN 3: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG)
             // ===================================================================
 
-            // --- (CẬP NHẬT) BIẾN TAB (Đã chuyển settingsBtn vào đây) ---
+            // (CẬP NHẬT) Đã di chuyển TẤT CẢ biến DOM điều khiển vào đây
             const newsTabBtn = document.getElementById('news-tab-btn');
             const calendarTabBtn = document.getElementById('calendar-tab-btn');
             const calendarTabBtnMobile = document.getElementById('calendar-tab-btn-mobile');
+            
             const settingsBtn = document.getElementById('settings-btn');
             const settingsBtnMobile = document.getElementById('settings-btn-mobile');
             
-            // --- HÀM TAB: Chuyển tab (Đã CẬP NHẬT) ---
+            const refreshFeedButton = document.getElementById('refresh-feed-button');
+            const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
+            
+            // (CẬP NHẬT) Hàm showTab dùng classList
             function showTab(tabName) {
                 if (tabName === 'news') {
                     newsMain.classList.remove('hidden');
@@ -1192,10 +1193,13 @@
                     calendarTabBtn.classList.remove('active');
                     calendarTabBtnMobile.classList.remove('active');
                     
-                    refreshFeedButton.style.display = 'flex';
-                    refreshFeedButtonMobile.style.display = 'flex';
-                    if (settingsBtn) settingsBtn.style.display = 'none';
-                    if (settingsBtnMobile) settingsBtnMobile.style.display = 'none'; 
+                    // HIỆN Tải lại
+                    refreshFeedButton.classList.remove('hidden');
+                    refreshFeedButtonMobile.classList.remove('hidden');
+                    
+                    // ẨN Cài đặt
+                    if (settingsBtn) settingsBtn.classList.add('hidden');
+                    if (settingsBtnMobile) settingsBtnMobile.classList.add('hidden'); 
 
                 } else if (tabName === 'calendar') {
                     newsMain.classList.add('hidden');
@@ -1204,10 +1208,13 @@
                     calendarTabBtn.classList.add('active');
                     calendarTabBtnMobile.classList.add('active');
                     
-                    refreshFeedButton.style.display = 'none';
-                    refreshFeedButtonMobile.style.display = 'none';
-                    if (settingsBtn) settingsBtn.style.display = 'flex';
-                    if (settingsBtnMobile) settingsBtnMobile.style.display = 'flex'; 
+                    // ẨN Tải lại
+                    refreshFeedButton.classList.add('hidden');
+                    refreshFeedButtonMobile.classList.add('hidden');
+
+                    // HIỆN Cài đặt
+                    if (settingsBtn) settingsBtn.classList.remove('hidden');
+                    if (settingsBtnMobile) settingsBtnMobile.classList.remove('hidden'); 
                 }
             }
 
@@ -1218,10 +1225,23 @@
                 mobileMenu.classList.add('hidden'); 
             });
 
+            // (CẬP NHẬT) Hàm handleRefreshClick được chuyển xuống đây
+            function handleRefreshClick() {
+                console.log("Đang yêu cầu tải lại...");
+                const activeButton = feedNav.querySelector('.feed-button.active');
+                if (activeButton) {
+                    const rssUrl = activeButton.dataset.rss;
+                    const sourceName = activeButton.dataset.source;
+                    fetchRSS(rssUrl, sourceName, { display: true, force: true });
+                }
+                mobileMenu.classList.add('hidden');
+            }
+
             // --- KHỞI ĐỘNG (TIN TỨC) ---
             (async () => {
                 feedNav.addEventListener('click', handleFeedButtonClick);
                 mobileMenu.addEventListener('click', handleFeedButtonClick);
+                // (CẬP NHẬT) Gắn sự kiện vào các biến toàn cục
                 refreshFeedButton.addEventListener('click', handleRefreshClick);
                 refreshFeedButtonMobile.addEventListener('click', handleRefreshClick); 
 
