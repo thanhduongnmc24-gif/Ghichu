@@ -49,15 +49,15 @@ if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_SUBJECT) {
     console.log("Web Push đã được cấu hình.");
 }
 
-// ----- CÀI ĐẶT DATABASE (PostgreSQL) -----
+// ----- (CẬP NHẬT) CÀI ĐẶT DATABASE (Dùng Supabase) -----
 const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false 
-    }
+    // (CẬP NHẬT) Supabase yêu cầu SSL, không cần rejectUnauthorized
+    ssl: true
 });
 
 // (CẬP NHẬT) Hàm tự động tạo bảng (thêm cột 'notes')
+// Tệp này sẽ chạy MỘT LẦN khi deploy, để tạo bảng trên Supabase
 (async () => {
     const client = await pool.connect();
     try {
@@ -71,7 +71,7 @@ const pool = new pg.Pool({
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log("Bảng 'subscriptions' (v2, có notes) đã sẵn sàng.");
+        console.log("Bảng 'subscriptions' (v2, có notes) đã sẵn sàng trên Supabase.");
     } catch (err) {
         console.error("Lỗi khi tạo bảng subscriptions:", err);
     } finally {
@@ -92,23 +92,19 @@ app.get('/get-rss', async (req, res) => {
     if (cache.has(rssUrl)) {
         const cachedItem = cache.get(rssUrl);
         if (now - cachedItem.timestamp < CACHE_DURATION_MS) {
-            console.log(`[CACHE] Gửi ${rssUrl} từ cache.`);
             res.type('application/xml');
             return res.send(cachedItem.data);
         } else {
             cache.delete(rssUrl);
-            console.log(`[CACHE] Cache ${rssUrl} đã hết hạn.`);
         }
     }
 
     try {
-        console.log(`[FETCH] Đang fetch mới ${rssUrl}...`);
         const response = await fetch(rssUrl);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const xmlText = await response.text();
 
         cache.set(rssUrl, { data: xmlText, timestamp: now });
-        console.log(`[CACHE] Đã lưu ${rssUrl} vào cache.`);
         res.type('application/xml');
         res.send(xmlText);
 
@@ -158,7 +154,6 @@ app.get('/summarize-stream', async (req, res) => {
     }
 
      req.on('close', () => {
-         console.log('Client ngắt kết nối SSE');
          res.end();
      });
 });
@@ -194,7 +189,6 @@ app.post('/chat', async (req, res) => {
 
         if (!geminiResponse.ok) {
             const errorBody = await geminiResponse.json();
-            console.error("Lỗi API Gemini (chat):", errorBody);
             throw new Error(`Lỗi từ Gemini: ${geminiResponse.status}`);
         }
 
@@ -204,7 +198,6 @@ app.post('/chat', async (req, res) => {
             const answerText = result.candidates[0].content.parts[0].text;
             res.json({ answer: answerText });
         } else {
-            console.warn("Kết quả trả về không có phần text:", result);
             throw new Error("Không nhận được nội dung hợp lệ từ API Gemini.");
         }
     } catch (error) {
@@ -263,7 +256,6 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
         const response = result.response;
         const jsonText = response.text();
 
-        console.log("Gemini (Lịch) trả về:", jsonText);
         res.setHeader('Content-Type', 'application/json');
         res.send(jsonText); 
 
@@ -374,9 +366,9 @@ function getHanoiTime() {
     const now = new Date();
     const options = { timeZone: 'Asia/Ho_Chi_Minh' };
     const timeFormatter = new Intl.DateTimeFormat('en-GB', { ...options, hour: '2-digit', minute: '2-digit', hour12: false });
-    const timeStr = timeFormatter.format(now); // "06:00"
+    const timeStr = timeFormatter.format(now);
     const dateFormatter = new Intl.DateTimeFormat('en-CA', { ...options, year: 'numeric', month: '2-digit', day: '2-digit' });
-    const dateStr = dateFormatter.format(now); // "2025-10-31"
+    const dateStr = dateFormatter.format(now);
     return { timeStr, dateStr };
 }
 async function deleteSubscription(endpoint) {
@@ -388,12 +380,15 @@ async function deleteSubscription(endpoint) {
     }
 }
 
-// (CẬP NHẬT) Hàm kiểm tra và gửi thông báo (Sửa định dạng ghi chú)
+// Hàm kiểm tra và gửi thông báo (Không thay đổi)
 let lastNotificationCheckTime = null;
 async function checkAndSendNotifications() {
     const { timeStr, dateStr } = getHanoiTime();
 
-    if (timeStr === lastNotificationCheckTime) return;
+    if (timeStr === lastNotificationCheckTime) {
+        console.log("Đã kiểm tra trong phút này, bỏ qua.");
+        return;
+    }
     lastNotificationCheckTime = timeStr;
     
     const todayShift = getShiftForDate(dateStr);
@@ -408,6 +403,7 @@ async function checkAndSendNotifications() {
     }
 
     if (subscriptions.length === 0) {
+         console.log("Không có ai đăng ký thông báo.");
         return;
     }
     
@@ -424,28 +420,22 @@ async function checkAndSendNotifications() {
         if (timeToAlert && timeStr === timeToAlert) {
             console.log(`Đang gửi thông báo ${todayShift} đến:`, endpoint);
             
-            // (CẬP NHẬT) Tạo nội dung thông báo có xuống dòng
             const notesForToday = (notes && notes[dateStr]) ? notes[dateStr] : [];
             let notesString = "";
             if (notesForToday.length > 0) {
-                // Thêm ký tự xuống dòng (\n)
                 notesString = "\nGhi chú:\n" + notesForToday.join('\n');
             }
-            
-            // Cắt bớt nếu quá dài (tăng giới hạn 1 chút)
             if (notesString.length > 150) {
                 notesString = notesString.substring(0, 150) + "...";
             }
 
             const title = `Lịch Luân Phiên - Ca ${todayShift.toUpperCase()}`;
-            // Thêm dấu chấm sau dateStr cho đẹp
-            const body = `${dateStr}.${notesString}`;
+            const body = `Hôm nay là ${dateStr}.${notesString}`;
             
             const notificationPayload = JSON.stringify({
                 title: title,
                 body: body
             });
-            // KẾT THÚC CẬP NHẬT
 
             const pushSubscription = {
                 endpoint: endpoint,
@@ -467,16 +457,37 @@ async function checkAndSendNotifications() {
     await Promise.all(sendPromises);
 }
 
-// Khởi chạy vòng lặp (Không thay đổi)
-setInterval(checkAndSendNotifications, 60000);
+// (CẬP NHẬT) Xóa bỏ vòng lặp setInterval
+// setInterval(checkAndSendNotifications, 60000);
+
+// (MỚI) Endpoint này sẽ được gọi bởi Render Cron Job
+app.get('/trigger-notifications', async (req, res) => {
+    // Thêm một key bí mật đơn giản để bảo vệ
+    const cronSecret = req.headers['x-cron-secret'];
+    if (cronSecret !== process.env.VAPID_PRIVATE_KEY) { // Tận dụng VAPID key làm key bí mật
+        console.warn("Cron trigger không hợp lệ (sai secret)");
+        return res.status(401).send("Unauthorized");
+    }
+
+    try {
+        console.log("Cron Job triggered: Đang chạy kiểm tra thông báo...");
+        await checkAndSendNotifications();
+        res.status(200).send('Notification check OK.');
+    } catch (err) {
+        console.error("Lỗi khi chạy Cron Job:", err);
+        res.status(500).send('Cron Job Error.');
+    }
+});
+
 
 // ----- CÁC ROUTE TRANG -----
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+
 // --- Khởi động Server ---
 app.listen(PORT, () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);
-    checkAndSendNotifications(); 
+    // (CẬP NHẬT) Xóa bỏ checkAndSendNotifications() khi khởi động
 });
