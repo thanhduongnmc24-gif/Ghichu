@@ -49,11 +49,18 @@ if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_SUBJECT) {
     console.log("Web Push đã được cấu hình.");
 }
 
-// ----- (CẬP NHẬT) CÀI ĐẶT DATABASE (Dùng Supabase) -----
+// ----- (CẬP NHẬT) CÀI ĐẶT DATABASE (Dùng Supabase + Ép IPv4) -----
+// Phân tích DATABASE_URL để ép IPv4
+const dbUrl = new URL(process.env.DATABASE_URL);
+
 const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
-    // (CẬP NHẬT) Supabase yêu cầu SSL, không cần rejectUnauthorized
-    ssl: true
+    user: dbUrl.username,
+    password: dbUrl.password,
+    host: dbUrl.hostname,
+    port: dbUrl.port,
+    database: dbUrl.pathname.split('/')[1],
+    ssl: true,
+    family: 4 // (MỚI) Ép sử dụng IPv4
 });
 
 // (CẬP NHẬT) Hàm tự động tạo bảng (thêm cột 'notes')
@@ -346,7 +353,7 @@ app.post('/update-notes', async (req, res) => {
 });
 
 
-// ----- (CẬP NHẬT) LOGIC GỬI THÔNG BÁO -----
+// ----- LOGIC GỬI THÔNG BÁO (Không thay đổi) -----
 
 // Logic tính ca (Không thay đổi)
 const EPOCH_DAYS = dateToDays('2025-10-26');
@@ -457,14 +464,10 @@ async function checkAndSendNotifications() {
     await Promise.all(sendPromises);
 }
 
-// (CẬP NHẬT) Xóa bỏ vòng lặp setInterval
-// setInterval(checkAndSendNotifications, 60000);
-
-// (MỚI) Endpoint này sẽ được gọi bởi Render Cron Job
+// (CẬP NHẬT) Endpoint của Cron Job (Không thay đổi)
 app.get('/trigger-notifications', async (req, res) => {
-    // Thêm một key bí mật đơn giản để bảo vệ
     const cronSecret = req.headers['x-cron-secret'];
-    if (cronSecret !== process.env.VAPID_PRIVATE_KEY) { // Tận dụng VAPID key làm key bí mật
+    if (cronSecret !== process.env.VAPID_PRIVATE_KEY) { 
         console.warn("Cron trigger không hợp lệ (sai secret)");
         return res.status(401).send("Unauthorized");
     }
@@ -489,5 +492,4 @@ app.get('*', (req, res) => {
 // --- Khởi động Server ---
 app.listen(PORT, () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);
-    // (CẬP NHẬT) Xóa bỏ checkAndSendNotifications() khi khởi động
 });
