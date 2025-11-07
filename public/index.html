@@ -213,6 +213,26 @@
                 right: auto; 
             }
         }
+        
+        /* (MỚI) CSS Cho Trang Chat */
+        #chat-main-wrapper {
+            background-color: #1F2937; /* bg-gray-800 */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            display: flex;
+            flex-direction: column;
+            /* (MỚI) Đặt chiều cao cho trang chat/cài đặt */
+            height: calc(100vh - 12rem); /* 100vh - header - bottom_nav - padding */
+            max-width: 1024px; /* max-w-5xl */
+            margin-left: auto;
+            margin-right: auto;
+        }
+        @media (min-width: 640px) { /* sm: */
+            #chat-main-wrapper {
+                 height: calc(100vh - 10rem); /* 100vh - header - padding */
+            }
+        }
+        
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -328,62 +348,29 @@
         </section>
 
     </main>
-
-    <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
-        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-white">Bản Tóm Tắt AI</h2>
-                <button id="close-summary-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
-            </div>
-            <div id="summary-content-wrapper" class="min-h-[200px]">
-                 <div class="text-gray-200 space-y-4">
-                      <h3 id="summary-title" class="text-lg font-semibold text-white"></h3>
-                      <p id="summary-text" class="whitespace-pre-wrap leading-relaxed"></p>
-                 </div>
-            </div>
-        </div>
-    </div>
     
-    <button id="chat-fab" class="hidden sm:flex fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg items-center justify-center z-40 transition-transform transform hover:scale-110">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-    </button>
-    
-    <div id="chat-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
-        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
-             <div class="flex justify-between items-center mb-4">
+    <main id="chat-main" class="container mx-auto p-4 sm:p-8 hidden">
+        <div id="chat-main-wrapper">
+             <div class="flex justify-between items-center mb-4 p-6 pb-0">
                  <h2 class="text-2xl font-bold text-white">Em là Tèo biết tuốt</h2>
-                 <button id="close-chat-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
-             </div>
-             <div id="chat-display" class="min-h-[200px] bg-gray-900 p-4 rounded-lg mb-4 overflow-y-auto flex-grow flex flex-col">
+                 </div>
+             <div id="chat-display" class="min-h-[200px] bg-gray-900 p-4 rounded-lg mb-4 overflow-y-auto flex-grow flex flex-col mx-6">
                  <div class="model-bubble">Chào đại ca, Tèo xin trả lời bất kỳ câu hỏi nào của đại ca?</div>
              </div>
-             <form id="chat-form" class="flex space-x-2">
+             <form id="chat-form" class="flex space-x-2 p-6 pt-0">
                  <input type="text" id="chat-input" placeholder="Hôm nay đại ca thấy thế nào..." class="flex-grow p-3 rounded-lg focus:outline-none">
                  <button type="submit" id="send-chat-button" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" /></svg>
                  </button>
              </form>
         </div>
-    </div>
-    <div id="summary-toast" class="hidden">
-        <button id="toast-close-button">&times;</button>
-        <div class="flex items-center">
-            <div id="toast-icon" class="flex-shrink-0 w-6 h-6">
-                </div>
-            <div class="ml-3">
-                <p id="toast-main-message" class="font-semibold"></p>
-                <p id="toast-title" class="text-sm text-gray-300 line-clamp-2"></p>
-                <p id="toast-cta" class="text-xs mt-2 text-blue-200">Nhấn để xem</p>
-            </div>
-        </div>
-    </div>
+    </main>
 
-    <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
-        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full">
+    <main id="settings-main" class="container mx-auto p-4 sm:p-8 hidden">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full mx-auto">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-white">Cài đặt</h2>
-                <button id="close-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
-            </div>
+                </div>
             
             <fieldset class="border border-gray-600 p-4 rounded-lg">
                 <legend class="text-lg font-semibold text-white px-2">Thông báo Push</legend>
@@ -409,6 +396,38 @@
                     <input type="time" id="notify-time-off" value="08:00">
                 </label>
             </fieldset>
+        </div>
+    </main>
+
+    <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-white">Bản Tóm Tắt AI</h2>
+                <button id="close-summary-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+            <div id="summary-content-wrapper" class="min-h-[200px]">
+                 <div class="text-gray-200 space-y-4">
+                      <h3 id="summary-title" class="text-lg font-semibold text-white"></h3>
+                      <p id="summary-text" class="whitespace-pre-wrap leading-relaxed"></p>
+                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <button id="chat-fab" class="hidden sm:flex fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg items-center justify-center z-40 transition-transform transform hover:scale-110">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+    </button>
+    
+    <div id="summary-toast" class="hidden">
+        <button id="toast-close-button">&times;</button>
+        <div class="flex items-center">
+            <div id="toast-icon" class="flex-shrink-0 w-6 h-6">
+                </div>
+            <div class="ml-3">
+                <p id="toast-main-message" class="font-semibold"></p>
+                <p id="toast-title" class="text-sm text-gray-300 line-clamp-2"></p>
+                <p id="toast-cta" class="text-xs mt-2 text-blue-200">Nhấn để xem</p>
+            </div>
         </div>
     </div>
     
@@ -504,13 +523,14 @@
 
             // --- Biến Phần 2 (Lịch & Cài đặt) ---
             const calendarMain = document.getElementById('calendar-main');
+            const settingsMain = document.getElementById('settings-main'); // (MỚI)
             const cal_aiForm = document.getElementById('ai-form');
             const cal_aiInput = document.getElementById('ai-input');
             const calendarBody = document.getElementById('calendar-body');
             const currentMonthYearEl = document.getElementById('current-month-year');
             const prevMonthBtn = document.getElementById('prev-month-btn');
             const nextMonthBtn = document.getElementById('next-month-btn');
-            const settingsModal = document.getElementById('settings-modal');
+            const settingsModal = document.getElementById('settings-modal'); // (CẬP NHẬT) Đây là modal CŨ, chúng ta lấy nội dung từ nó
             const closeModalBtn = document.getElementById('close-modal');
             const notifyButton = document.getElementById('notify-button');
             const notifyTimeNgay = document.getElementById('notify-time-ngay');
@@ -524,14 +544,17 @@
             const addNoteForm = document.getElementById('add-note-form');
             const newNoteInput = document.getElementById('new-note-input');
 
-            // --- Biến Phần 3 (Điều khiển Tab) ---
+            // --- Biến Phần 3 (Trò chuyện) ---
+            const chatMain = document.getElementById('chat-main'); // (MỚI)
+
+            // --- Biến Phần 4 (Điều khiển Tab) ---
             const newsTabBtn = document.getElementById('news-tab-btn');
             const calendarTabBtn = document.getElementById('calendar-tab-btn');
             const settingsBtn = document.getElementById('settings-btn'); 
             const mobileHeaderTitle = document.getElementById('mobile-header-title');
             const refreshFeedButton = document.getElementById('refresh-feed-button');
             const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
-            // (CẬP NHẬT) Đã xóa settingsBtnMobile
+            // (ĐÃ XÓA) settingsBtnMobile
             const bottomTabNews = document.getElementById('bottom-tab-news');
             const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
             const bottomTabChat = document.getElementById('bottom-tab-chat'); // (MỚI)
@@ -1242,98 +1265,95 @@
             // PHẦN 3: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG)
             // ===================================================================
             
-            // (CẬP NHẬT) Hàm mở modal cài đặt
-            const openSettingsModal = () => {
-                loadSettings(); 
-                settingsModal.style.display = 'flex';
-                
-                // Cập nhật trạng thái Active
-                if (newsTabBtn) newsTabBtn.classList.remove('active');
-                if (calendarTabBtn) calendarTabBtn.classList.remove('active');
-                bottomTabNews.classList.remove('active');
-                bottomTabCalendar.classList.remove('active');
-                bottomTabChat.classList.remove('active');
-                
-                if (settingsBtn) settingsBtn.classList.add('active'); 
-                bottomTabSettings.classList.add('active'); 
-            };
+            let currentTab = 'news'; // (MỚI) Theo dõi tab hiện tại
             
-            // (CẬP NHẬT) Hàm mở modal chat
-            const openChatModal = () => {
-                chatModal.classList.remove('hidden');
-                chatInput.focus();
+            // (CẬP NHẬT) Hàm showTab (Xử lý 4 trang)
+            function showTab(tabName) {
+                if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
                 
-                // Cập nhật trạng thái Active
+                // (MỚI) Reset chat nếu rời khỏi tab chat
+                if (currentTab === 'chat') {
+                    resetChat();
+                }
+                
+                currentTab = tabName;
+                
+                // 1. Ẩn tất cả các trang
+                newsMain.classList.add('hidden');
+                calendarMain.classList.add('hidden');
+                chatMain.classList.add('hidden');
+                settingsMain.classList.add('hidden');
+                
+                // 2. Tắt active tất cả các nút
                 if (newsTabBtn) newsTabBtn.classList.remove('active');
                 if (calendarTabBtn) calendarTabBtn.classList.remove('active');
                 if (settingsBtn) settingsBtn.classList.remove('active');
                 bottomTabNews.classList.remove('active');
                 bottomTabCalendar.classList.remove('active');
+                bottomTabChat.classList.remove('active');
                 bottomTabSettings.classList.remove('active');
                 
-                bottomTabChat.classList.add('active');
-            };
-            
-            // (CẬP NHẬT) Hàm showTab (chỉ xử lý 'news' và 'calendar')
-            function showTab(tabName) {
-                // 1. Ẩn/Hiện nội dung chính
-                if (tabName === 'news') {
-                    newsMain.classList.remove('hidden');
-                    calendarMain.classList.add('hidden');
-                    if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Tin Tức";
-                    
-                    // 2. Cập nhật trạng thái Active
-                    if (newsTabBtn) newsTabBtn.classList.add('active');
-                    bottomTabNews.classList.add('active');
-                    if (calendarTabBtn) calendarTabBtn.classList.remove('active');
-                    bottomTabCalendar.classList.remove('active');
-                    if (settingsBtn) settingsBtn.classList.remove('active');
-                    bottomTabSettings.classList.remove('active');
-                    bottomTabChat.classList.remove('active');
+                // 3. Ẩn các nút header mobile
+                if (rssMenuBtn) rssMenuBtn.classList.add('hidden');
+                if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.add('hidden');
+                
+                // 4. Ẩn nút Chat FAB (desktop)
+                chatFab.classList.add('hidden');
 
-                    // 3. Cập nhật Header Mobile
-                    if (rssMenuBtn) rssMenuBtn.classList.remove('hidden');
-                    if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.remove('hidden');
-                    // (Đã xóa settingsBtnMobile)
-
-                } else if (tabName === 'calendar') {
-                    newsMain.classList.add('hidden');
-                    calendarMain.classList.remove('hidden');
-                    if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Lịch Làm Việc";
-
-                    // 2. Cập nhật trạng thái Active
-                    if (newsTabBtn) newsTabBtn.classList.remove('active');
-                    bottomTabNews.classList.remove('active');
-                    if (calendarTabBtn) calendarTabBtn.classList.add('active');
-                    bottomTabCalendar.classList.add('active');
-                    if (settingsBtn) settingsBtn.classList.remove('active');
-                    bottomTabSettings.classList.remove('active');
-                    bottomTabChat.classList.remove('active');
-                    
-                    // 3. Cập nhật Header Mobile
-                    if (rssMenuBtn) rssMenuBtn.classList.add('hidden');
-                    if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.add('hidden');
-                    // (Đã xóa settingsBtnMobile)
+                // 5. Xử lý hiển thị tab
+                switch (tabName) {
+                    case 'news':
+                        newsMain.classList.remove('hidden');
+                        if (newsTabBtn) newsTabBtn.classList.add('active');
+                        bottomTabNews.classList.add('active');
+                        if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Tin Tức";
+                        if (rssMenuBtn) rssMenuBtn.classList.remove('hidden');
+                        if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.remove('hidden');
+                        break;
+                    case 'calendar':
+                        calendarMain.classList.remove('hidden');
+                        if (calendarTabBtn) calendarTabBtn.classList.add('active');
+                        bottomTabCalendar.classList.add('active');
+                        if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Lịch Làm Việc";
+                        break;
+                    case 'chat':
+                        chatMain.classList.remove('hidden');
+                        bottomTabChat.classList.add('active');
+                        if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Trò chuyện";
+                        chatInput.focus();
+                        break;
+                    case 'settings':
+                        settingsMain.classList.remove('hidden');
+                        if (settingsBtn) settingsBtn.classList.add('active');
+                        bottomTabSettings.classList.add('active');
+                        if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Cài đặt";
+                        break;
                 }
                 
-                // 4. Luôn đóng modals khi chuyển tab
-                settingsModal.style.display = 'none';
-                chatModal.classList.add('hidden');
-                // 5. Luôn đóng menu RSS khi chuyển tab
+                // 6. (MỚI) Hiện lại nút Chat FAB (desktop) nếu không ở trang chat
+                if (window.innerWidth >= 640 && currentTab !== 'chat') {
+                    chatFab.classList.remove('hidden');
+                }
+                
+                // 7. Luôn đóng menu RSS
                 rssMobileMenu.classList.add('hidden');
             }
 
             // --- Gắn sự kiện cho TAB ---
             
+            // Desktop
             if (newsTabBtn) newsTabBtn.addEventListener('click', () => showTab('news'));
             if (calendarTabBtn) calendarTabBtn.addEventListener('click', () => showTab('calendar'));
-            if (settingsBtn) settingsBtn.addEventListener('click', openSettingsModal);
+            if (settingsBtn) settingsBtn.addEventListener('click', () => showTab('settings'));
+            chatFab.addEventListener('click', () => showTab('chat')); // (CẬP NHẬT)
             
+            // Mobile (Bottom Nav)
             bottomTabNews.addEventListener('click', () => showTab('news'));
             bottomTabCalendar.addEventListener('click', () => showTab('calendar'));
-            bottomTabChat.addEventListener('click', openChatModal); // (MỚI)
-            bottomTabSettings.addEventListener('click', openSettingsModal);
+            bottomTabChat.addEventListener('click', () => showTab('chat')); // (MỚI)
+            bottomTabSettings.addEventListener('click', () => showTab('settings'));
             
+            // Mobile (Top Header)
             if (rssMenuBtn) rssMenuBtn.addEventListener('click', () => rssMobileMenu.classList.toggle('hidden'));
 
             // (Hàm Tải lại)
@@ -1348,15 +1368,6 @@
                 rssMobileMenu.classList.add('hidden'); 
             }
             
-            // --- Hàm trả về Tab cuối ---
-            function returnToLastTab() {
-                if (newsMain.classList.contains('hidden')) {
-                    showTab('calendar');
-                } else {
-                    showTab('news');
-                }
-            }
-
             // --- KHỞI ĐỘNG (TIN TỨC) ---
             (async () => {
                 feedNav.addEventListener('click', handleFeedButtonClick);
@@ -1391,22 +1402,8 @@
                      hideToast();
                  });
                  
-                // (CẬP NHẬT) Nút Chat FAB (Desktop)
-                chatFab.addEventListener('click', openChatModal);
-                
-                // (CẬP NHẬT) Đóng Modal Chat
-                closeChatModal.addEventListener('click', () => {
-                    chatModal.classList.add('hidden');
-                    resetChat();
-                    returnToLastTab(); // (MỚI)
-                });
-                chatModal.addEventListener('click', (e) => {
-                    if (e.target === chatModal) {
-                        chatModal.classList.add('hidden');
-                        resetChat();
-                        returnToLastTab(); // (MỚI)
-                    }
-                });
+                // (XÓA) Sự kiện nút chat đã chuyển lên trên
+                // (XÓA) Sự kiện đóng modal chat đã bị xóa
                 chatForm.addEventListener('submit', handleSendChat);
             })();
             
@@ -1415,17 +1412,7 @@
                 renderCalendar(currentViewDate);
                 loadSettings();
                 
-                // (CẬP NHẬT) Đóng Modal Cài đặt
-                closeModalBtn.addEventListener('click', () => {
-                    settingsModal.style.display = 'none';
-                    returnToLastTab(); // (MỚI)
-                });
-                settingsModal.addEventListener('click', (e) => {
-                    if (e.target === settingsModal) {
-                        settingsModal.style.display = 'none';
-                        returnToLastTab(); // (MỚI)
-                    }
-                });
+                // (XÓA) Sự kiện đóng modal cài đặt đã bị xóa
 
                 notifyTimeNgay.addEventListener('change', (e) => {
                     appSettings.notifyTimeNgay = e.target.value;
