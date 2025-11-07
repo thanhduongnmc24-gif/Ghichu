@@ -15,12 +15,11 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            /* (MỚI) Thêm padding-bottom để không bị nav che */
             padding-bottom: 80px; /* 5rem */
         }
         @media (min-width: 640px) {
             body {
-                padding-bottom: 0; /* Tắt padding trên desktop */
+                padding-bottom: 0; 
             }
         }
 
@@ -67,7 +66,6 @@
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         }
         
-        /* (CẬP NHẬT) Sửa CSS menu mobile cũ (chỉ còn RSS) */
         #rss-mobile-menu .feed-button { 
             display: block; width: 100%; text-align: left; padding: 10px 16px; 
             border: none; margin-left: 0; color: #E5E7EB; font-weight: 600; 
@@ -175,7 +173,6 @@
             grid-column-start: 2;
         }
         
-        /* (MỚI) CSS CHO THANH NAV DƯỚI CÙNG */
         #bottom-nav {
             position: fixed;
             bottom: 0;
@@ -212,7 +209,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-900 text-gray-100 antialiased pb-20 sm:pb-0">
+<body class="bg-gray-900 text-gray-100 antialiased">
 
     <header class="bg-gray-800 shadow-md sticky top-0 z-30">
         <nav class="container mx-auto px-4 py-4 relative">
@@ -466,9 +463,10 @@
             }
 
             // ===================================================================
-            // PHẦN 1: LOGIC VÀ BIẾN CỦA TRANG TIN TỨC (NEWS)
+            // (MỚI) PHẦN 0: KHAI BÁO BIẾN (DOM ELEMENTS)
             // ===================================================================
             
+            // --- Biến Phần 1 (Tin Tức) ---
             const newsMain = document.getElementById('news-main');
             const newsGrid = document.getElementById('news-grid');
             const loadingSpinner = document.getElementById('loading-spinner');
@@ -483,17 +481,52 @@
             const chatForm = document.getElementById('chat-form');
             const chatInput = document.getElementById('chat-input');
             const chatDisplay = document.getElementById('chat-display');
-            
-            // (CẬP NHẬT) Đã đổi tên 2 biến này
             const rssMenuBtn = document.getElementById('rss-menu-btn');
             const rssMobileMenu = document.getElementById('rss-mobile-menu');
-
             const summaryToast = document.getElementById('summary-toast');
             const toastTitle = document.getElementById('toast-title');
             const toastCloseButton = document.getElementById('toast-close-button');
             const toastIcon = document.getElementById('toast-icon');
             const toastMainMessage = document.getElementById('toast-main-message');
             const toastCta = document.getElementById('toast-cta');
+
+            // --- Biến Phần 2 (Lịch) ---
+            const calendarMain = document.getElementById('calendar-main');
+            const cal_aiForm = document.getElementById('ai-form');
+            const cal_aiInput = document.getElementById('ai-input');
+            const calendarBody = document.getElementById('calendar-body');
+            const currentMonthYearEl = document.getElementById('current-month-year');
+            const prevMonthBtn = document.getElementById('prev-month-btn');
+            const nextMonthBtn = document.getElementById('next-month-btn');
+            const settingsModal = document.getElementById('settings-modal');
+            const closeModalBtn = document.getElementById('close-modal');
+            const notifyButton = document.getElementById('notify-button');
+            const notifyTimeNgay = document.getElementById('notify-time-ngay');
+            const notifyTimeDem = document.getElementById('notify-time-dem');
+            const notifyTimeOff = document.getElementById('notify-time-off');
+            const noteModal = document.getElementById('note-modal');
+            const closeNoteModalBtn = document.getElementById('close-note-modal');
+            const noteModalTitle = document.getElementById('note-modal-title');
+            const modalShiftInfo = document.getElementById('modal-shift-info'); 
+            const noteList = document.getElementById('note-list');
+            const addNoteForm = document.getElementById('add-note-form');
+            const newNoteInput = document.getElementById('new-note-input');
+
+            // --- Biến Phần 3 (Điều khiển Tab) ---
+            const newsTabBtn = document.getElementById('news-tab-btn');
+            const calendarTabBtn = document.getElementById('calendar-tab-btn');
+            const settingsBtn = document.getElementById('settings-btn'); 
+            const mobileHeaderTitle = document.getElementById('mobile-header-title');
+            const refreshFeedButton = document.getElementById('refresh-feed-button');
+            const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
+            const settingsBtnMobile = document.getElementById('settings-btn-mobile'); 
+            const bottomTabNews = document.getElementById('bottom-tab-news');
+            const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
+            const bottomTabSettings = document.getElementById('bottom-tab-settings');
+            
+            // ===================================================================
+            // PHẦN 1: LOGIC TIN TỨC (CHỈ CÓ HÀM VÀ BIẾN LOGIC)
+            // ===================================================================
             
             const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
             const iconCheck = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
@@ -679,7 +712,7 @@
                  document.querySelectorAll(`.feed-button[data-rss="${rssUrl}"]`).forEach(btn => btn.classList.add('active'));
                  window.scrollTo({ top: 0, behavior: 'smooth' });
                  fetchRSS(rssUrl, sourceName);
-                 rssMobileMenu.classList.add('hidden'); // (CẬP NHẬT) Đổi tên biến
+                 rssMobileMenu.classList.add('hidden'); 
             }
             function handleSummaryClick(title, description) {
                 if (!description || description === "Không có mô tả.") {
@@ -789,45 +822,8 @@
             
             
             // ===================================================================
-            // PHẦN 2: LOGIC VÀ BIẾN CỦA TRANG LỊCH (CALENDAR)
+            // PHẦN 2: LOGIC LỊCH (CHỈ CÓ HÀM VÀ BIẾN LOGIC)
             // ===================================================================
-
-            function getLocalDateString(date) {
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                return `${year}-${month}-${day}`;
-            }
-            
-            function dateToDays(dateStr) {
-                const [year, month, day] = dateStr.split('-').map(Number);
-                const date = new Date(year, month - 1, day);
-                return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
-            }
-
-            const calendarMain = document.getElementById('calendar-main');
-            const cal_aiForm = document.getElementById('ai-form');
-            const cal_aiInput = document.getElementById('ai-input');
-            const calendarBody = document.getElementById('calendar-body');
-            const currentMonthYearEl = document.getElementById('current-month-year');
-            const prevMonthBtn = document.getElementById('prev-month-btn');
-            const nextMonthBtn = document.getElementById('next-month-btn');
-            
-            const settingsModal = document.getElementById('settings-modal');
-            const closeModalBtn = document.getElementById('close-modal');
-            
-            const notifyButton = document.getElementById('notify-button');
-            const notifyTimeNgay = document.getElementById('notify-time-ngay');
-            const notifyTimeDem = document.getElementById('notify-time-dem');
-            const notifyTimeOff = document.getElementById('notify-time-off');
-            
-            const noteModal = document.getElementById('note-modal');
-            const closeNoteModalBtn = document.getElementById('close-note-modal');
-            const noteModalTitle = document.getElementById('note-modal-title');
-            const modalShiftInfo = document.getElementById('modal-shift-info'); 
-            const noteList = document.getElementById('note-list');
-            const addNoteForm = document.getElementById('add-note-form');
-            const newNoteInput = document.getElementById('new-note-input');
 
             let currentEditingDateStr = null;
 
@@ -842,7 +838,20 @@
             const EPOCH_DAYS = dateToDays('2025-10-26');
             const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
 
-            // (Hàm Lưu Ghi chú (Thêm đồng bộ) - Không thay đổi)
+            function getLocalDateString(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            function dateToDays(dateStr) {
+                const [year, month, day] = dateStr.split('-').map(Number);
+                const date = new Date(year, month - 1, day);
+                return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
+            }
+            
+            // (Các hàm Lịch & Thông báo giữ nguyên)
             function saveNoteData() {
                 const cleanData = {};
                 for (const date in noteData) {
@@ -854,27 +863,21 @@
                 
                 syncNotesToServer().catch(err => console.error('Lỗi đồng bộ ghi chú:', err));
             }
-
-            // (Hàm Lưu Cài đặt (Thêm đồng bộ) - Không thay đổi)
             function saveSettings() {
                 localStorage.setItem('myScheduleSettings', JSON.stringify(appSettings));
                 updateSubscriptionSettings();
             }
-            
             function getShiftForDate(dateStr) {
                 const currentDays = dateToDays(dateStr);
                 const diffDays = currentDays - EPOCH_DAYS;
                 const patternIndex = (diffDays % SHIFT_PATTERN.length + SHIFT_PATTERN.length) % SHIFT_PATTERN.length;
                 return SHIFT_PATTERN[patternIndex];
             }
-
             function loadSettings() {
                 notifyTimeNgay.value = appSettings.notifyTimeNgay;
                 notifyTimeDem.value = appSettings.notifyTimeDem;
                 notifyTimeOff.value = appSettings.notifyTimeOff;
             }
-
-            // (Hàm renderCalendar, renderMonthlyNoteSummary, openNoteModal, renderNoteList không thay đổi)
             function renderCalendar(date) {
                 calendarBody.innerHTML = '';
                 const year = date.getFullYear();
@@ -1051,9 +1054,6 @@
                     noteList.appendChild(li);
                 });
             }
-
-            // --- (Hàm LỊCH: Các hàm Thông báo Push - Không thay đổi) ---
-            
             function urlBase64ToUint8Array(base64String) {
                 const padding = '='.repeat((4 - base64String.length % 4) % 4);
                 const base64 = (base64String + padding)
@@ -1229,37 +1229,18 @@
             // PHẦN 3: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG)
             // ===================================================================
 
-            // (CẬP NHẬT) Lấy tất cả các nút điều khiển
-            
-            // Nút Tab Desktop
-            const newsTabBtn = document.getElementById('news-tab-btn');
-            const calendarTabBtn = document.getElementById('calendar-tab-btn');
-            const settingsBtn = document.getElementById('settings-btn'); // Nút Cài đặt Desktop
-            
-            // Nút Header Mobile
-            const mobileHeaderTitle = document.getElementById('mobile-header-title');
-            const rssMenuBtn = document.getElementById('rss-menu-btn'); // Nút Hamburger RSS
-            const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
-            const settingsBtnMobile = document.getElementById('settings-btn-mobile'); // Nút Cài đặt Lịch (Mobile)
-            
-            // Nút Tab Dưới Cùng (Bottom Nav)
-            const bottomTabNews = document.getElementById('bottom-tab-news');
-            const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
-            const bottomTabSettings = document.getElementById('bottom-tab-settings');
-
             // (CẬP NHẬT) Hàm mở modal cài đặt
             const openSettingsModal = () => {
                 loadSettings(); 
                 settingsModal.style.display = 'flex';
                 
-                // (MỚI) Khi mở Cài đặt, cũng phải cập nhật trạng thái 'active'
                 // Bỏ active khỏi các tab chính
                 newsTabBtn.classList.remove('active');
                 calendarTabBtn.classList.remove('active');
                 bottomTabNews.classList.remove('active');
                 bottomTabCalendar.classList.remove('active');
                 // Active nút Cài đặt
-                settingsBtn.classList.add('active'); // Desktop
+                if (settingsBtn) settingsBtn.classList.add('active'); // Desktop
                 bottomTabSettings.classList.add('active'); // Mobile
             };
             
@@ -1272,11 +1253,11 @@
                     mobileHeaderTitle.textContent = "Tin Tức";
                     
                     // 2. Cập nhật trạng thái Active (Desktop + Mobile)
-                    newsTabBtn.classList.add('active');
+                    if (newsTabBtn) newsTabBtn.classList.add('active');
                     bottomTabNews.classList.add('active');
-                    calendarTabBtn.classList.remove('active');
+                    if (calendarTabBtn) calendarTabBtn.classList.remove('active');
                     bottomTabCalendar.classList.remove('active');
-                    settingsBtn.classList.remove('active');
+                    if (settingsBtn) settingsBtn.classList.remove('active');
                     bottomTabSettings.classList.remove('active');
 
                     // 3. Cập nhật Header Mobile
@@ -1290,11 +1271,11 @@
                     mobileHeaderTitle.textContent = "Lịch Làm Việc";
 
                     // 2. Cập nhật trạng thái Active (Desktop + Mobile)
-                    newsTabBtn.classList.remove('active');
+                    if (newsTabBtn) newsTabBtn.classList.remove('active');
                     bottomTabNews.classList.remove('active');
-                    calendarTabBtn.classList.add('active');
+                    if (calendarTabBtn) calendarTabBtn.classList.add('active');
                     bottomTabCalendar.classList.add('active');
-                    settingsBtn.classList.remove('active');
+                    if (settingsBtn) settingsBtn.classList.remove('active');
                     bottomTabSettings.classList.remove('active');
                     
                     // 3. Cập nhật Header Mobile
@@ -1312,9 +1293,9 @@
             // --- Gắn sự kiện cho TAB ---
             
             // Desktop
-            newsTabBtn.addEventListener('click', () => showTab('news'));
-            calendarTabBtn.addEventListener('click', () => showTab('calendar'));
-            settingsBtn.addEventListener('click', openSettingsModal);
+            if (newsTabBtn) newsTabBtn.addEventListener('click', () => showTab('news'));
+            if (calendarTabBtn) calendarTabBtn.addEventListener('click', () => showTab('calendar'));
+            if (settingsBtn) settingsBtn.addEventListener('click', openSettingsModal);
             
             // Mobile (Bottom Nav)
             bottomTabNews.addEventListener('click', () => showTab('news'));
@@ -1326,8 +1307,7 @@
             rssMenuBtn.addEventListener('click', () => rssMobileMenu.classList.toggle('hidden'));
 
 
-            // (CẬP NHẬT) Hàm Tải lại (Giờ phải lấy từ DOM toàn cục)
-            const refreshFeedButton = document.getElementById('refresh-feed-button');
+            // (CẬP NHẬT) Hàm Tải lại
             function handleRefreshClick() {
                 console.log("Đang yêu cầu tải lại...");
                 const activeButton = feedNav.querySelector('.feed-button.active');
@@ -1342,7 +1322,7 @@
             // --- KHỞI ĐỘNG (TIN TỨC) ---
             (async () => {
                 feedNav.addEventListener('click', handleFeedButtonClick);
-                rssMobileMenu.addEventListener('click', handleFeedButtonClick); // (CẬP NHẬT) Đổi tên biến
+                rssMobileMenu.addEventListener('click', handleFeedButtonClick); 
                 refreshFeedButton.addEventListener('click', handleRefreshClick);
                 refreshFeedButtonMobile.addEventListener('click', handleRefreshClick); 
 
@@ -1393,8 +1373,6 @@
             (async () => {
                 renderCalendar(currentViewDate);
                 loadSettings();
-                
-                // (CẬP NHẬT) Xóa các sự kiện của settingsBtn, đã chuyển lên PHẦN 3
                 
                 closeModalBtn.addEventListener('click', () => {
                     settingsModal.style.display = 'none';
