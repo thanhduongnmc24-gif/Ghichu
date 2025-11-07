@@ -90,6 +90,7 @@
         .model-bubble { background-color: #4B5563; color: #E5E7EB; align-self: flex-start; }
         .line-clamp-3 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
         .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+        
         #summary-toast {
             position: fixed;
             bottom: 1rem;
@@ -204,6 +205,14 @@
         .bottom-nav-btn.active {
             color: #FFFFFF; /* text-white */
         }
+        
+        @media (max-width: 639px) { /* sm: breakpoint */
+            #summary-toast {
+                bottom: 6rem; /* 5rem nav + 1rem padding */
+                left: 1rem;
+                right: auto; 
+            }
+        }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -243,9 +252,6 @@
                  <span id="mobile-header-title" class="text-xl font-bold text-white">Tin Tức</span>
                  
                  <div class="flex items-center space-x-2">
-                     <button id="settings-btn-mobile" class="refresh-button hidden" title="Cài đặt Lịch">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M11.49 3.17c-.12-.02-.24-.03-.36-.03h-2.26c-.12 0-.24.01-.36.03l-.79.12c-1.2.18-2.27 1.25-2.45 2.45l-.12.79c-.02.12-.03.24-.03.36v2.26c0 .12.01.24.03.36l.12.79c.18 1.2 1.25 2.27 2.45 2.45l.79.12c.12.02.24.03.36.03h2.26c.12 0 .24-.01.36-.03l.79-.12c1.2-.18 2.27-1.25 2.45-2.45l.12-.79c.02-.12.03-.24.03-.36V6.9c0-.12-.01-.24-.03-.36l-.12-.79A2.695 2.695 0 0 0 12.28 3.3l-.79-.12ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" /></svg>
-                     </button>
                      <button id="refresh-feed-button-mobile" class="refresh-button" title="Tải lại tin tức">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                      </button>
@@ -337,9 +343,11 @@
             </div>
         </div>
     </div>
-    <button id="chat-fab" class="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center z-40 transition-transform transform hover:scale-110">
+    
+    <button id="chat-fab" class="hidden sm:flex fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg items-center justify-center z-40 transition-transform transform hover:scale-110">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
     </button>
+    
     <div id="chat-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
              <div class="flex justify-between items-center mb-4">
@@ -436,6 +444,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25m10.5-2.25v2.25M6.75 21H3.375c-.621 0-1.125-.504-1.125-1.125V7.5c0-.621.504-1.125 1.125-1.125h13.5c.621 0 1.125.504 1.125 1.125v12.375c0 .621-.504 1.125-1.125 1.125H6.75zM16.5 7.5h-9v9h9v-9z" /></svg>
             <span>Lịch</span>
         </button>
+        <button id="bottom-tab-chat" class="bottom-nav-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+            <span>Trò chuyện</span>
+        </button>
         <button id="bottom-tab-settings" class="bottom-nav-btn">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h3.75" /></svg>
             <span>Cài đặt</span>
@@ -481,8 +493,8 @@
             const chatForm = document.getElementById('chat-form');
             const chatInput = document.getElementById('chat-input');
             const chatDisplay = document.getElementById('chat-display');
-            const rssMenuBtn = document.getElementById('rss-menu-btn');
-            const rssMobileMenu = document.getElementById('rss-mobile-menu');
+            const rssMenuBtn = document.getElementById('rss-menu-btn'); 
+            const rssMobileMenu = document.getElementById('rss-mobile-menu'); 
             const summaryToast = document.getElementById('summary-toast');
             const toastTitle = document.getElementById('toast-title');
             const toastCloseButton = document.getElementById('toast-close-button');
@@ -490,7 +502,7 @@
             const toastMainMessage = document.getElementById('toast-main-message');
             const toastCta = document.getElementById('toast-cta');
 
-            // --- Biến Phần 2 (Lịch) ---
+            // --- Biến Phần 2 (Lịch & Cài đặt) ---
             const calendarMain = document.getElementById('calendar-main');
             const cal_aiForm = document.getElementById('ai-form');
             const cal_aiInput = document.getElementById('ai-input');
@@ -519,9 +531,10 @@
             const mobileHeaderTitle = document.getElementById('mobile-header-title');
             const refreshFeedButton = document.getElementById('refresh-feed-button');
             const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
-            const settingsBtnMobile = document.getElementById('settings-btn-mobile'); 
+            // (CẬP NHẬT) Đã xóa settingsBtnMobile
             const bottomTabNews = document.getElementById('bottom-tab-news');
             const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
+            const bottomTabChat = document.getElementById('bottom-tab-chat'); // (MỚI)
             const bottomTabSettings = document.getElementById('bottom-tab-settings');
             
             // ===================================================================
@@ -1228,20 +1241,37 @@
             // ===================================================================
             // PHẦN 3: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG)
             // ===================================================================
-
+            
             // (CẬP NHẬT) Hàm mở modal cài đặt
             const openSettingsModal = () => {
                 loadSettings(); 
                 settingsModal.style.display = 'flex';
                 
-                // Bỏ active khỏi các tab chính
-                newsTabBtn.classList.remove('active');
-                calendarTabBtn.classList.remove('active');
+                // Cập nhật trạng thái Active
+                if (newsTabBtn) newsTabBtn.classList.remove('active');
+                if (calendarTabBtn) calendarTabBtn.classList.remove('active');
                 bottomTabNews.classList.remove('active');
                 bottomTabCalendar.classList.remove('active');
-                // Active nút Cài đặt
-                if (settingsBtn) settingsBtn.classList.add('active'); // Desktop
-                bottomTabSettings.classList.add('active'); // Mobile
+                bottomTabChat.classList.remove('active');
+                
+                if (settingsBtn) settingsBtn.classList.add('active'); 
+                bottomTabSettings.classList.add('active'); 
+            };
+            
+            // (CẬP NHẬT) Hàm mở modal chat
+            const openChatModal = () => {
+                chatModal.classList.remove('hidden');
+                chatInput.focus();
+                
+                // Cập nhật trạng thái Active
+                if (newsTabBtn) newsTabBtn.classList.remove('active');
+                if (calendarTabBtn) calendarTabBtn.classList.remove('active');
+                if (settingsBtn) settingsBtn.classList.remove('active');
+                bottomTabNews.classList.remove('active');
+                bottomTabCalendar.classList.remove('active');
+                bottomTabSettings.classList.remove('active');
+                
+                bottomTabChat.classList.add('active');
             };
             
             // (CẬP NHẬT) Hàm showTab (chỉ xử lý 'news' và 'calendar')
@@ -1250,64 +1280,63 @@
                 if (tabName === 'news') {
                     newsMain.classList.remove('hidden');
                     calendarMain.classList.add('hidden');
-                    mobileHeaderTitle.textContent = "Tin Tức";
+                    if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Tin Tức";
                     
-                    // 2. Cập nhật trạng thái Active (Desktop + Mobile)
+                    // 2. Cập nhật trạng thái Active
                     if (newsTabBtn) newsTabBtn.classList.add('active');
                     bottomTabNews.classList.add('active');
                     if (calendarTabBtn) calendarTabBtn.classList.remove('active');
                     bottomTabCalendar.classList.remove('active');
                     if (settingsBtn) settingsBtn.classList.remove('active');
                     bottomTabSettings.classList.remove('active');
+                    bottomTabChat.classList.remove('active');
 
                     // 3. Cập nhật Header Mobile
-                    rssMenuBtn.classList.remove('hidden');
-                    refreshFeedButtonMobile.classList.remove('hidden');
-                    settingsBtnMobile.classList.add('hidden');
+                    if (rssMenuBtn) rssMenuBtn.classList.remove('hidden');
+                    if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.remove('hidden');
+                    // (Đã xóa settingsBtnMobile)
 
                 } else if (tabName === 'calendar') {
                     newsMain.classList.add('hidden');
                     calendarMain.classList.remove('hidden');
-                    mobileHeaderTitle.textContent = "Lịch Làm Việc";
+                    if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Lịch Làm Việc";
 
-                    // 2. Cập nhật trạng thái Active (Desktop + Mobile)
+                    // 2. Cập nhật trạng thái Active
                     if (newsTabBtn) newsTabBtn.classList.remove('active');
                     bottomTabNews.classList.remove('active');
                     if (calendarTabBtn) calendarTabBtn.classList.add('active');
                     bottomTabCalendar.classList.add('active');
                     if (settingsBtn) settingsBtn.classList.remove('active');
                     bottomTabSettings.classList.remove('active');
+                    bottomTabChat.classList.remove('active');
                     
                     // 3. Cập nhật Header Mobile
-                    rssMenuBtn.classList.add('hidden');
-                    refreshFeedButtonMobile.classList.add('hidden');
-                    settingsBtnMobile.classList.remove('hidden');
+                    if (rssMenuBtn) rssMenuBtn.classList.add('hidden');
+                    if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.add('hidden');
+                    // (Đã xóa settingsBtnMobile)
                 }
                 
-                // 4. Luôn đóng modal Cài đặt khi chuyển tab
+                // 4. Luôn đóng modals khi chuyển tab
                 settingsModal.style.display = 'none';
+                chatModal.classList.add('hidden');
                 // 5. Luôn đóng menu RSS khi chuyển tab
                 rssMobileMenu.classList.add('hidden');
             }
 
             // --- Gắn sự kiện cho TAB ---
             
-            // Desktop
             if (newsTabBtn) newsTabBtn.addEventListener('click', () => showTab('news'));
             if (calendarTabBtn) calendarTabBtn.addEventListener('click', () => showTab('calendar'));
             if (settingsBtn) settingsBtn.addEventListener('click', openSettingsModal);
             
-            // Mobile (Bottom Nav)
             bottomTabNews.addEventListener('click', () => showTab('news'));
             bottomTabCalendar.addEventListener('click', () => showTab('calendar'));
+            bottomTabChat.addEventListener('click', openChatModal); // (MỚI)
             bottomTabSettings.addEventListener('click', openSettingsModal);
             
-            // Mobile (Top Header)
-            settingsBtnMobile.addEventListener('click', openSettingsModal);
-            rssMenuBtn.addEventListener('click', () => rssMobileMenu.classList.toggle('hidden'));
+            if (rssMenuBtn) rssMenuBtn.addEventListener('click', () => rssMobileMenu.classList.toggle('hidden'));
 
-
-            // (CẬP NHẬT) Hàm Tải lại
+            // (Hàm Tải lại)
             function handleRefreshClick() {
                 console.log("Đang yêu cầu tải lại...");
                 const activeButton = feedNav.querySelector('.feed-button.active');
@@ -1316,7 +1345,16 @@
                     const sourceName = activeButton.dataset.source;
                     fetchRSS(rssUrl, sourceName, { display: true, force: true });
                 }
-                rssMobileMenu.classList.add('hidden'); // Đóng menu RSS
+                rssMobileMenu.classList.add('hidden'); 
+            }
+            
+            // --- Hàm trả về Tab cuối ---
+            function returnToLastTab() {
+                if (newsMain.classList.contains('hidden')) {
+                    showTab('calendar');
+                } else {
+                    showTab('news');
+                }
             }
 
             // --- KHỞI ĐỘNG (TIN TỨC) ---
@@ -1352,18 +1390,21 @@
                      e.stopPropagation();
                      hideToast();
                  });
-                chatFab.addEventListener('click', () => {
-                    chatModal.classList.remove('hidden');
-                    chatInput.focus();
-                });
+                 
+                // (CẬP NHẬT) Nút Chat FAB (Desktop)
+                chatFab.addEventListener('click', openChatModal);
+                
+                // (CẬP NHẬT) Đóng Modal Chat
                 closeChatModal.addEventListener('click', () => {
                     chatModal.classList.add('hidden');
                     resetChat();
+                    returnToLastTab(); // (MỚI)
                 });
                 chatModal.addEventListener('click', (e) => {
                     if (e.target === chatModal) {
                         chatModal.classList.add('hidden');
                         resetChat();
+                        returnToLastTab(); // (MỚI)
                     }
                 });
                 chatForm.addEventListener('submit', handleSendChat);
@@ -1374,24 +1415,15 @@
                 renderCalendar(currentViewDate);
                 loadSettings();
                 
+                // (CẬP NHẬT) Đóng Modal Cài đặt
                 closeModalBtn.addEventListener('click', () => {
                     settingsModal.style.display = 'none';
-                    // (MỚI) Khi đóng modal, quay lại tab active trước đó
-                    if (newsMain.classList.contains('hidden')) {
-                        showTab('calendar');
-                    } else {
-                        showTab('news');
-                    }
+                    returnToLastTab(); // (MỚI)
                 });
                 settingsModal.addEventListener('click', (e) => {
                     if (e.target === settingsModal) {
                         settingsModal.style.display = 'none';
-                        // (MỚI) Khi đóng modal, quay lại tab active trước đó
-                        if (newsMain.classList.contains('hidden')) {
-                            showTab('calendar');
-                        } else {
-                            showTab('news');
-                        }
+                        returnToLastTab(); // (MỚI)
                     }
                 });
 
