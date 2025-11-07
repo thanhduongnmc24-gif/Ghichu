@@ -51,8 +51,8 @@ if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_SUBJECT) {
 
 // ----- (CẬP NHẬT) CÀI ĐẶT DATABASE (Sửa lỗi IPv6) -----
 const pool = new pg.Pool({
-    // (CẬP NHẬT) Thêm '?family=4' để ép kết nối bằng IPv4
-    connectionString: process.env.DATABASE_URL + '?family=4',
+    // (CẬP NHẬT) Xóa bỏ mọi tùy chọn ép IPv4, chỉ dùng chuỗi kết nối
+    connectionString: process.env.DATABASE_URL,
     ssl: true
 });
 
