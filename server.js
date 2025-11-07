@@ -49,11 +49,13 @@ if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_SUBJECT) {
     console.log("Web Push đã được cấu hình.");
 }
 
-// ----- (CẬP NHẬT) CÀI ĐẶT DATABASE (Sửa lỗi IPv6) -----
+// ----- (CẬP NHẬT) CÀI ĐẶT DATABASE (Sửa lỗi SSL) -----
 const pool = new pg.Pool({
-    // (CẬP NHẬT) Xóa bỏ mọi tùy chọn ép IPv4, chỉ dùng chuỗi kết nối
     connectionString: process.env.DATABASE_URL,
-    ssl: true
+    // (CẬP NHẬT) Thêm rejectUnauthorized: false để chấp nhận cert của Supabase
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 // Hàm tự động tạo bảng (không thay đổi)
