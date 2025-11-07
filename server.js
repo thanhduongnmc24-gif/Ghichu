@@ -49,22 +49,14 @@ if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_SUBJECT) {
     console.log("Web Push đã được cấu hình.");
 }
 
-// ----- (CẬP NHẬT) CÀI ĐẶT DATABASE (Dùng Supabase + Ép IPv4) -----
-// Phân tích DATABASE_URL để ép IPv4
-const dbUrl = new URL(process.env.DATABASE_URL);
-
+// ----- (CẬP NHẬT) CÀI ĐẶT DATABASE (Sửa lỗi IPv6) -----
 const pool = new pg.Pool({
-    user: dbUrl.username,
-    password: dbUrl.password,
-    host: dbUrl.hostname,
-    port: dbUrl.port,
-    database: dbUrl.pathname.split('/')[1],
-    ssl: true,
-    family: 4 // (MỚI) Ép sử dụng IPv4
+    // (CẬP NHẬT) Thêm '?family=4' để ép kết nối bằng IPv4
+    connectionString: process.env.DATABASE_URL + '?family=4',
+    ssl: true
 });
 
-// (CẬP NHẬT) Hàm tự động tạo bảng (thêm cột 'notes')
-// Tệp này sẽ chạy MỘT LẦN khi deploy, để tạo bảng trên Supabase
+// Hàm tự động tạo bảng (không thay đổi)
 (async () => {
     const client = await pool.connect();
     try {
@@ -464,7 +456,7 @@ async function checkAndSendNotifications() {
     await Promise.all(sendPromises);
 }
 
-// (CẬP NHẬT) Endpoint của Cron Job (Không thay đổi)
+// Endpoint của Cron Job (Không thay đổi)
 app.get('/trigger-notifications', async (req, res) => {
     const cronSecret = req.headers['x-cron-secret'];
     if (cronSecret !== process.env.VAPID_PRIVATE_KEY) { 
