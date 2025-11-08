@@ -15,14 +15,11 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            padding-bottom: 80px; /* 5rem */
+            padding-bottom: 80px; /* 5rem */ /* (CẬP NHẬT) Luôn luôn đệm 80px */
         }
-        @media (min-width: 640px) {
-            body {
-                padding-bottom: 0; 
-            }
-        }
-
+        
+        /* (ĐÃ XÓA) Xóa media query đặt padding-bottom: 0 trên desktop */
+        
         .spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
@@ -206,12 +203,11 @@
             color: #FFFFFF; /* text-white */
         }
         
-        @media (max-width: 639px) { /* sm: breakpoint */
-            #summary-toast {
-                bottom: 6rem; /* 5rem nav + 1rem padding */
-                left: 1rem;
-                right: auto; 
-            }
+        /* (CẬP NHẬT) Áp dụng cho mọi kích cỡ */
+        #summary-toast {
+            bottom: 6rem; /* 5rem nav + 1rem padding */
+            left: 1rem;
+            right: auto; 
         }
         
         /* CSS Cho Trang Chat */
@@ -229,39 +225,40 @@
         }
         @media (min-width: 640px) { /* sm: */
             #chat-main-wrapper {
-                 height: calc(100vh - 10rem); /* 100vh - header - padding */
+                 /* (CẬP NHẬT) Chiều cao desktop cũng phải tính bottom nav */
+                 height: calc(100vh - 12rem);
             }
         }
         
-        /* (MỚI) CSS Cho Đồng bộ Online */
+        /* CSS Cho Đồng bộ Online */
         .sync-input {
             background-color: #4B5563; 
             color: #FFFFFF;
             border: 1px solid #6B7280; 
             border-radius: 0.375rem; 
-            padding: 0.5rem 0.75rem; /* Tăng padding */
-            width: 100%; /* Đầy đủ chiều rộng */
-            margin-bottom: 0.75rem; /* 12px */
+            padding: 0.5rem 0.75rem; 
+            width: 100%; 
+            margin-bottom: 0.75rem; 
         }
         .sync-input::placeholder {
-            color: #9CA3AF; /* text-gray-400 */
+            color: #9CA3AF; 
         }
         
         .sync-button-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 0.75rem; /* 12px */
+            gap: 0.75rem; 
         }
         .sync-button {
             width: 100%;
             text-white: white;
-            font-weight: 700; /* font-bold */
-            padding-top: 0.75rem; /* py-3 */
+            font-weight: 700; 
+            padding-top: 0.75rem; 
             padding-bottom: 0.75rem;
-            padding-left: 1rem; /* px-4 */
+            padding-left: 1rem; 
             padding-right: 1rem;
-            border-radius: 0.5rem; /* rounded-lg */
-            transition-property: all; /* transition-colors */
+            border-radius: 0.5rem; 
+            transition-property: all; 
             transition-duration: 200ms;
         }
         .sync-button:disabled {
@@ -269,31 +266,29 @@
             cursor: not-allowed;
         }
         
-        /* (Style cho nút Up - màu xanh lá) */
         #sync-up-btn {
-            background-color: #10B981; /* bg-green-500 */
+            background-color: #10B981; 
             color: white;
         }
         #sync-up-btn:hover:not(:disabled) {
-            background-color: #059669; /* hover:bg-green-600 */
+            background-color: #059669; 
         }
-        /* (Style cho nút Down - màu xanh dương) */
         #sync-down-btn {
-            background-color: #3B82F6; /* bg-blue-500 */
+            background-color: #3B82F6; 
             color: white;
         }
         #sync-down-btn:hover:not(:disabled) {
-            background-color: #2563EB; /* hover:bg-blue-600 */
+            background-color: #2563EB; 
         }
         
         #sync-message {
             text-align: center;
-            font-size: 0.875rem; /* text-sm */
-            margin-top: 1rem; /* 16px */
-            min-height: 1.25rem; /* Đảm bảo nó chiếm không gian */
+            font-size: 0.875rem; 
+            margin-top: 1rem; 
+            min-height: 1.25rem; 
         }
-        .sync-success { color: #34D399; /* text-green-400 */ }
-        .sync-error { color: #F87171; /* text-red-400 */ }
+        .sync-success { color: #34D399; }
+        .sync-error { color: #F87171; }
         
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -319,7 +314,7 @@
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://thethao247.vn/bong-da.rss" data-source="Thể Thao 247">Thể Thao 247</button>
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
                     </div>
-                    <button id="calendar-tab-btn" class="tab-button">Lịch Làm Việc</button>
+                    
                     <button id="refresh-feed-button" class="refresh-button" title="Tải lại tin tức">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                     </button>
@@ -365,7 +360,7 @@
         <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
     </main>
     
-    <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
+    <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden mb-24">
         <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6">
             <h2 class="text-xl font-bold text-white mb-4">Thêm Nhanh (AI)</h2>
             <form id="ai-form" class="flex space-x-2">
@@ -538,7 +533,7 @@
         </div>
     </div>
 
-    <nav id="bottom-nav" class="sm:hidden">
+    <nav id="bottom-nav">
         <button id="bottom-tab-news" class="bottom-nav-btn active">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
             <span>Tin Tức</span>
@@ -578,7 +573,7 @@
             }
 
             // ===================================================================
-            // (MỚI) PHẦN 0: KHAI BÁO BIẾN (DOM ELEMENTS)
+            // PHẦN 0: KHAI BÁO BIẾN (DOM ELEMENTS)
             // ===================================================================
             
             // --- Biến Phần 1 (Tin Tức) ---
@@ -591,7 +586,6 @@
             const summaryTextElement = document.getElementById('summary-text');
             const feedNav = document.getElementById('feed-nav');
             const chatFab = document.getElementById('chat-fab');
-            // (Đã xóa) chatModal, closeChatModal
             const chatForm = document.getElementById('chat-form');
             const chatInput = document.getElementById('chat-input');
             const chatDisplay = document.getElementById('chat-display');
@@ -613,7 +607,6 @@
             const currentMonthYearEl = document.getElementById('current-month-year');
             const prevMonthBtn = document.getElementById('prev-month-btn');
             const nextMonthBtn = document.getElementById('next-month-btn');
-            // (Đã xóa) settingsModal, closeModalBtn
             const notifyButton = document.getElementById('notify-button');
             const notifyTimeNgay = document.getElementById('notify-time-ngay');
             const notifyTimeDem = document.getElementById('notify-time-dem');
@@ -631,7 +624,7 @@
 
             // --- Biến Phần 4 (Điều khiển Tab) ---
             const newsTabBtn = document.getElementById('news-tab-btn');
-            const calendarTabBtn = document.getElementById('calendar-tab-btn');
+            const calendarTabBtn = document.getElementById('calendar-tab-btn'); // (Sẽ là null nhưng không sao)
             const settingsBtn = document.getElementById('settings-btn'); 
             const mobileHeaderTitle = document.getElementById('mobile-header-title');
             const refreshFeedButton = document.getElementById('refresh-feed-button');
@@ -641,7 +634,7 @@
             const bottomTabChat = document.getElementById('bottom-tab-chat'); 
             const bottomTabSettings = document.getElementById('bottom-tab-settings');
             
-            // --- (MỚI) Biến Phần 5 (Đồng bộ) ---
+            // --- Biến Phần 5 (Đồng bộ) ---
             const syncUsernameInput = document.getElementById('sync-username');
             const syncPasswordInput = document.getElementById('sync-password');
             const syncUpBtn = document.getElementById('sync-up-btn');
@@ -649,7 +642,7 @@
             const syncMessage = document.getElementById('sync-message');
             
             // ===================================================================
-            // PHẦN 1: LOGIC TIN TỨC (CHỈ CÓ HÀM VÀ BIẾN LOGIC)
+            // PHẦN 1: LOGIC TIN TỨC (Không thay đổi)
             // ===================================================================
             
             const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
@@ -662,7 +655,6 @@
             let completedSummary = { title: '', text: '' };
             let toastTimeoutId = null;
 
-            // (Các hàm Tin Tức giữ nguyên)
             function callGeminiAPIStreaming(prompt, title) {
                 if (summaryEventSource) {
                     summaryEventSource.close();
@@ -817,7 +809,6 @@
                          if (e.target.closest('.summary-btn')) {
                              return;
                          }
-                         // (MỚI) Khi nhấn vào thẻ bài viết (không phải nút Tóm tắt) thì mở link gốc
                          e.preventDefault();
                          window.open(card.href, '_blank');
                      });
@@ -949,7 +940,7 @@
             
             
             // ===================================================================
-            // PHẦN 2: LOGIC LỊCH (CHỈ CÓ HÀM VÀ BIẾN LOGIC)
+            // PHẦN 2: LOGIC LỊCH (Không thay đổi)
             // ===================================================================
 
             let currentEditingDateStr = null;
@@ -978,7 +969,6 @@
                 return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
             }
             
-            // (Các hàm Lịch & Thông báo giữ nguyên)
             function saveNoteData() {
                 const cleanData = {};
                 for (const date in noteData) {
@@ -1353,7 +1343,7 @@
 
             
             // ===================================================================
-            // (MỚI) PHẦN 3: LOGIC ĐỒNG BỘ ONLINE (SYNC)
+            // PHẦN 3: LOGIC ĐỒNG BỘ ONLINE (Không thay đổi)
             // ===================================================================
             
             function showSyncMessage(message, isError = false) {
@@ -1361,7 +1351,7 @@
                 syncMessage.className = isError ? 'sync-error' : 'sync-success';
                 setTimeout(() => {
                     syncMessage.textContent = '';
-                }, 4000); // Tự động xóa sau 4 giây
+                }, 4000); 
             }
 
             async function handleSyncUp() {
@@ -1373,7 +1363,6 @@
                     return;
                 }
                 
-                // Lấy dữ liệu ghi chú hiện tại từ localStorage (an toàn nhất)
                 const currentNoteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
 
                 syncUpBtn.disabled = true;
@@ -1442,10 +1431,9 @@
                         throw new Error(restoredNoteData.error || `Lỗi ${response.status}`);
                     }
                     
-                    // Cập nhật dữ liệu
-                    noteData = restoredNoteData || {}; // Cập nhật biến global
-                    saveNoteData(); // Lưu vào localStorage VÀ sync lên server (cho push)
-                    renderCalendar(currentViewDate); // Vẽ lại lịch
+                    noteData = restoredNoteData || {}; 
+                    saveNoteData(); 
+                    renderCalendar(currentViewDate); 
                     
                     showSyncMessage('Tải về và đồng bộ thành công!', false);
 
@@ -1461,7 +1449,7 @@
 
 
             // ===================================================================
-            // PHẦN 4: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG)
+            // PHẦN 4: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG) (Không thay đổi)
             // ===================================================================
             
             let currentTab = 'news'; 
@@ -1509,7 +1497,7 @@
                         break;
                     case 'calendar':
                         calendarMain.classList.remove('hidden');
-                        if (calendarTabBtn) calendarTabBtn.classList.add('active');
+                        if (calendarTabBtn) calendarTabBtn.classList.add('active'); // (Sẽ là null nhưng không sao)
                         bottomTabCalendar.classList.add('active');
                         if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Lịch Làm Việc";
                         break;
@@ -1528,9 +1516,10 @@
                 }
                 
                 // 6. Hiện lại nút Chat FAB (desktop) nếu không ở trang chat
-                if (window.innerWidth >= 640 && currentTab !== 'chat') {
-                    chatFab.classList.remove('hidden');
-                }
+                // (CẬP NHẬT) Luôn ẩn vì nav đã ở dưới
+                // if (window.innerWidth >= 640 && currentTab !== 'chat') {
+                //     chatFab.classList.remove('hidden');
+                // }
                 
                 // 7. Luôn đóng menu RSS
                 rssMobileMenu.classList.add('hidden');
@@ -1540,13 +1529,13 @@
             
             // Desktop
             if (newsTabBtn) newsTabBtn.addEventListener('click', () => showTab('news'));
-            if (calendarTabBtn) calendarTabBtn.addEventListener('click', () => showTab('calendar'));
+            if (calendarTabBtn) calendarTabBtn.addEventListener('click', () => showTab('calendar')); // (Sẽ là null nhưng không sao)
             if (settingsBtn) settingsBtn.addEventListener('click', () => showTab('settings'));
             chatFab.addEventListener('click', () => showTab('chat')); 
             
             // Mobile (Bottom Nav)
             bottomTabNews.addEventListener('click', () => showTab('news'));
-            bottomTabCalendar.addEventListener('click', () => showTab('calendar'));
+            bottomTabCalendar.addEventListener('click', () => showTab('calendar')); 
             bottomTabChat.addEventListener('click', () => showTab('chat')); 
             bottomTabSettings.addEventListener('click', () => showTab('settings'));
             
@@ -1719,7 +1708,6 @@
                     cal_aiForm.querySelector('button').textContent = "Phân tích";
                 });
                 
-                // (MỚI) Gắn sự kiện cho nút Sync
                 syncUpBtn.addEventListener('click', handleSyncUp);
                 syncDownBtn.addEventListener('click', handleSyncDown);
                 
