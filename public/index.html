@@ -214,14 +214,14 @@
             }
         }
         
-        /* (MỚI) CSS Cho Trang Chat */
+        /* CSS Cho Trang Chat */
         #chat-main-wrapper {
             background-color: #1F2937; /* bg-gray-800 */
             border-radius: 0.5rem; /* rounded-lg */
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
             display: flex;
             flex-direction: column;
-            /* (MỚI) Đặt chiều cao cho trang chat/cài đặt */
+            /* Đặt chiều cao cho trang chat/cài đặt */
             height: calc(100vh - 12rem); /* 100vh - header - bottom_nav - padding */
             max-width: 1024px; /* max-w-5xl */
             margin-left: auto;
@@ -232,6 +232,68 @@
                  height: calc(100vh - 10rem); /* 100vh - header - padding */
             }
         }
+        
+        /* (MỚI) CSS Cho Đồng bộ Online */
+        .sync-input {
+            background-color: #4B5563; 
+            color: #FFFFFF;
+            border: 1px solid #6B7280; 
+            border-radius: 0.375rem; 
+            padding: 0.5rem 0.75rem; /* Tăng padding */
+            width: 100%; /* Đầy đủ chiều rộng */
+            margin-bottom: 0.75rem; /* 12px */
+        }
+        .sync-input::placeholder {
+            color: #9CA3AF; /* text-gray-400 */
+        }
+        
+        .sync-button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem; /* 12px */
+        }
+        .sync-button {
+            width: 100%;
+            text-white: white;
+            font-weight: 700; /* font-bold */
+            padding-top: 0.75rem; /* py-3 */
+            padding-bottom: 0.75rem;
+            padding-left: 1rem; /* px-4 */
+            padding-right: 1rem;
+            border-radius: 0.5rem; /* rounded-lg */
+            transition-property: all; /* transition-colors */
+            transition-duration: 200ms;
+        }
+        .sync-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        /* (Style cho nút Up - màu xanh lá) */
+        #sync-up-btn {
+            background-color: #10B981; /* bg-green-500 */
+            color: white;
+        }
+        #sync-up-btn:hover:not(:disabled) {
+            background-color: #059669; /* hover:bg-green-600 */
+        }
+        /* (Style cho nút Down - màu xanh dương) */
+        #sync-down-btn {
+            background-color: #3B82F6; /* bg-blue-500 */
+            color: white;
+        }
+        #sync-down-btn:hover:not(:disabled) {
+            background-color: #2563EB; /* hover:bg-blue-600 */
+        }
+        
+        #sync-message {
+            text-align: center;
+            font-size: 0.875rem; /* text-sm */
+            margin-top: 1rem; /* 16px */
+            min-height: 1.25rem; /* Đảm bảo nó chiếm không gian */
+        }
+        .sync-success { color: #34D399; /* text-green-400 */ }
+        .sync-error { color: #F87171; /* text-red-400 */ }
         
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -396,6 +458,28 @@
                     <input type="time" id="notify-time-off" value="08:00">
                 </label>
             </fieldset>
+            
+            <fieldset class="border border-gray-600 p-4 rounded-lg mt-6">
+                <legend class="text-lg font-semibold text-white px-2">Đồng bộ Online</legend>
+                
+                <label for="sync-username" class="sr-only">Tên đăng nhập</label>
+                <input type="text" id="sync-username" placeholder="Tên đăng nhập..." class="sync-input">
+                
+                <label for="sync-password" class="sr-only">Mật khẩu</label>
+                <input type="password" id="sync-password" placeholder="Mật khẩu..." class="sync-input">
+                
+                <div class="sync-button-group">
+                    <button id="sync-up-btn" class="sync-button">
+                        Tải Lên (Backup)
+                    </button>
+                    <button id="sync-down-btn" class="sync-button">
+                        Tải Về (Restore)
+                    </button>
+                </div>
+                
+                <p id="sync-message" class="sync-error"></p>
+            </fieldset>
+            
         </div>
     </main>
 
@@ -507,8 +591,7 @@
             const summaryTextElement = document.getElementById('summary-text');
             const feedNav = document.getElementById('feed-nav');
             const chatFab = document.getElementById('chat-fab');
-            const chatModal = document.getElementById('chat-modal');
-            const closeChatModal = document.getElementById('close-chat-modal');
+            // (Đã xóa) chatModal, closeChatModal
             const chatForm = document.getElementById('chat-form');
             const chatInput = document.getElementById('chat-input');
             const chatDisplay = document.getElementById('chat-display');
@@ -523,15 +606,14 @@
 
             // --- Biến Phần 2 (Lịch & Cài đặt) ---
             const calendarMain = document.getElementById('calendar-main');
-            const settingsMain = document.getElementById('settings-main'); // (MỚI)
+            const settingsMain = document.getElementById('settings-main'); 
             const cal_aiForm = document.getElementById('ai-form');
             const cal_aiInput = document.getElementById('ai-input');
             const calendarBody = document.getElementById('calendar-body');
             const currentMonthYearEl = document.getElementById('current-month-year');
             const prevMonthBtn = document.getElementById('prev-month-btn');
             const nextMonthBtn = document.getElementById('next-month-btn');
-            const settingsModal = document.getElementById('settings-modal'); // (CẬP NHẬT) Đây là modal CŨ, chúng ta lấy nội dung từ nó
-            const closeModalBtn = document.getElementById('close-modal');
+            // (Đã xóa) settingsModal, closeModalBtn
             const notifyButton = document.getElementById('notify-button');
             const notifyTimeNgay = document.getElementById('notify-time-ngay');
             const notifyTimeDem = document.getElementById('notify-time-dem');
@@ -545,7 +627,7 @@
             const newNoteInput = document.getElementById('new-note-input');
 
             // --- Biến Phần 3 (Trò chuyện) ---
-            const chatMain = document.getElementById('chat-main'); // (MỚI)
+            const chatMain = document.getElementById('chat-main'); 
 
             // --- Biến Phần 4 (Điều khiển Tab) ---
             const newsTabBtn = document.getElementById('news-tab-btn');
@@ -554,11 +636,17 @@
             const mobileHeaderTitle = document.getElementById('mobile-header-title');
             const refreshFeedButton = document.getElementById('refresh-feed-button');
             const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
-            // (ĐÃ XÓA) settingsBtnMobile
             const bottomTabNews = document.getElementById('bottom-tab-news');
             const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
-            const bottomTabChat = document.getElementById('bottom-tab-chat'); // (MỚI)
+            const bottomTabChat = document.getElementById('bottom-tab-chat'); 
             const bottomTabSettings = document.getElementById('bottom-tab-settings');
+            
+            // --- (MỚI) Biến Phần 5 (Đồng bộ) ---
+            const syncUsernameInput = document.getElementById('sync-username');
+            const syncPasswordInput = document.getElementById('sync-password');
+            const syncUpBtn = document.getElementById('sync-up-btn');
+            const syncDownBtn = document.getElementById('sync-down-btn');
+            const syncMessage = document.getElementById('sync-message');
             
             // ===================================================================
             // PHẦN 1: LOGIC TIN TỨC (CHỈ CÓ HÀM VÀ BIẾN LOGIC)
@@ -729,6 +817,9 @@
                          if (e.target.closest('.summary-btn')) {
                              return;
                          }
+                         // (MỚI) Khi nhấn vào thẻ bài viết (không phải nút Tóm tắt) thì mở link gốc
+                         e.preventDefault();
+                         window.open(card.href, '_blank');
                      });
                     const summaryButton = card.querySelector('.summary-btn');
                     summaryButton.addEventListener('click', (e) => {
@@ -1260,18 +1351,124 @@
                 }
             }
 
+            
+            // ===================================================================
+            // (MỚI) PHẦN 3: LOGIC ĐỒNG BỘ ONLINE (SYNC)
+            // ===================================================================
+            
+            function showSyncMessage(message, isError = false) {
+                syncMessage.textContent = message;
+                syncMessage.className = isError ? 'sync-error' : 'sync-success';
+                setTimeout(() => {
+                    syncMessage.textContent = '';
+                }, 4000); // Tự động xóa sau 4 giây
+            }
+
+            async function handleSyncUp() {
+                const username = syncUsernameInput.value.trim();
+                const password = syncPasswordInput.value.trim();
+                
+                if (!username || !password) {
+                    showSyncMessage('Vui lòng nhập Tên và Mật khẩu.', true);
+                    return;
+                }
+                
+                // Lấy dữ liệu ghi chú hiện tại từ localStorage (an toàn nhất)
+                const currentNoteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
+
+                syncUpBtn.disabled = true;
+                syncDownBtn.disabled = true;
+                syncUpBtn.textContent = "Đang tải lên...";
+                
+                try {
+                    const response = await fetch('/api/sync/up', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password,
+                            noteData: currentNoteData 
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(result.error || `Lỗi ${response.status}`);
+                    }
+                    
+                    showSyncMessage(result.message || 'Tải lên thành công!', false);
+
+                } catch (err) {
+                    console.error("Lỗi khi Tải Lên:", err);
+                    showSyncMessage(err.message, true);
+                } finally {
+                    syncUpBtn.disabled = false;
+                    syncDownBtn.disabled = false;
+                    syncUpBtn.textContent = "Tải Lên (Backup)";
+                }
+            }
+
+            async function handleSyncDown() {
+                const username = syncUsernameInput.value.trim();
+                const password = syncPasswordInput.value.trim();
+                
+                if (!username || !password) {
+                    showSyncMessage('Vui lòng nhập Tên và Mật khẩu.', true);
+                    return;
+                }
+
+                if (!confirm('Tải về sẽ GHI ĐÈ toàn bộ ghi chú hiện tại trên máy này. Đại ca có chắc chắn?')) {
+                    return;
+                }
+                
+                syncUpBtn.disabled = true;
+                syncDownBtn.disabled = true;
+                syncDownBtn.textContent = "Đang tải về...";
+
+                try {
+                    const response = await fetch('/api/sync/down', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password
+                        })
+                    });
+                    
+                    const restoredNoteData = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(restoredNoteData.error || `Lỗi ${response.status}`);
+                    }
+                    
+                    // Cập nhật dữ liệu
+                    noteData = restoredNoteData || {}; // Cập nhật biến global
+                    saveNoteData(); // Lưu vào localStorage VÀ sync lên server (cho push)
+                    renderCalendar(currentViewDate); // Vẽ lại lịch
+                    
+                    showSyncMessage('Tải về và đồng bộ thành công!', false);
+
+                } catch (err) {
+                    console.error("Lỗi khi Tải Về:", err);
+                    showSyncMessage(err.message, true);
+                } finally {
+                    syncUpBtn.disabled = false;
+                    syncDownBtn.disabled = false;
+                    syncDownBtn.textContent = "Tải Về (Restore)";
+                }
+            }
+
 
             // ===================================================================
-            // PHẦN 3: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG)
+            // PHẦN 4: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG)
             // ===================================================================
             
-            let currentTab = 'news'; // (MỚI) Theo dõi tab hiện tại
+            let currentTab = 'news'; 
             
-            // (CẬP NHẬT) Hàm showTab (Xử lý 4 trang)
             function showTab(tabName) {
-                if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
+                if (tabName === currentTab) return; 
                 
-                // (MỚI) Reset chat nếu rời khỏi tab chat
                 if (currentTab === 'chat') {
                     resetChat();
                 }
@@ -1330,7 +1527,7 @@
                         break;
                 }
                 
-                // 6. (MỚI) Hiện lại nút Chat FAB (desktop) nếu không ở trang chat
+                // 6. Hiện lại nút Chat FAB (desktop) nếu không ở trang chat
                 if (window.innerWidth >= 640 && currentTab !== 'chat') {
                     chatFab.classList.remove('hidden');
                 }
@@ -1345,18 +1542,17 @@
             if (newsTabBtn) newsTabBtn.addEventListener('click', () => showTab('news'));
             if (calendarTabBtn) calendarTabBtn.addEventListener('click', () => showTab('calendar'));
             if (settingsBtn) settingsBtn.addEventListener('click', () => showTab('settings'));
-            chatFab.addEventListener('click', () => showTab('chat')); // (CẬP NHẬT)
+            chatFab.addEventListener('click', () => showTab('chat')); 
             
             // Mobile (Bottom Nav)
             bottomTabNews.addEventListener('click', () => showTab('news'));
             bottomTabCalendar.addEventListener('click', () => showTab('calendar'));
-            bottomTabChat.addEventListener('click', () => showTab('chat')); // (MỚI)
+            bottomTabChat.addEventListener('click', () => showTab('chat')); 
             bottomTabSettings.addEventListener('click', () => showTab('settings'));
             
             // Mobile (Top Header)
             if (rssMenuBtn) rssMenuBtn.addEventListener('click', () => rssMobileMenu.classList.toggle('hidden'));
 
-            // (Hàm Tải lại)
             function handleRefreshClick() {
                 console.log("Đang yêu cầu tải lại...");
                 const activeButton = feedNav.querySelector('.feed-button.active');
@@ -1402,8 +1598,6 @@
                      hideToast();
                  });
                  
-                // (XÓA) Sự kiện nút chat đã chuyển lên trên
-                // (XÓA) Sự kiện đóng modal chat đã bị xóa
                 chatForm.addEventListener('submit', handleSendChat);
             })();
             
@@ -1411,8 +1605,6 @@
             (async () => {
                 renderCalendar(currentViewDate);
                 loadSettings();
-                
-                // (XÓA) Sự kiện đóng modal cài đặt đã bị xóa
 
                 notifyTimeNgay.addEventListener('change', (e) => {
                     appSettings.notifyTimeNgay = e.target.value;
@@ -1526,6 +1718,11 @@
                     cal_aiForm.querySelector('button').disabled = false;
                     cal_aiForm.querySelector('button').textContent = "Phân tích";
                 });
+                
+                // (MỚI) Gắn sự kiện cho nút Sync
+                syncUpBtn.addEventListener('click', handleSyncUp);
+                syncDownBtn.addEventListener('click', handleSyncDown);
+                
             })();
             
             // --- KHỞI ĐỘNG (TAB) ---
