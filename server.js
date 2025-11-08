@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import webpush from 'web-push'; 
 import pg from 'pg'; 
+import crypto from 'crypto'; // (MỚI) Thêm module crypto để mã hóa
 
 // ----- CÀI ĐẶT CACHE (RSS) -----
 const cache = new Map();
@@ -58,7 +59,21 @@ const pool = new pg.Pool({
     }
 });
 
-// Hàm tự động tạo bảng (không thay đổi)
+// (MỚI) --- Helper functions for Password Hashing ---
+// (Không cần 'bcrypt', dùng 'crypto' có sẵn của Node)
+function hashPassword(password) {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+    return { salt, hash };
+}
+
+function verifyPassword(inputPassword, storedHash, salt) {
+    const hashToCompare = crypto.pbkdf2Sync(inputPassword, salt, 1000, 64, 'sha512').toString('hex');
+    return storedHash === hashToCompare;
+}
+
+
+// (MỚI) Hàm tự động tạo bảng (cập nhật)
 (async () => {
     const client = await pool.connect();
     try {
@@ -73,8 +88,22 @@ const pool = new pg.Pool({
             );
         `);
         console.log("Bảng 'subscriptions' (v2, có notes) đã sẵn sàng trên Supabase.");
+
+        // (MỚI) Tạo bảng user_notes
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS user_notes (
+                id SERIAL PRIMARY KEY,
+                username TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL,
+                salt TEXT NOT NULL,
+                notes JSONB DEFAULT '{}'::jsonb,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log("Bảng 'user_notes' đã sẵn sàng trên Supabase.");
+
     } catch (err) {
-        console.error("Lỗi khi tạo bảng subscriptions:", err);
+        console.error("Lỗi khi tạo bảng:", err);
     } finally {
         client.release();
     }
@@ -347,6 +376,81 @@ app.post('/update-notes', async (req, res) => {
 });
 
 
+// ----- (MỚI) CÁC ENDPOINT CHO SYNC ONLINE -----
+
+// Endpoint 5: Tải lên (Backup)
+app.post('/api/sync/up', async (req, res) => {
+    const { username, password, noteData } = req.body;
+    if (!username || !password || !noteData) {
+        return res.status(400).json({ error: 'Thiếu Tên, Mật khẩu, hoặc Dữ liệu Ghi chú.' });
+    }
+
+    const client = await pool.connect();
+    try {
+        const userResult = await client.query("SELECT * FROM user_notes WHERE username = $1", [username]);
+        
+        if (userResult.rows.length > 0) {
+            // --- Người dùng tồn tại -> Cập nhật ---
+            const user = userResult.rows[0];
+            const isVerified = verifyPassword(password, user.password_hash, user.salt);
+            
+            if (!isVerified) {
+                return res.status(401).json({ error: 'Mật khẩu không đúng.' });
+            }
+
+            await client.query("UPDATE user_notes SET notes = $1 WHERE username = $2", [noteData, username]);
+            res.status(200).json({ success: true, message: 'Đã cập nhật dữ liệu thành công.' });
+
+        } else {
+            // --- Người dùng mới -> Tạo mới ---
+            const { salt, hash } = hashPassword(password);
+            await client.query(
+                "INSERT INTO user_notes (username, password_hash, salt, notes) VALUES ($1, $2, $3, $4)",
+                [username, hash, salt, noteData]
+            );
+            res.status(201).json({ success: true, message: 'Đã tạo tài khoản và lưu dữ liệu thành công.' });
+        }
+    } catch (error) {
+        console.error("Lỗi khi /api/sync/up:", error);
+        res.status(500).json({ error: 'Lỗi máy chủ.' });
+    } finally {
+        client.release();
+    }
+});
+
+// Endpoint 6: Tải về (Restore)
+app.post('/api/sync/down', async (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Thiếu Tên hoặc Mật khẩu.' });
+    }
+
+    const client = await pool.connect();
+    try {
+        const userResult = await client.query("SELECT * FROM user_notes WHERE username = $1", [username]);
+        
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Tên đăng nhập không tồn tại.' });
+        }
+
+        const user = userResult.rows[0];
+        const isVerified = verifyPassword(password, user.password_hash, user.salt);
+
+        if (!isVerified) {
+            return res.status(401).json({ error: 'Mật khẩu không đúng.' });
+        }
+
+        res.status(200).json(user.notes || {}); // Trả về data
+
+    } catch (error) {
+        console.error("Lỗi khi /api/sync/down:", error);
+        res.status(500).json({ error: 'Lỗi máy chủ.' });
+    } finally {
+        client.release();
+    }
+});
+
+
 // ----- LOGIC GỬI THÔNG BÁO (Không thay đổi) -----
 
 // Logic tính ca (Không thay đổi)
@@ -387,7 +491,7 @@ async function checkAndSendNotifications() {
     const { timeStr, dateStr } = getHanoiTime();
 
     if (timeStr === lastNotificationCheckTime) {
-        console.log("Đã kiểm tra trong phút này, bỏ qua.");
+        // console.log("Đã kiểm tra trong phút này, bỏ qua.");
         return;
     }
     lastNotificationCheckTime = timeStr;
@@ -404,7 +508,7 @@ async function checkAndSendNotifications() {
     }
 
     if (subscriptions.length === 0) {
-         console.log("Không có ai đăng ký thông báo.");
+         // console.log("Không có ai đăng ký thông báo.");
         return;
     }
     
