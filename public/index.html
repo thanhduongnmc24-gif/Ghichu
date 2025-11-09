@@ -130,9 +130,10 @@
               color: white;
           }
           
+        /* ===== (CẬP NHẬT 1/3) Co nhỏ Lịch ===== */
         .day-note-list {
-            margin-top: 4px;
-            padding-left: 16px; 
+            margin-top: 2px;
+            padding-left: 8px; /* (Co lại) */
             overflow: hidden;
             max-height: 60px; 
         }
@@ -140,11 +141,24 @@
             overflow: hidden; display: -webkit-box;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 1; 
-            font-size: 0.8em;
+            font-size: 0.7em; /* (Co lại) */
             font-weight: 500;
             color: #C0392B; 
             list-style-type: disc; 
+            margin-left: -2px; /* (Kéo vào) */
         }
+        @media (min-width: 640px) { /* sm: */
+            .day-note-list {
+                margin-top: 4px;
+                padding-left: 16px;
+            }
+            .day-note {
+                font-size: 0.8em;
+                margin-left: 0;
+            }
+        }
+        /* ===== Hết Cập nhật 1/3 ===== */
+
         .time-setting-label {
             display: flex;
             justify-content: space-between;
@@ -317,22 +331,20 @@
             </div>
             
             <div class="overflow-x-auto">
-                <div class="min-w-[700px]"> 
-                    <div id="calendar-weekdays" class="grid grid-cols-7 gap-1 md:gap-2 mb-2">
-                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T2</div>
-                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T3</div>
-                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T4</div>
-                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T5</div>
-                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T6</div>
-                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-3 rounded-lg text-center">T7</div>
-                        <div class="weekday sunday bg-gray-100 text-red-600 font-semibold text-sm p-3 rounded-lg text-center">CN</div>
+                <div> <div id="calendar-weekdays" class="grid grid-cols-7 gap-1 md:gap-2 mb-2">
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-1 sm:p-3 rounded-lg text-center">T2</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-1 sm:p-3 rounded-lg text-center">T3</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-1 sm:p-3 rounded-lg text-center">T4</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-1 sm:p-3 rounded-lg text-center">T5</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-1 sm:p-3 rounded-lg text-center">T6</div>
+                        <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-1 sm:p-3 rounded-lg text-center">T7</div>
+                        <div class="weekday sunday bg-gray-100 text-red-600 font-semibold text-sm p-1 sm:p-3 rounded-lg text-center">CN</div>
                     </div>
                     <div id="calendar-body" class="grid grid-cols-7 gap-1 md:gap-2">
                         </div>
                 </div>
             </div>
         </section>
-
         <section id="monthly-note-summary" class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mt-6 sm:mb-0 mb-20">
             <h2 class="text-xl font-bold text-white mb-4">Tổng kết Ghi chú Tháng</h2>
             <div id="monthly-note-list" class="space-y-3">
@@ -1170,6 +1182,8 @@
                 notifyTimeDem.value = appSettings.notifyTimeDem;
                 notifyTimeOff.value = appSettings.notifyTimeOff;
             }
+
+            // ===== (CẬP NHẬT 3/3) Co nhỏ Lịch =====
             function renderCalendar(date) {
                 calendarBody.innerHTML = '';
                 const year = date.getFullYear();
@@ -1188,14 +1202,16 @@
 
                 for (let i = 0; i < 42; i++) {
                     const dayCell = document.createElement('div');
-                    dayCell.className = "bg-white rounded-lg p-2 min-h-[100px] flex flex-col justify-start relative cursor-pointer hover:bg-gray-50 transition-colors border border-gray-200";
+                    // (Sửa) Đổi p-2 -> p-1 sm:p-2 và min-h-[100px] -> min-h-[80px] sm:min-h-[100px]
+                    dayCell.className = "bg-white rounded-lg p-1 sm:p-2 min-h-[80px] sm:min-h-[100px] flex flex-col justify-start relative cursor-pointer hover:bg-gray-50 transition-colors border border-gray-200";
                     const currentDate = new Date(startDate);
                     currentDate.setDate(startDate.getDate() + i);
                     const dateStr = getLocalDateString(currentDate);
                     const day = currentDate.getDate();
                     
                     const dayNumberEl = document.createElement('span');
-                    dayNumberEl.className = 'day-number font-semibold text-lg text-gray-800'; 
+                    // (Sửa) Đổi text-lg -> text-sm sm:text-lg
+                    dayNumberEl.className = 'day-number font-semibold text-sm sm:text-lg text-gray-800'; 
                     dayNumberEl.textContent = day;
                     dayCell.appendChild(dayNumberEl);
                     
@@ -1218,7 +1234,8 @@
                             dayCell.classList.remove('bg-white');
                         } else {
                             const shiftEl = document.createElement('span');
-                            shiftEl.className = 'day-shift text-xs font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full self-start mt-1';
+                            // (Sửa) Đổi px-2 -> px-1 sm:px-2
+                            shiftEl.className = 'day-shift text-xs font-bold text-blue-700 bg-blue-100 px-1 sm:px-2 py-0.5 rounded-full self-start mt-1';
                             shiftEl.textContent = shift;
                             dayCell.appendChild(shiftEl);
                         }
@@ -1250,6 +1267,8 @@
                 
                 renderMonthlyNoteSummary(date); 
             }
+            // ===== Hết Cập nhật 3/3 =====
+
             function renderMonthlyNoteSummary(date) {
                 const monthlyNoteList = document.getElementById('monthly-note-list');
                 if (!monthlyNoteList) return; 
@@ -1524,7 +1543,6 @@
             let currentTab = 'news'; // (MỚI) Theo dõi tab hiện tại
             
             // ===== (CẬP NHẬT 4/4) Toàn bộ hàm showTab đã được cập nhật =====
-            // (CẬP NHẬT 4/4) Toàn bộ hàm showTab đã được cập nhật
             function showTab(tabName) {
                 if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
                 
