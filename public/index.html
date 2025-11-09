@@ -652,7 +652,7 @@
             // PHẦN 1: LOGIC TIN TỨC
             // ===================================================================
             
-            // (ĐÃ XÓA) Xóa (function() {
+            // (SỬA LỖI) Đã xóa (function(){...}) bị lỗi
             
             const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
             const iconCheck = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
@@ -947,14 +947,11 @@
                 });
             }
             
-            // (ĐÃ XÓA) Xóa })();
-            
-            
             // ===================================================================
             // PHẦN 2: LOGIC LỊCH
             // ===================================================================
 
-            // (ĐÃ XÓA) Xóa (function() {
+            // (SỬA LỖI) Đã xóa (function(){...}) bị lỗi
 
             let currentEditingDateStr = null;
 
@@ -1354,8 +1351,6 @@
                 }
             }
 
-            // (ĐÃ XÓA) Xóa })();
-
 
             // ===================================================================
             // PHẦN 3: LOGIC ĐỒNG BỘ ONLINE (SYNC)
@@ -1488,7 +1483,7 @@
                 
                 btn.disabled = true;
                 btn.textContent = "Đang tải...";
-                adminUserList.innerHTML = `<div classclass="spinner border-t-white mx-auto" style="width: 24px; height: 24px;"></div>`;
+                adminUserList.innerHTML = `<div class="spinner border-t-white mx-auto" style="width: 24px; height: 24px;"></div>`;
                 
                 try {
                     const response = await fetch('/api/admin/get-users', {
@@ -1676,9 +1671,9 @@
 
                 const defaultFeed = feedNav.querySelector('.feed-button.active');
                 if (defaultFeed) {
-                    await fetchRSS(defaultFeed.dataset.rss, defaultFeed.dataset.source); // (SỬA LỖI) Hàm này giờ đã hoạt động
+                    await fetchRSS(defaultFeed.dataset.rss, defaultFeed.dataset.source); // (SỬA LỖI) OK
                 }
-                setTimeout(prewarmCache, 0); // (SỬA LỖI) Hàm này giờ đã hoạt động
+                setTimeout(prewarmCache, 0); // (SỬA LỖI) OK
 
                 closeSummaryModalButton.addEventListener('click', () => {
                      summaryModal.classList.add('hidden');
@@ -1706,8 +1701,8 @@
             
             // --- KHỞI ĐỘNG (LỊCH) ---
             (async () => {
-                renderCalendar(currentViewDate); // (SỬA LỖI) Hàm này giờ đã hoạt động
-                loadSettings(); // (SỬA LỖI) Hàm này giờ đã hoạt động
+                renderCalendar(currentViewDate); // (SỬA LỖI) OK
+                loadSettings(); // (SỬA LỖI) OK
                 
                 notifyTimeNgay.addEventListener('change', (e) => {
                     appSettings.notifyTimeNgay = e.target.value;
