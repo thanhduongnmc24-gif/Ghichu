@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import webpush from 'web-push'; 
 import pg from 'pg'; 
-import crypto from 'crypto'; 
+import crypto from 'crypto'; // (MỚI) Thêm module crypto để mã hóa
 
 // ----- CÀI ĐẶT CACHE (RSS) -----
 const cache = new Map();
@@ -26,7 +26,6 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- CÀI ĐẶT GOOGLE AI ---
-// (Giữ nguyên)
 const API_KEY = process.env.GEMINI_API_KEY;
 let genAI;
 if (API_KEY) {
@@ -36,7 +35,6 @@ if (API_KEY) {
 }
 
 // ----- CÀI ĐẶT WEB PUSH -----
-// (Giữ nguyên)
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT;
@@ -52,17 +50,17 @@ if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_SUBJECT) {
     console.log("Web Push đã được cấu hình.");
 }
 
-// ----- CÀI ĐẶT DATABASE -----
-// (Giữ nguyên)
+// ----- (CẬP NHẬT) CÀI ĐẶT DATABASE (Sửa lỗi SSL) -----
 const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
+    // (CẬP NHẬT) Thêm rejectUnauthorized: false để chấp nhận cert của Supabase
     ssl: {
         rejectUnauthorized: false
     }
 });
 
-// --- Helper functions for Password Hashing ---
-// (Giữ nguyên)
+// (MỚI) --- Helper functions for Password Hashing ---
+// (Không cần 'bcrypt', dùng 'crypto' có sẵn của Node)
 function hashPassword(password) {
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
@@ -75,7 +73,7 @@ function verifyPassword(inputPassword, storedHash, salt) {
 }
 
 
-// (CẬP NHẬT) Hàm tự động tạo bảng (thêm is_admin)
+// (MỚI) Hàm tự động tạo bảng (cập nhật)
 (async () => {
     const client = await pool.connect();
     try {
@@ -91,6 +89,7 @@ function verifyPassword(inputPassword, storedHash, salt) {
         `);
         console.log("Bảng 'subscriptions' (v2, có notes) đã sẵn sàng trên Supabase.");
 
+        // (MỚI) Tạo bảng user_notes
         await client.query(`
             CREATE TABLE IF NOT EXISTS user_notes (
                 id SERIAL PRIMARY KEY,
@@ -98,21 +97,13 @@ function verifyPassword(inputPassword, storedHash, salt) {
                 password_hash TEXT NOT NULL,
                 salt TEXT NOT NULL,
                 notes JSONB DEFAULT '{}'::jsonb,
-                is_admin BOOLEAN DEFAULT false, -- (MỚI) Thêm cột admin
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log("Bảng 'user_notes' (có is_admin) đã sẵn sàng trên Supabase.");
-
-        // (MỚI) Thêm cột is_admin nếu bảng đã tồn tại mà chưa có
-        await client.query(`
-            ALTER TABLE user_notes
-            ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
-        `);
-        console.log("Đã đảm bảo cột 'is_admin' tồn tại.");
+        console.log("Bảng 'user_notes' đã sẵn sàng trên Supabase.");
 
     } catch (err) {
-        console.error("Lỗi khi tạo/cập nhật bảng:", err);
+        console.error("Lỗi khi tạo bảng:", err);
     } finally {
         client.release();
     }
@@ -120,9 +111,10 @@ function verifyPassword(inputPassword, storedHash, salt) {
 
 
 // ----- CÁC ENDPOINT CỦA TIN TỨC -----
-// (Giữ nguyên Endpoint 1, 2, 3)
+// (Không thay đổi - Giữ nguyên Endpoint 1, 2, 3)
+
+// Endpoint 1: Lấy RSS feed (Không thay đổi)
 app.get('/get-rss', async (req, res) => {
-    // ... (giữ nguyên code)
     const rssUrl = req.query.url;
     if (!rssUrl) return res.status(400).send('Thiếu tham số url');
 
@@ -151,8 +143,9 @@ app.get('/get-rss', async (req, res) => {
         res.status(500).send('Không thể lấy RSS feed: ' + error.message);
     }
 });
+
+// Endpoint 2: Tóm tắt AI (Streaming - Không thay đổi)
 app.get('/summarize-stream', async (req, res) => {
-    // ... (giữ nguyên code)
     const { prompt } = req.query; 
 
     if (!prompt) return res.status(400).send('Thiếu prompt');
@@ -194,8 +187,10 @@ app.get('/summarize-stream', async (req, res) => {
          res.end();
      });
 });
+
+
+// Endpoint 3: Chat AI (Không thay đổi)
 app.post('/chat', async (req, res) => {
-    // ... (giữ nguyên code)
     const { history } = req.body;
 
     if (!history || history.length === 0) {
@@ -241,10 +236,8 @@ app.post('/chat', async (req, res) => {
     }
 });
 
-// ----- ENDPOINT CỦA LỊCH LÀM VIỆC -----
-// (Giữ nguyên)
+// ----- ENDPOINT CỦA LỊCH LÀM VIỆC (Không thay đổi) -----
 app.post('/api/calendar-ai-parse', async (req, res) => {
-    // ... (giữ nguyên code)
     const text = req.body.text || "";
     if (!text) {
         return res.status(400).json({ error: 'Không có văn bản' });
@@ -303,17 +296,18 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
 });
 
 
-// ----- CÁC ENDPOINT CHO PUSH NOTIFICATION -----
-// (Giữ nguyên Endpoint 1, 2, 3, 4)
+// ----- CÁC ENDPOINT CHO PUSH NOTIFICATION (Không thay đổi) -----
+
+// Endpoint 1: Gửi VAPID Public Key (Không thay đổi)
 app.get('/vapid-public-key', (req, res) => {
-    // ... (giữ nguyên code)
     if (!VAPID_PUBLIC_KEY) {
         return res.status(500).send("VAPID Public Key chưa được cấu hình trên server.");
     }
     res.send(VAPID_PUBLIC_KEY);
 });
+
+// Endpoint 2: Đăng ký nhận thông báo (Không thay đổi)
 app.post('/subscribe', async (req, res) => {
-    // ... (giữ nguyên code)
     const { subscription, settings, noteData } = req.body;
     if (!subscription || !settings || !subscription.endpoint || !subscription.keys) {
         return res.status(400).send("Thiếu thông tin subscription hoặc settings.");
@@ -338,8 +332,9 @@ app.post('/subscribe', async (req, res) => {
         res.status(500).send("Lỗi máy chủ khi lưu subscription.");
     }
 });
+
+// Endpoint 3: Hủy đăng ký (Không thay đổi)
 app.post('/unsubscribe', async (req, res) => {
-    // ... (giữ nguyên code)
     const { endpoint } = req.body;
     if (!endpoint) {
         return res.status(400).send("Thiếu thông tin endpoint.");
@@ -360,8 +355,9 @@ app.post('/unsubscribe', async (req, res) => {
         res.status(500).send("Lỗi máy chủ khi hủy đăng ký.");
     }
 });
+
+// Endpoint 4: Cập nhật Ghi chú (Không thay đổi)
 app.post('/update-notes', async (req, res) => {
-    // ... (giữ nguyên code)
     const { endpoint, noteData } = req.body;
     if (!endpoint || !noteData) {
         return res.status(400).send("Thiếu endpoint hoặc noteData.");
@@ -380,9 +376,9 @@ app.post('/update-notes', async (req, res) => {
 });
 
 
-// ----- CÁC ENDPOINT CHO SYNC ONLINE -----
+// ----- (MỚI) CÁC ENDPOINT CHO SYNC ONLINE -----
 
-// Endpoint 5: Tải lên (Backup) - (Giữ nguyên)
+// Endpoint 5: Tải lên (Backup)
 app.post('/api/sync/up', async (req, res) => {
     const { username, password, noteData } = req.body;
     if (!username || !password || !noteData) {
@@ -422,7 +418,7 @@ app.post('/api/sync/up', async (req, res) => {
     }
 });
 
-// Endpoint 6: Tải về (Restore) - (CẬP NHẬT: trả về thêm cờ isAdmin)
+// Endpoint 6: Tải về (Restore)
 app.post('/api/sync/down', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -444,11 +440,7 @@ app.post('/api/sync/down', async (req, res) => {
             return res.status(401).json({ error: 'Mật khẩu không đúng.' });
         }
 
-        // (CẬP NHẬT) Trả về một object thay vì chỉ notes
-        res.status(200).json({
-            notes: user.notes || {},
-            isAdmin: user.is_admin 
-        });
+        res.status(200).json(user.notes || {}); // Trả về data
 
     } catch (error) {
         console.error("Lỗi khi /api/sync/down:", error);
@@ -459,96 +451,9 @@ app.post('/api/sync/down', async (req, res) => {
 });
 
 
-// (MỚI) ----- CÁC ENDPOINT CHO ADMIN -----
+// ----- LOGIC GỬI THÔNG BÁO (Không thay đổi) -----
 
-// Hàm middleware kiểm tra admin
-const checkAdmin = async (req, res, next) => {
-    const { username, password } = req.body;
-    if (!username || !password) {
-        return res.status(400).json({ error: 'Thiếu Tên hoặc Mật khẩu Admin.' });
-    }
-    
-    let client;
-    try {
-        client = await pool.connect();
-        const userResult = await client.query("SELECT * FROM user_notes WHERE username = $1", [username]);
-
-        if (userResult.rows.length === 0) {
-            return res.status(404).json({ error: 'Tài khoản Admin không tồn tại.' });
-        }
-
-        const user = userResult.rows[0];
-        const isVerified = verifyPassword(password, user.password_hash, user.salt);
-
-        if (!isVerified) {
-            return res.status(401).json({ error: 'Mật khẩu Admin không đúng.' });
-        }
-        
-        if (!user.is_admin) {
-            return res.status(403).json({ error: 'Tài khoản này không có quyền Admin.' });
-        }
-
-        // Nếu hợp lệ, đi tiếp
-        req.adminUser = user; // Gắn thông tin admin vào request
-        next();
-        
-    } catch (error) {
-        console.error("Lỗi khi checkAdmin:", error);
-        res.status(500).json({ error: 'Lỗi máy chủ khi xác thực Admin.' });
-    } finally {
-        if (client) client.release();
-    }
-};
-
-// (MỚI) Endpoint 7: Admin lấy danh sách user
-app.post('/api/admin/get-users', checkAdmin, async (req, res) => {
-    // Nếu qua được checkAdmin là đã xác thực admin
-    const client = await pool.connect();
-    try {
-        const usersResult = await client.query(
-            "SELECT username, created_at, notes FROM user_notes WHERE is_admin = false ORDER BY created_at DESC"
-        );
-        res.status(200).json(usersResult.rows);
-    } catch (error) {
-        console.error("Lỗi khi /api/admin/get-users:", error);
-        res.status(500).json({ error: 'Lỗi máy chủ khi lấy danh sách user.' });
-    } finally {
-        client.release();
-    }
-});
-
-// (MỚI) Endpoint 8: Admin xóa user
-app.post('/api/admin/delete-user', checkAdmin, async (req, res) => {
-    // Đã xác thực admin
-    const { targetUsername } = req.body;
-    if (!targetUsername) {
-        return res.status(400).json({ error: 'Thiếu targetUsername (tên user cần xóa).' });
-    }
-
-    const client = await pool.connect();
-    try {
-        const deleteResult = await client.query(
-            "DELETE FROM user_notes WHERE username = $1 AND is_admin = false",
-            [targetUsername]
-        );
-        
-        if (deleteResult.rowCount === 0) {
-            return res.status(404).json({ error: 'Không tìm thấy user hoặc user này là Admin (không thể xóa).' });
-        }
-
-        res.status(200).json({ success: true, message: `Đã xóa user: ${targetUsername}` });
-    } catch (error) {
-        console.error("Lỗi khi /api/admin/delete-user:", error);
-        res.status(500).json({ error: 'Lỗi máy chủ khi xóa user.' });
-    } finally {
-        client.release();
-    }
-});
-
-
-// ----- LOGIC GỬI THÔNG BÁO -----
-// (Giữ nguyên)
-// ... (toàn bộ code logic gửi thông báo giữ nguyên)
+// Logic tính ca (Không thay đổi)
 const EPOCH_DAYS = dateToDays('2025-10-26');
 const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
 function dateToDays(dateStr) {
@@ -579,11 +484,14 @@ async function deleteSubscription(endpoint) {
         console.error("Lỗi khi xóa sub hết hạn:", err);
     }
 }
+
+// Hàm kiểm tra và gửi thông báo (Không thay đổi)
 let lastNotificationCheckTime = null;
 async function checkAndSendNotifications() {
     const { timeStr, dateStr } = getHanoiTime();
 
     if (timeStr === lastNotificationCheckTime) {
+        // console.log("Đã kiểm tra trong phút này, bỏ qua.");
         return;
     }
     lastNotificationCheckTime = timeStr;
@@ -600,6 +508,7 @@ async function checkAndSendNotifications() {
     }
 
     if (subscriptions.length === 0) {
+         // console.log("Không có ai đăng ký thông báo.");
         return;
     }
     
@@ -653,10 +562,8 @@ async function checkAndSendNotifications() {
     await Promise.all(sendPromises);
 }
 
-// ----- Cron Job & Khởi động Server -----
-// (Giữ nguyên)
+// Endpoint của Cron Job (Không thay đổi)
 app.get('/trigger-notifications', async (req, res) => {
-    // ... (giữ nguyên code)
     const cronSecret = req.headers['x-cron-secret'];
     if (cronSecret !== process.env.VAPID_PRIVATE_KEY) { 
         console.warn("Cron trigger không hợp lệ (sai secret)");
@@ -672,9 +579,15 @@ app.get('/trigger-notifications', async (req, res) => {
         res.status(500).send('Cron Job Error.');
     }
 });
+
+
+// ----- CÁC ROUTE TRANG -----
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+
+// --- Khởi động Server ---
 app.listen(PORT, () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);
 });
