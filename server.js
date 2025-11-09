@@ -612,6 +612,7 @@ async function deleteSubscription(endpoint) {
 }
 
 // Hàm kiểm tra và gửi thông báo (Không thay đổi)
+// Hàm kiểm tra và gửi thông báo (ĐÃ CẬP NHẬT CHO IOS)
 let lastNotificationCheckTime = null;
 async function checkAndSendNotifications() {
     const { timeStr, dateStr } = getHanoiTime();
@@ -663,16 +664,44 @@ async function checkAndSendNotifications() {
             const title = `Lịch Luân Phiên - Ca ${todayShift.toUpperCase()}`;
             const body = `Hôm nay là ${dateStr}.${notesString}`;
             
-            const notificationPayload = JSON.stringify({
-                title: title,
-                body: body
-            });
+            // ==========================================================
+            // ===== (MỚI) BẮT ĐẦU LOGIC KIỂM TRA IOS =====
+            // ==========================================================
+            
+            let notificationPayload;
+            
+            // Các thiết bị Apple có endpoint bắt đầu bằng "https://web.push.apple.com"
+            if (endpoint.startsWith('https://web.push.apple.com')) {
+                // Định dạng APNs (Apple) yêu cầu
+                console.log("-> Gửi payload định dạng APNs (iOS)");
+                notificationPayload = JSON.stringify({
+                    aps: {
+                        alert: {
+                            title: title,
+                            body: body
+                        },
+                        // (Tùy chọn) Nếu muốn hiển thị số trên icon app:
+                        // badge: 1 
+                    }
+                });
+            } else {
+                // Định dạng VAPID chuẩn (Android, Desktop)
+                console.log("-> Gửi payload định dạng VAPID chuẩn");
+                notificationPayload = JSON.stringify({
+                    title: title,
+                    body: body
+                });
+            }
+            // ==========================================================
+            // ===== (MỚI) KẾT THÚC LOGIC KIỂM TRA IOS =====
+            // ==========================================================
 
             const pushSubscription = {
                 endpoint: endpoint,
                 keys: keys
             };
             
+            // Gửi payload đã được định dạng
             return webpush.sendNotification(pushSubscription, notificationPayload)
                 .catch(err => {
                     if (err.statusCode === 410 || err.statusCode === 404) {
