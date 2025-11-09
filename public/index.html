@@ -13,12 +13,16 @@
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 
     <style>
-        /* (Giữ nguyên toàn bộ CSS cũ, không thay đổi) */
         body {
             font-family: 'Inter', sans-serif;
-            padding-bottom: 80px; 
+            padding-bottom: 80px; /* 5rem */
         }
-        
+        @media (min-width: 640px) {
+            body {
+                padding-bottom: 0; 
+            }
+        }
+
         .spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
@@ -43,8 +47,8 @@
         }
         
         #settings-btn svg, #settings-btn-mobile svg {
-            width: 24px; 
-            height: 24px; 
+            width: 24px; /* w-6 */
+            height: 24px; /* h-6 */
         }
         
         .tab-button {
@@ -89,9 +93,8 @@
         
         #summary-toast {
             position: fixed;
-            bottom: 6rem;
+            bottom: 1rem;
             left: 1rem;
-            right: auto; 
             background-color: #2563EB; 
             color: white;
             padding: 1rem;
@@ -176,9 +179,9 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 5rem; 
-            background-color: #1F2937; 
-            border-top: 1px solid #374151; 
+            height: 5rem; /* 80px */
+            background-color: #1F2937; /* bg-gray-800 */
+            border-top: 1px solid #374151; /* border-gray-700 */
             display: flex;
             align-items: center;
             z-index: 40;
@@ -189,150 +192,45 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: #9CA3AF; 
-            font-size: 0.75rem; 
+            color: #9CA3AF; /* text-gray-400 */
+            font-size: 0.75rem; /* 12px */
             font-weight: 500;
             transition: color 0.2s;
         }
         .bottom-nav-btn svg {
-            width: 1.75rem; 
-            height: 1.75rem; 
+            width: 1.75rem; /* 28px */
+            height: 1.75rem; /* 28px */
             margin-bottom: 4px;
         }
         .bottom-nav-btn.active {
-            color: #FFFFFF; 
+            color: #FFFFFF; /* text-white */
         }
         
-        #chat-main-wrapper {
-            background-color: #1F2937; 
-            border-radius: 0.5rem; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); 
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 12rem); 
-            max-width: 1024px; 
-            margin-left: auto;
-            margin-right: auto;
-        }
-        @media (min-width: 640px) { 
-            #chat-main-wrapper {
-                 height: calc(100vh - 12rem);
+        @media (max-width: 639px) { /* sm: breakpoint */
+            #summary-toast {
+                bottom: 6rem; /* 5rem nav + 1rem padding */
+                left: 1rem;
+                right: auto; 
             }
         }
         
-        .sync-input {
-            background-color: #4B5563; 
-            color: #FFFFFF;
-            border: 1px solid #6B7280; 
-            border-radius: 0.375rem; 
-            padding: 0.5rem 0.75rem; 
-            width: 100%; 
-            margin-bottom: 0.75rem; 
-        }
-        .sync-input::placeholder {
-            color: #9CA3AF; 
-        }
-        
-        .sync-button-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem; 
-        }
-        .sync-button {
-            width: 100%;
-            text-white: white;
-            font-weight: 700; 
-            padding-top: 0.75rem; 
-            padding-bottom: 0.75rem;
-            padding-left: 1rem; 
-            padding-right: 1rem;
-            border-radius: 0.5rem; 
-            transition-property: all; 
-            transition-duration: 200ms;
-        }
-        .sync-button:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-        
-        #sync-up-btn {
-            background-color: #10B981; 
-            color: white;
-        }
-        #sync-up-btn:hover:not(:disabled) {
-            background-color: #059669; 
-        }
-        #sync-down-btn {
-            background-color: #3B82F6; 
-            color: white;
-        }
-        #sync-down-btn:hover:not(:disabled) {
-            background-color: #2563EB; 
-        }
-        
-        #sync-message {
-            text-align: center;
-            font-size: 0.875rem; 
-            margin-top: 1rem; 
-            min-height: 1.25rem; 
-        }
-        .sync-success { color: #34D399; }
-        .sync-error { color: #F87171; }
-        
-        #admin-user-list {
-            margin-top: 1rem;
-            max-height: 400px;
-            overflow-y: auto;
-            background-color: #111827;
-            padding: 0.75rem; 
-            border-radius: 0.5rem; 
-        }
-        .admin-user-card {
-            background-color: #374151; 
-            padding: 0.75rem 1rem; 
-            border-radius: 0.5rem; 
-            margin-bottom: 0.75rem; 
-        }
-        .admin-user-header {
+        /* (MỚI) CSS Cho Trang Chat */
+        #chat-main-wrapper {
+            background-color: #1F2937; /* bg-gray-800 */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem; 
+            flex-direction: column;
+            /* (MỚI) Đặt chiều cao cho trang chat/cài đặt */
+            height: calc(100vh - 12rem); /* 100vh - header - bottom_nav - padding */
+            max-width: 1024px; /* max-w-5xl */
+            margin-left: auto;
+            margin-right: auto;
         }
-        .admin-user-name {
-            font-weight: 600; 
-            color: #F3F4F6; 
-        }
-        .admin-user-date {
-            font-size: 0.75rem; 
-            color: #9CA3AF; 
-        }
-        .admin-user-notes {
-            background-color: #1F2937; 
-            color: #E5E7EB; 
-            padding: 0.5rem; 
-            border-radius: 0.375rem; 
-            font-size: 0.875rem; 
-            max-height: 150px;
-            overflow-y: auto;
-            white-space: pre-wrap; 
-            word-break: break-all;
-        }
-        .admin-delete-btn {
-            background-color: #EF4444; 
-            color: white;
-            font-weight: 600; 
-            font-size: 0.75rem; 
-            padding: 0.25rem 0.75rem; 
-            border-radius: 9999px; 
-            transition: background-color 0.2s;
-        }
-        .admin-delete-btn:hover {
-            background-color: #DC2626; 
-        }
-        .admin-delete-btn:disabled {
-            background-color: #F87171; 
-            opacity: 0.7;
+        @media (min-width: 640px) { /* sm: */
+            #chat-main-wrapper {
+                 height: calc(100vh - 10rem); /* 100vh - header - padding */
+            }
         }
         
     </style>
@@ -359,7 +257,7 @@
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://thethao247.vn/bong-da.rss" data-source="Thể Thao 247">Thể Thao 247</button>
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
                     </div>
-                    
+                    <button id="calendar-tab-btn" class="tab-button">Lịch Làm Việc</button>
                     <button id="refresh-feed-button" class="refresh-button" title="Tải lại tin tức">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                     </button>
@@ -405,7 +303,7 @@
         <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
     </main>
     
-    <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden mb-24">
+    <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
         <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6">
             <h2 class="text-xl font-bold text-white mb-4">Thêm Nhanh (AI)</h2>
             <form id="ai-form" class="flex space-x-2">
@@ -498,55 +396,65 @@
                     <input type="time" id="notify-time-off" value="08:00">
                 </label>
             </fieldset>
-            
-            <fieldset class="border border-gray-600 p-4 rounded-lg mt-6">
-                <legend class="text-lg font-semibold text-white px-2">Đồng bộ Online</legend>
-                
-                <label for="sync-username" class="sr-only">Tên đăng nhập</label>
-                <input type="text" id="sync-username" placeholder="Tên đăng nhập..." class="sync-input">
-                
-                <label for="sync-password" class="sr-only">Mật khẩu</label>
-                <input type="password" id="sync-password" placeholder="Mật khẩu..." class="sync-input">
-                
-                <div class="sync-button-group">
-                    <button id="sync-up-btn" class="sync-button">
-                        Tải Lên (Backup)
-                    </button>
-                    <button id="sync-down-btn" class="sync-button">
-                        Tải Về (Restore)
-                    </button>
-                </div>
-                
-                <p id="sync-message" class="sync-error"></p>
-            </fieldset>
-            
-            <fieldset id="admin-panel-fieldset" class="border border-yellow-500 p-4 rounded-lg mt-6 hidden">
-                <legend class="text-lg font-semibold text-yellow-300 px-2">Bảng Điều Khiển Admin</legend>
-                
-                <button id="admin-get-users-btn" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                    Tải danh sách Users
-                </button>
-                
-                <div id="admin-user-list">
-                </div>
-            </fieldset>
-            
         </div>
     </main>
 
     <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-white">Bản Tóm Tắt AI</h2>
+                <button id="close-summary-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+            <div id="summary-content-wrapper" class="min-h-[200px]">
+                 <div class="text-gray-200 space-y-4">
+                      <h3 id="summary-title" class="text-lg font-semibold text-white"></h3>
+                      <p id="summary-text" class="whitespace-pre-wrap leading-relaxed"></p>
+                 </div>
+            </div>
         </div>
+    </div>
     
     <button id="chat-fab" class="hidden sm:flex fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg items-center justify-center z-40 transition-transform transform hover:scale-110">
-        </button>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+    </button>
     
     <div id="summary-toast" class="hidden">
+        <button id="toast-close-button">&times;</button>
+        <div class="flex items-center">
+            <div id="toast-icon" class="flex-shrink-0 w-6 h-6">
+                </div>
+            <div class="ml-3">
+                <p id="toast-main-message" class="font-semibold"></p>
+                <p id="toast-title" class="text-sm text-gray-300 line-clamp-2"></p>
+                <p id="toast-cta" class="text-xs mt-2 text-blue-200">Nhấn để xem</p>
+            </div>
         </div>
+    </div>
     
     <div id="note-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col">
+            <span id="close-note-modal" class="absolute top-3 right-4 text-gray-400 hover:text-white text-3xl cursor-pointer">&times;</span>
+            <h2 id="note-modal-title" class="text-2xl font-bold text-white mb-2">Cập nhật (Ngày...)</h2>
+            
+            <p id="modal-shift-info" class="bg-gray-700 p-3 rounded-lg text-gray-200 text-center font-semibold mb-4">
+                Ca tự động: <strong>...</strong>
+            </p>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Ghi chú hiện có:</label>
+            <div id="note-list-wrapper" class="flex-grow overflow-y-auto bg-gray-900 p-3 rounded-lg min-h-[100px] max-h-[200px] mb-4">
+                <ul id="note-list" class="space-y-2">
+                    </ul>
+            </div>
+            <form id="add-note-form">
+                <label for="new-note-input" class="block text-sm font-medium text-gray-300 mb-2">Thêm ghi chú mới:</label>
+                <div class="flex space-x-2">
+                    <input type="text" id="new-note-input" placeholder="Nhập ghi chú mới..." autocomplete="off" class="flex-grow p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Thêm</button>
+                </div>
+            </form>
         </div>
+    </div>
 
-    <nav id="bottom-nav">
+    <nav id="bottom-nav" class="sm:hidden">
         <button id="bottom-tab-news" class="bottom-nav-btn active">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
             <span>Tin Tức</span>
@@ -586,9 +494,10 @@
             }
 
             // ===================================================================
-            // PHẦN 0: KHAI BÁO BIẾN (DOM ELEMENTS)
+            // (MỚI) PHẦN 0: KHAI BÁO BIẾN (DOM ELEMENTS)
             // ===================================================================
             
+            // --- Biến Phần 1 (Tin Tức) ---
             const newsMain = document.getElementById('news-main');
             const newsGrid = document.getElementById('news-grid');
             const loadingSpinner = document.getElementById('loading-spinner');
@@ -598,6 +507,8 @@
             const summaryTextElement = document.getElementById('summary-text');
             const feedNav = document.getElementById('feed-nav');
             const chatFab = document.getElementById('chat-fab');
+            const chatModal = document.getElementById('chat-modal');
+            const closeChatModal = document.getElementById('close-chat-modal');
             const chatForm = document.getElementById('chat-form');
             const chatInput = document.getElementById('chat-input');
             const chatDisplay = document.getElementById('chat-display');
@@ -609,14 +520,18 @@
             const toastIcon = document.getElementById('toast-icon');
             const toastMainMessage = document.getElementById('toast-main-message');
             const toastCta = document.getElementById('toast-cta');
+
+            // --- Biến Phần 2 (Lịch & Cài đặt) ---
             const calendarMain = document.getElementById('calendar-main');
-            const settingsMain = document.getElementById('settings-main'); 
+            const settingsMain = document.getElementById('settings-main'); // (MỚI)
             const cal_aiForm = document.getElementById('ai-form');
             const cal_aiInput = document.getElementById('ai-input');
             const calendarBody = document.getElementById('calendar-body');
             const currentMonthYearEl = document.getElementById('current-month-year');
             const prevMonthBtn = document.getElementById('prev-month-btn');
             const nextMonthBtn = document.getElementById('next-month-btn');
+            const settingsModal = document.getElementById('settings-modal'); // (CẬP NHẬT) Đây là modal CŨ, chúng ta lấy nội dung từ nó
+            const closeModalBtn = document.getElementById('close-modal');
             const notifyButton = document.getElementById('notify-button');
             const notifyTimeNgay = document.getElementById('notify-time-ngay');
             const notifyTimeDem = document.getElementById('notify-time-dem');
@@ -628,31 +543,26 @@
             const noteList = document.getElementById('note-list');
             const addNoteForm = document.getElementById('add-note-form');
             const newNoteInput = document.getElementById('new-note-input');
-            const chatMain = document.getElementById('chat-main'); 
+
+            // --- Biến Phần 3 (Trò chuyện) ---
+            const chatMain = document.getElementById('chat-main'); // (MỚI)
+
+            // --- Biến Phần 4 (Điều khiển Tab) ---
             const newsTabBtn = document.getElementById('news-tab-btn');
-            const calendarTabBtn = document.getElementById('calendar-tab-btn'); 
+            const calendarTabBtn = document.getElementById('calendar-tab-btn');
             const settingsBtn = document.getElementById('settings-btn'); 
             const mobileHeaderTitle = document.getElementById('mobile-header-title');
             const refreshFeedButton = document.getElementById('refresh-feed-button');
             const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
+            // (ĐÃ XÓA) settingsBtnMobile
             const bottomTabNews = document.getElementById('bottom-tab-news');
             const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
-            const bottomTabChat = document.getElementById('bottom-tab-chat'); 
+            const bottomTabChat = document.getElementById('bottom-tab-chat'); // (MỚI)
             const bottomTabSettings = document.getElementById('bottom-tab-settings');
-            const syncUsernameInput = document.getElementById('sync-username');
-            const syncPasswordInput = document.getElementById('sync-password');
-            const syncUpBtn = document.getElementById('sync-up-btn');
-            const syncDownBtn = document.getElementById('sync-down-btn');
-            const syncMessage = document.getElementById('sync-message');
-            const adminPanelFieldset = document.getElementById('admin-panel-fieldset');
-            const adminGetUsersBtn = document.getElementById('admin-get-users-btn');
-            const adminUserList = document.getElementById('admin-user-list');
             
             // ===================================================================
-            // PHẦN 1: LOGIC TIN TỨC
+            // PHẦN 1: LOGIC TIN TỨC (CHỈ CÓ HÀM VÀ BIẾN LOGIC)
             // ===================================================================
-            
-            // (SỬA LỖI) Đã xóa (function(){...}) bị lỗi
             
             const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
             const iconCheck = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
@@ -664,6 +574,7 @@
             let completedSummary = { title: '', text: '' };
             let toastTimeoutId = null;
 
+            // (Các hàm Tin Tức giữ nguyên)
             function callGeminiAPIStreaming(prompt, title) {
                 if (summaryEventSource) {
                     summaryEventSource.close();
@@ -818,8 +729,6 @@
                          if (e.target.closest('.summary-btn')) {
                              return;
                          }
-                         e.preventDefault();
-                         window.open(card.href, '_blank');
                      });
                     const summaryButton = card.querySelector('.summary-btn');
                     summaryButton.addEventListener('click', (e) => {
@@ -947,11 +856,10 @@
                 });
             }
             
+            
             // ===================================================================
-            // PHẦN 2: LOGIC LỊCH
+            // PHẦN 2: LOGIC LỊCH (CHỈ CÓ HÀM VÀ BIẾN LOGIC)
             // ===================================================================
-
-            // (SỬA LỖI) Đã xóa (function(){...}) bị lỗi
 
             let currentEditingDateStr = null;
 
@@ -979,6 +887,7 @@
                 return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
             }
             
+            // (Các hàm Lịch & Thông báo giữ nguyên)
             function saveNoteData() {
                 const cleanData = {};
                 for (const date in noteData) {
@@ -1353,250 +1262,29 @@
 
 
             // ===================================================================
-            // PHẦN 3: LOGIC ĐỒNG BỘ ONLINE (SYNC)
+            // PHẦN 3: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG)
             // ===================================================================
             
-            function showSyncMessage(message, isError = false) {
-                syncMessage.textContent = message;
-                syncMessage.className = isError ? 'sync-error' : 'sync-success';
-                setTimeout(() => {
-                    syncMessage.textContent = '';
-                }, 4000); 
-            }
-
-            async function handleSyncUp() {
-                const username = syncUsernameInput.value.trim();
-                const password = syncPasswordInput.value.trim();
-                
-                if (!username || !password) {
-                    showSyncMessage('Vui lòng nhập Tên và Mật khẩu.', true);
-                    return;
-                }
-                
-                const currentNoteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
-
-                syncUpBtn.disabled = true;
-                syncDownBtn.disabled = true;
-                syncUpBtn.textContent = "Đang tải lên...";
-                
-                try {
-                    const response = await fetch('/api/sync/up', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            username: username,
-                            password: password,
-                            noteData: currentNoteData 
-                        })
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (!response.ok) {
-                        throw new Error(result.error || `Lỗi ${response.status}`);
-                    }
-                    
-                    showSyncMessage(result.message || 'Tải lên thành công!', false);
-
-                } catch (err) {
-                    console.error("Lỗi khi Tải Lên:", err);
-                    showSyncMessage(err.message, true);
-                } finally {
-                    syncUpBtn.disabled = false;
-                    syncDownBtn.disabled = false;
-                    syncUpBtn.textContent = "Tải Lên (Backup)";
-                }
-            }
-
-            async function handleSyncDown() {
-                const username = syncUsernameInput.value.trim();
-                const password = syncPasswordInput.value.trim();
-                
-                if (!username || !password) {
-                    showSyncMessage('Vui lòng nhập Tên và Mật khẩu.', true);
-                    return;
-                }
-
-                if (!confirm('Tải về sẽ GHI ĐÈ toàn bộ ghi chú hiện tại trên máy này. Đại ca có chắc chắn?')) {
-                    return;
-                }
-                
-                syncUpBtn.disabled = true;
-                syncDownBtn.disabled = true;
-                syncDownBtn.textContent = "Đang tải về...";
-                
-                adminPanelFieldset.classList.add('hidden');
-                adminUserList.innerHTML = '';
-
-                try {
-                    const response = await fetch('/api/sync/down', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            username: username,
-                            password: password
-                        })
-                    });
-                    
-                    const result = await response.json(); 
-                    
-                    if (!response.ok) {
-                        throw new Error(result.error || `Lỗi ${response.status}`);
-                    }
-                    
-                    const restoredNoteData = result.notes || {}; 
-                    
-                    noteData = restoredNoteData; 
-                    saveNoteData(); 
-                    renderCalendar(currentViewDate); // (SỬA LỖI) OK
-                    
-                    if (result.isAdmin) {
-                        adminPanelFieldset.classList.remove('hidden');
-                        showSyncMessage('Tải về thành công! (Quyền Admin)', false);
-                    } else {
-                        showSyncMessage('Tải về và đồng bộ thành công!', false);
-                    }
-
-                } catch (err) {
-                    console.error("Lỗi khi Tải Về:", err);
-                    showSyncMessage(err.message, true);
-                } finally {
-                    syncUpBtn.disabled = false;
-                    syncDownBtn.disabled = false;
-                    syncDownBtn.textContent = "Tải Về (Restore)";
-                }
-            }
+            let currentTab = 'news'; // (MỚI) Theo dõi tab hiện tại
             
-            // ===================================================================
-            // PHẦN 5: LOGIC ADMIN
-            // ===================================================================
-            
-            async function handleAdminGetUsers(e) {
-                const btn = e.target;
-                const username = syncUsernameInput.value.trim();
-                const password = syncPasswordInput.value.trim();
-                
-                if (!username || !password) {
-                    showSyncMessage('Vui lòng giữ Tên/Mật khẩu Admin để thực hiện.', true);
-                    return;
-                }
-                
-                btn.disabled = true;
-                btn.textContent = "Đang tải...";
-                adminUserList.innerHTML = `<div class="spinner border-t-white mx-auto" style="width: 24px; height: 24px;"></div>`;
-                
-                try {
-                    const response = await fetch('/api/admin/get-users', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password })
-                    });
-                    
-                    const users = await response.json();
-                    
-                    if (!response.ok) {
-                        throw new Error(users.error || `Lỗi ${response.status}`);
-                    }
-                    
-                    adminUserList.innerHTML = '';
-                    if (users.length === 0) {
-                        adminUserList.innerHTML = `<p class="text-gray-400 text-center italic">Không có user nào.</p>`;
-                    }
-                    
-                    users.forEach(user => {
-                        const userCard = document.createElement('div');
-                        userCard.className = 'admin-user-card';
-                        userCard.dataset.username = user.username;
-                        
-                        const notesJson = JSON.stringify(user.notes, null, 2);
-                        const noteCount = Object.keys(user.notes || {}).length;
-                        
-                        userCard.innerHTML = `
-                            <div class="admin-user-header">
-                                <div>
-                                    <span class="admin-user-name">${user.username}</span>
-                                    <span class="admin-user-date">(${new Date(user.created_at).toLocaleDateString('vi-VN')})</span>
-                                </div>
-                                <button class="admin-delete-btn" data-username="${user.username}">Xóa User</button>
-                            </div>
-                            <p class="text-sm text-gray-300 mb-2">Có ${noteCount} ngày có ghi chú.</p>
-                            <pre class="admin-user-notes">${notesJson}</pre>
-                        `;
-                        adminUserList.appendChild(userCard);
-                    });
-                    
-                } catch (err) {
-                    console.error("Lỗi khi lấy danh sách user:", err);
-                    showSyncMessage(err.message, true);
-                    adminUserList.innerHTML = `<p class="text-red-400 text-center">${err.message}</p>`;
-                } finally {
-                    btn.disabled = false;
-                    btn.textContent = "Tải danh sách Users";
-                }
-            }
-            
-            async function handleAdminDeleteUser(e) {
-                if (!e.target.classList.contains('admin-delete-btn')) return;
-                
-                const btn = e.target;
-                const targetUsername = btn.dataset.username;
-                
-                const username = syncUsernameInput.value.trim();
-                const password = syncPasswordInput.value.trim();
-
-                if (!username || !password) {
-                    showSyncMessage('Vui lòng giữ Tên/Mật khẩu Admin để thực hiện.', true);
-                    return;
-                }
-                
-                if (!confirm(`Đại ca có chắc muốn XÓA vĩnh viễn user "${targetUsername}" không? Không thể hoàn tác!`)) {
-                    return;
-                }
-                
-                btn.disabled = true;
-                btn.textContent = "Đang xóa...";
-                
-                try {
-                    const response = await fetch('/api/admin/delete-user', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password, targetUsername })
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (!response.ok) {
-                        throw new Error(result.error || `Lỗi ${response.status}`);
-                    }
-                    
-                    showSyncMessage(result.message || `Đã xóa ${targetUsername}`, false);
-                    btn.closest('.admin-user-card').remove(); 
-                    
-                } catch (err) {
-                    console.error("Lỗi khi xóa user:", err);
-                    showSyncMessage(err.message, true);
-                    btn.disabled = false;
-                    btn.textContent = "Xóa User";
-                }
-            }
-
-
-            // ===================================================================
-            // PHẦN 6: LOGIC GỘP (TAB VÀ KHỞI ĐỘNG)
-            // ===================================================================
-            
-            let currentTab = 'news'; 
-            
+            // (CẬP NHẬT) Hàm showTab (Xử lý 4 trang)
             function showTab(tabName) {
-                if (tabName === currentTab) return; 
+                if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
+                
+                // (MỚI) Reset chat nếu rời khỏi tab chat
                 if (currentTab === 'chat') {
                     resetChat();
                 }
+                
                 currentTab = tabName;
+                
+                // 1. Ẩn tất cả các trang
                 newsMain.classList.add('hidden');
                 calendarMain.classList.add('hidden');
                 chatMain.classList.add('hidden');
                 settingsMain.classList.add('hidden');
+                
+                // 2. Tắt active tất cả các nút
                 if (newsTabBtn) newsTabBtn.classList.remove('active');
                 if (calendarTabBtn) calendarTabBtn.classList.remove('active');
                 if (settingsBtn) settingsBtn.classList.remove('active');
@@ -1604,10 +1292,15 @@
                 bottomTabCalendar.classList.remove('active');
                 bottomTabChat.classList.remove('active');
                 bottomTabSettings.classList.remove('active');
+                
+                // 3. Ẩn các nút header mobile
                 if (rssMenuBtn) rssMenuBtn.classList.add('hidden');
                 if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.add('hidden');
+                
+                // 4. Ẩn nút Chat FAB (desktop)
                 chatFab.classList.add('hidden');
 
+                // 5. Xử lý hiển thị tab
                 switch (tabName) {
                     case 'news':
                         newsMain.classList.remove('hidden');
@@ -1619,7 +1312,7 @@
                         break;
                     case 'calendar':
                         calendarMain.classList.remove('hidden');
-                        if (calendarTabBtn) calendarTabBtn.classList.add('active'); 
+                        if (calendarTabBtn) calendarTabBtn.classList.add('active');
                         bottomTabCalendar.classList.add('active');
                         if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Lịch Làm Việc";
                         break;
@@ -1637,20 +1330,33 @@
                         break;
                 }
                 
+                // 6. (MỚI) Hiện lại nút Chat FAB (desktop) nếu không ở trang chat
+                if (window.innerWidth >= 640 && currentTab !== 'chat') {
+                    chatFab.classList.remove('hidden');
+                }
+                
+                // 7. Luôn đóng menu RSS
                 rssMobileMenu.classList.add('hidden');
             }
 
             // --- Gắn sự kiện cho TAB ---
+            
+            // Desktop
             if (newsTabBtn) newsTabBtn.addEventListener('click', () => showTab('news'));
-            if (calendarTabBtn) calendarTabBtn.addEventListener('click', () => showTab('calendar')); 
+            if (calendarTabBtn) calendarTabBtn.addEventListener('click', () => showTab('calendar'));
             if (settingsBtn) settingsBtn.addEventListener('click', () => showTab('settings'));
-            chatFab.addEventListener('click', () => showTab('chat')); 
+            chatFab.addEventListener('click', () => showTab('chat')); // (CẬP NHẬT)
+            
+            // Mobile (Bottom Nav)
             bottomTabNews.addEventListener('click', () => showTab('news'));
-            bottomTabCalendar.addEventListener('click', () => showTab('calendar')); 
-            bottomTabChat.addEventListener('click', () => showTab('chat')); 
+            bottomTabCalendar.addEventListener('click', () => showTab('calendar'));
+            bottomTabChat.addEventListener('click', () => showTab('chat')); // (MỚI)
             bottomTabSettings.addEventListener('click', () => showTab('settings'));
+            
+            // Mobile (Top Header)
             if (rssMenuBtn) rssMenuBtn.addEventListener('click', () => rssMobileMenu.classList.toggle('hidden'));
 
+            // (Hàm Tải lại)
             function handleRefreshClick() {
                 console.log("Đang yêu cầu tải lại...");
                 const activeButton = feedNav.querySelector('.feed-button.active');
@@ -1671,9 +1377,9 @@
 
                 const defaultFeed = feedNav.querySelector('.feed-button.active');
                 if (defaultFeed) {
-                    await fetchRSS(defaultFeed.dataset.rss, defaultFeed.dataset.source); // (SỬA LỖI) OK
+                    await fetchRSS(defaultFeed.dataset.rss, defaultFeed.dataset.source);
                 }
-                setTimeout(prewarmCache, 0); // (SỬA LỖI) OK
+                setTimeout(prewarmCache, 0);
 
                 closeSummaryModalButton.addEventListener('click', () => {
                      summaryModal.classList.add('hidden');
@@ -1696,14 +1402,18 @@
                      hideToast();
                  });
                  
+                // (XÓA) Sự kiện nút chat đã chuyển lên trên
+                // (XÓA) Sự kiện đóng modal chat đã bị xóa
                 chatForm.addEventListener('submit', handleSendChat);
             })();
             
             // --- KHỞI ĐỘNG (LỊCH) ---
             (async () => {
-                renderCalendar(currentViewDate); // (SỬA LỖI) OK
-                loadSettings(); // (SỬA LỖI) OK
+                renderCalendar(currentViewDate);
+                loadSettings();
                 
+                // (XÓA) Sự kiện đóng modal cài đặt đã bị xóa
+
                 notifyTimeNgay.addEventListener('change', (e) => {
                     appSettings.notifyTimeNgay = e.target.value;
                     saveSettings(); 
@@ -1816,22 +1526,14 @@
                     cal_aiForm.querySelector('button').disabled = false;
                     cal_aiForm.querySelector('button').textContent = "Phân tích";
                 });
-                
-                syncUpBtn.addEventListener('click', handleSyncUp);
-                syncDownBtn.addEventListener('click', handleSyncDown);
-                adminGetUsersBtn.addEventListener('click', handleAdminGetUsers);
-                adminUserList.addEventListener('click', handleAdminDeleteUser);
-                
             })();
             
             // --- KHỞI ĐỘNG (TAB) ---
-            (async () => {
-                if (window.location.hash === '#calendar') {
-                    showTab('calendar');
-                } else {
-                    showTab('news'); 
-                }
-            })();
+            if (window.location.hash === '#calendar') {
+                showTab('calendar');
+            } else {
+                showTab('news'); 
+            }
 
         }); 
     </script>
