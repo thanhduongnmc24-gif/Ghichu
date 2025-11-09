@@ -255,8 +255,8 @@
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://thethao247.vn/bong-da.rss" data-source="Thể Thao 247">Thể Thao 247</button>
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
                          <button id="refresh-feed-button" class="refresh-button" title="Tải lại tin tức">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
-                    </button>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
+                        </button>
                     </div>
                  </div>
              </div>
@@ -333,7 +333,7 @@
             </div>
         </section>
 
-        <section id="monthly-note-summary" class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mt-6">
+        <section id="monthly-note-summary" class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mt-6 sm:mb-0 mb-20">
             <h2 class="text-xl font-bold text-white mb-4">Tổng kết Ghi chú Tháng</h2>
             <div id="monthly-note-list" class="space-y-3">
                 <p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>
@@ -475,7 +475,7 @@
         </div>
     </div>
     
-    <button id="chat-fab" class="hidden sm:flex fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg items-center justify-center z-40 transition-transform transform hover:scale-110">
+    <button id="chat-fab" class="hidden sm:hidden fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg items-center justify-center z-40 transition-transform transform hover:scale-110">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
     </button>
     
@@ -1499,6 +1499,7 @@
             
             let currentTab = 'news'; // (MỚI) Theo dõi tab hiện tại
             
+            // (CẬP NHẬT 3/3) Đã xóa `chatInput.focus()` và khối `if (window.innerWidth ...)`
             // (CẬP NHẬT) Hàm showTab (Xử lý 4 trang)
             function showTab(tabName) {
                 if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
@@ -1557,7 +1558,7 @@
                         chatMain.classList.remove('hidden');
                         bottomTabChat.classList.add('active');
                         if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Trò chuyện";
-                        chatInput.focus();
+                        // ĐÃ XÓA: chatInput.focus();
                         break;
                     case 'settings':
                         settingsMain.classList.remove('hidden');
@@ -1573,10 +1574,7 @@
                         break;
                 }
                 
-                // 6. (MỚI) Hiện lại nút Chat FAB (desktop) nếu không ở trang chat
-                if (window.innerWidth >= 640 && currentTab !== 'chat') {
-                    chatFab.classList.remove('hidden');
-                }
+                // 6. (ĐÃ XÓA) Khối `if (window.innerWidth ...)`
                 
                 // 7. Luôn đóng menu RSS
                 rssMobileMenu.classList.add('hidden');
