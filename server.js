@@ -588,6 +588,7 @@ async function deleteSubscription(endpoint) {
 }
 
 // (ĐÃ CẬP NHẬT CHO IOS)
+// (ĐÃ CẬP NHẬT LOGIC HIỂN THỊ NỘI DUNG)
 let lastNotificationCheckTime = null;
 async function checkAndSendNotifications() {
     const { timeStr, dateStr } = getHanoiTime();
@@ -627,19 +628,33 @@ async function checkAndSendNotifications() {
         if (timeToAlert && timeStr === timeToAlert) {
             console.log(`Đang gửi thông báo ${todayShift} đến:`, endpoint);
             
+            // ==========================================================
+            // ===== (MỚI) BẮT ĐẦU LOGIC NỘI DUNG THÔNG BÁO =====
+            // ==========================================================
             const notesForToday = (notes && notes[dateStr]) ? notes[dateStr] : [];
-            let notesString = "";
+            let bodyContent = ""; // Dùng biến này
+
             if (notesForToday.length > 0) {
-                notesString = "\nGhi chú:\n" + notesForToday.join('\n');
+                // Nếu có ghi chú, chỉ hiện ghi chú
+                bodyContent = "Ghi chú:\n" + notesForToday.join('\n');
+            } else {
+                // Nếu không có ghi chú, hiện nội dung dự phòng
+                bodyContent = `Không có ghi chú cho hôm nay (${dateStr}).`;
             }
-            if (notesString.length > 150) {
-                notesString = notesString.substring(0, 150) + "...";
+            
+            // Cắt bớt nếu quá dài
+            if (bodyContent.length > 150) {
+                bodyContent = bodyContent.substring(0, 150) + "...";
             }
 
             const title = `Lịch Luân Phiên - Ca ${todayShift.toUpperCase()}`;
-            const body = `Hôm nay là ${dateStr}.${notesString}`;
+            const body = bodyContent; // Gán nội dung đã xử lý
+            // ==========================================================
+            // ===== (MỚI) KẾT THÚC LOGIC NỘI DUNG THÔNG BÁO =====
+            // ==========================================================
             
-            // --- Logic kiểm tra iOS ---
+
+            // --- Logic kiểm tra iOS (Giữ nguyên) ---
             let notificationPayload;
             if (endpoint.startsWith('https://web.push.apple.com')) {
                 // Định dạng APNs (Apple)
@@ -679,7 +694,6 @@ async function checkAndSendNotifications() {
     
     await Promise.all(sendPromises);
 }
-
 // Endpoint của Cron Job (Giữ lại để test, nhưng không dùng chính)
 app.get('/trigger-notifications', async (req, res) => {
     const cronSecret = req.headers['x-cron-secret'];
