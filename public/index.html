@@ -13,7 +13,7 @@
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 
     <style>
-        /* (Giữ nguyên toàn bộ CSS cũ) */
+        /* (Giữ nguyên toàn bộ CSS cũ, không thay đổi) */
         body {
             font-family: 'Inter', sans-serif;
             padding-bottom: 80px; 
@@ -279,60 +279,59 @@
         .sync-success { color: #34D399; }
         .sync-error { color: #F87171; }
         
-        /* (MỚI) CSS Cho Bảng Admin */
         #admin-user-list {
             margin-top: 1rem;
             max-height: 400px;
             overflow-y: auto;
-            background-color: #111827; /* bg-gray-900 */
-            padding: 0.75rem; /* p-3 */
-            border-radius: 0.5rem; /* rounded-lg */
+            background-color: #111827;
+            padding: 0.75rem; 
+            border-radius: 0.5rem; 
         }
         .admin-user-card {
-            background-color: #374151; /* bg-gray-700 */
-            padding: 0.75rem 1rem; /* p-3 md:p-4 */
-            border-radius: 0.5rem; /* rounded-lg */
-            margin-bottom: 0.75rem; /* mb-3 */
+            background-color: #374151; 
+            padding: 0.75rem 1rem; 
+            border-radius: 0.5rem; 
+            margin-bottom: 0.75rem; 
         }
         .admin-user-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.5rem; /* mb-2 */
+            margin-bottom: 0.5rem; 
         }
         .admin-user-name {
-            font-weight: 600; /* font-semibold */
-            color: #F3F4F6; /* text-gray-100 */
+            font-weight: 600; 
+            color: #F3F4F6; 
         }
         .admin-user-date {
-            font-size: 0.75rem; /* text-xs */
-            color: #9CA3AF; /* text-gray-400 */
+            font-size: 0.75rem; 
+            color: #9CA3AF; 
         }
         .admin-user-notes {
-            background-color: #1F2937; /* bg-gray-800 */
-            color: #E5E7EB; /* text-gray-200 */
-            padding: 0.5rem; /* p-2 */
-            border-radius: 0.375rem; /* rounded-md */
-            font-size: 0.875rem; /* text-sm */
+            background-color: #1F2937; 
+            color: #E5E7EB; 
+            padding: 0.5rem; 
+            border-radius: 0.375rem; 
+            font-size: 0.875rem; 
             max-height: 150px;
             overflow-y: auto;
-            white-space: pre-wrap; /* Hiển thị JSON đẹp */
+            white-space: pre-wrap; 
             word-break: break-all;
         }
         .admin-delete-btn {
-            background-color: #EF4444; /* bg-red-500 */
+            background-color: #EF4444; 
             color: white;
-            font-weight: 600; /* font-semibold */
-            font-size: 0.75rem; /* text-xs */
-            padding: 0.25rem 0.75rem; /* py-1 px-3 */
-            border-radius: 9999px; /* rounded-full */
+            font-weight: 600; 
+            font-size: 0.75rem; 
+            padding: 0.25rem 0.75rem; 
+            border-radius: 9999px; 
             transition: background-color 0.2s;
         }
         .admin-delete-btn:hover {
-            background-color: #DC2626; /* hover:bg-red-600 */
+            background-color: #DC2626; 
         }
         .admin-delete-btn:disabled {
-            background-color: #F87171; /* bg-red-400 */
+            background-color: #F87171; 
             opacity: 0.7;
         }
         
@@ -414,6 +413,7 @@
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-lg transition-colors flex-shrink-0">Phân tích</button>
             </form>
         </section>
+
         <section id="calendar-container" class="bg-white text-gray-900 rounded-lg shadow-lg p-4 md:p-6">
             <div id="calendar-header" class="flex justify-between items-center mb-4">
                 <button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600">
@@ -424,6 +424,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                 </button>
             </div>
+            
             <div class="overflow-x-auto">
                 <div class="min-w-[700px]"> 
                     <div id="calendar-weekdays" class="grid grid-cols-7 gap-1 md:gap-2 mb-2">
@@ -436,16 +437,18 @@
                         <div class="weekday sunday bg-gray-100 text-red-600 font-semibold text-sm p-3 rounded-lg text-center">CN</div>
                     </div>
                     <div id="calendar-body" class="grid grid-cols-7 gap-1 md:gap-2">
-                    </div>
+                        </div>
                 </div>
             </div>
         </section>
+
         <section id="monthly-note-summary" class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mt-6">
             <h2 class="text-xl font-bold text-white mb-4">Tổng kết Ghi chú Tháng</h2>
             <div id="monthly-note-list" class="space-y-3">
                 <p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>
             </div>
         </section>
+
     </main>
     
     <main id="chat-main" class="container mx-auto p-4 sm:p-8 hidden">
@@ -469,7 +472,7 @@
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full mx-auto">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-white">Cài đặt</h2>
-            </div>
+                </div>
             
             <fieldset class="border border-gray-600 p-4 rounded-lg">
                 <legend class="text-lg font-semibold text-white px-2">Thông báo Push</legend>
@@ -477,8 +480,11 @@
                     Bật Thông Báo
                 </button>
                 <p class="text-sm text-gray-400 mt-2 mb-4">Cho phép máy chủ gửi thông báo ngay cả khi đã đóng ứng dụng.</p>
+                
                 <hr class="border-gray-600 my-4">
+                
                 <h3 class="text-md font-semibold text-white mb-3">Giờ báo thức (sẽ gửi lên server):</h3>
+                
                 <label class="time-setting-label">
                     <span>Báo ca <strong>Ngày</strong> lúc:</span>
                     <input type="time" id="notify-time-ngay" value="06:00">
@@ -495,10 +501,13 @@
             
             <fieldset class="border border-gray-600 p-4 rounded-lg mt-6">
                 <legend class="text-lg font-semibold text-white px-2">Đồng bộ Online</legend>
+                
                 <label for="sync-username" class="sr-only">Tên đăng nhập</label>
                 <input type="text" id="sync-username" placeholder="Tên đăng nhập..." class="sync-input">
+                
                 <label for="sync-password" class="sr-only">Mật khẩu</label>
                 <input type="password" id="sync-password" placeholder="Mật khẩu..." class="sync-input">
+                
                 <div class="sync-button-group">
                     <button id="sync-up-btn" class="sync-button">
                         Tải Lên (Backup)
@@ -507,6 +516,7 @@
                         Tải Về (Restore)
                     </button>
                 </div>
+                
                 <p id="sync-message" class="sync-error"></p>
             </fieldset>
             
@@ -518,7 +528,7 @@
                 </button>
                 
                 <div id="admin-user-list">
-                    </div>
+                </div>
             </fieldset>
             
         </div>
@@ -526,10 +536,13 @@
 
     <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         </div>
+    
     <button id="chat-fab" class="hidden sm:flex fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white w-16 h-16 rounded-full shadow-lg items-center justify-center z-40 transition-transform transform hover:scale-110">
         </button>
+    
     <div id="summary-toast" class="hidden">
         </div>
+    
     <div id="note-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         </div>
 
@@ -559,13 +572,14 @@
             let vapidPublicKey = null; 
 
             // --- ĐĂNG KÝ SERVICE WORKER ---
-            // (Giữ nguyên)
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('/service-worker.js')
                     .then(async reg => {
                         console.log('Main Service Worker Registered!', reg);
                         swRegistration = reg; 
+                        
                         await getVapidPublicKey();
+                        
                         checkNotificationStatus();
                     })
                     .catch(err => console.error('Main Service Worker registration failed:', err));
@@ -575,7 +589,6 @@
             // PHẦN 0: KHAI BÁO BIẾN (DOM ELEMENTS)
             // ===================================================================
             
-            // (Giữ nguyên các biến cũ)
             const newsMain = document.getElementById('news-main');
             const newsGrid = document.getElementById('news-grid');
             const loadingSpinner = document.getElementById('loading-spinner');
@@ -631,342 +644,320 @@
             const syncUpBtn = document.getElementById('sync-up-btn');
             const syncDownBtn = document.getElementById('sync-down-btn');
             const syncMessage = document.getElementById('sync-message');
-            
-            // --- (MỚI) Biến Phần 6 (Admin) ---
             const adminPanelFieldset = document.getElementById('admin-panel-fieldset');
             const adminGetUsersBtn = document.getElementById('admin-get-users-btn');
             const adminUserList = document.getElementById('admin-user-list');
             
             // ===================================================================
-            // PHẦN 1: LOGIC TIN TỨC (Không thay đổi)
+            // PHẦN 1: LOGIC TIN TỨC
             // ===================================================================
-            // (Giữ nguyên toàn bộ code)
+            
+            // (ĐÃ XÓA) Xóa (function() {
+            
             const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
             const iconCheck = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
             const iconError = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+
             const clientRssCache = new Map();
             let chatHistory = [];
             let summaryEventSource = null;
             let completedSummary = { title: '', text: '' };
             let toastTimeoutId = null;
-            function callGeminiAPIStreaming(prompt, title) { /* ... */ }
-            async function callChatAPI() { /* ... */ }
-            async function fetchRSS(rssUrl, sourceName, { display = true, force = false } = {}) { /* ... */ }
-            function displayArticles(items, sourceName) { /* ... */ }
-            function handleFeedButtonClick(e) { /* ... */ }
-            function handleSummaryClick(title, description) { /* ... */ }
-            function showToast(mainMessage, detailMessage, state = 'ready', onClickAction, autoHideDelay = null) { /* ... */ }
-            function hideToast() { /* ... */ }
-            function showSummaryReadyNotification(title) { /* ... */ }
-            function renderChatHistory() { /* ... */ }
-            async function handleSendChat(e) { /* ... */ }
-            function resetChat() { /* ... */ }
-            function prewarmCache() { /* ... */ }
-            // (Sao chép và dán toàn bộ các hàm ở PHẦN 1 từ file trước)
-            (function() {
-                // Dán code các hàm PHẦN 1 vào đây
-                function callGeminiAPIStreaming(prompt, title) {
-                    if (summaryEventSource) {
-                        summaryEventSource.close();
-                    }
-                    let currentSummaryText = '';
-                    const encodedPrompt = encodeURIComponent(prompt);
-                    const streamUrl = `/summarize-stream?prompt=${encodedPrompt}`;
-                    summaryEventSource = new EventSource(streamUrl);
-                    summaryEventSource.onopen = () => console.log("Kết nối stream tóm tắt thành công!");
-                    summaryEventSource.onerror = (error) => {
-                        console.error("Lỗi kết nối EventSource:", error);
-                        showToast("Lỗi tóm tắt", "Không thể kết nối server.", 'error', null, 5000); 
-                        if (summaryEventSource) summaryEventSource.close();
-                        summaryEventSource = null;
-                    };
-                    summaryEventSource.onmessage = (event) => {
-                        try {
-                            const data = JSON.parse(event.data);
-                            if (data.text) {
-                                currentSummaryText += data.text;
-                            } else if (data.error) {
-                                console.error("Lỗi từ stream:", data.error);
-                                currentSummaryText += `\n\n[Lỗi: ${data.error}]`;
-                                if (summaryEventSource) summaryEventSource.close();
-                                summaryEventSource = null;
-                                showToast("Lỗi tóm tắt", data.error, 'error', null, 5000);
-                            } else if (data.done) {
-                                console.log("Stream tóm tắt hoàn thành.");
-                                if (summaryEventSource) summaryEventSource.close();
-                                summaryEventSource = null;
-                                completedSummary = { title: title, text: currentSummaryText };
-                                showSummaryReadyNotification(title); 
-                            }
-                        } catch (e) {
-                            console.error("Lỗi phân tích dữ liệu stream:", e, event.data);
+
+            function callGeminiAPIStreaming(prompt, title) {
+                if (summaryEventSource) {
+                    summaryEventSource.close();
+                }
+                let currentSummaryText = '';
+                const encodedPrompt = encodeURIComponent(prompt);
+                const streamUrl = `/summarize-stream?prompt=${encodedPrompt}`;
+                summaryEventSource = new EventSource(streamUrl);
+                summaryEventSource.onopen = () => console.log("Kết nối stream tóm tắt thành công!");
+                summaryEventSource.onerror = (error) => {
+                    console.error("Lỗi kết nối EventSource:", error);
+                    showToast("Lỗi tóm tắt", "Không thể kết nối server.", 'error', null, 5000); 
+                    if (summaryEventSource) summaryEventSource.close();
+                    summaryEventSource = null;
+                };
+                summaryEventSource.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.text) {
+                            currentSummaryText += data.text;
+                        } else if (data.error) {
+                            console.error("Lỗi từ stream:", data.error);
+                            currentSummaryText += `\n\n[Lỗi: ${data.error}]`;
                             if (summaryEventSource) summaryEventSource.close();
                             summaryEventSource = null;
-                            showToast("Lỗi tóm tắt", "Dữ liệu trả về không hợp lệ.", 'error', null, 5000);
+                            showToast("Lỗi tóm tắt", data.error, 'error', null, 5000);
+                        } else if (data.done) {
+                            console.log("Stream tóm tắt hoàn thành.");
+                            if (summaryEventSource) summaryEventSource.close();
+                            summaryEventSource = null;
+                            completedSummary = { title: title, text: currentSummaryText };
+                            showSummaryReadyNotification(title); 
                         }
-                    };
-                }
-                window.callGeminiAPIStreaming = callGeminiAPIStreaming;
-                async function callChatAPI() {
-                    const loadingBubble = document.createElement('div');
-                    loadingBubble.className = 'model-bubble';
-                    loadingBubble.innerHTML = `<div class="spinner border-t-white" style="width: 20px; height: 20px;"></div>`;
-                    chatDisplay.appendChild(loadingBubble);
+                    } catch (e) {
+                        console.error("Lỗi phân tích dữ liệu stream:", e, event.data);
+                        if (summaryEventSource) summaryEventSource.close();
+                        summaryEventSource = null;
+                        showToast("Lỗi tóm tắt", "Dữ liệu trả về không hợp lệ.", 'error', null, 5000);
+                    }
+                };
+            }
+            async function callChatAPI() {
+                const loadingBubble = document.createElement('div');
+                loadingBubble.className = 'model-bubble';
+                loadingBubble.innerHTML = `<div class="spinner border-t-white" style="width: 20px; height: 20px;"></div>`;
+                chatDisplay.appendChild(loadingBubble);
+                chatDisplay.scrollTop = chatDisplay.scrollHeight;
+                try {
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ history: chatHistory })
+                    });
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Lỗi server: ${errorText}`);
+                    }
+                    const result = await response.json();
+                    const answer = result.answer;
+                    chatHistory.push({ role: "model", parts: [{ text: answer }] });
+                    chatDisplay.removeChild(loadingBubble);
+                    renderChatHistory();
+                } catch (error) {
+                    console.error("Lỗi khi gọi API chat:", error);
+                    chatDisplay.removeChild(loadingBubble);
+                    const errorBubble = document.createElement('div');
+                    errorBubble.className = 'model-bubble';
+                    errorBubble.style.backgroundColor = '#991B1B';
+                    errorBubble.textContent = `Lỗi: ${error.message}`;
+                    chatDisplay.appendChild(errorBubble);
+                } finally {
                     chatDisplay.scrollTop = chatDisplay.scrollHeight;
-                    try {
-                        const response = await fetch('/chat', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ history: chatHistory })
-                        });
-                        if (!response.ok) {
-                            const errorText = await response.text();
-                            throw new Error(`Lỗi server: ${errorText}`);
-                        }
-                        const result = await response.json();
-                        const answer = result.answer;
-                        chatHistory.push({ role: "model", parts: [{ text: answer }] });
-                        chatDisplay.removeChild(loadingBubble);
-                        renderChatHistory();
-                    } catch (error) {
-                        console.error("Lỗi khi gọi API chat:", error);
-                        chatDisplay.removeChild(loadingBubble);
-                        const errorBubble = document.createElement('div');
-                        errorBubble.className = 'model-bubble';
-                        errorBubble.style.backgroundColor = '#991B1B';
-                        errorBubble.textContent = `Lỗi: ${error.message}`;
-                        chatDisplay.appendChild(errorBubble);
-                    } finally {
-                        chatDisplay.scrollTop = chatDisplay.scrollHeight;
-                    }
                 }
-                window.callChatAPI = callChatAPI;
-                async function fetchRSS(rssUrl, sourceName, { display = true, force = false } = {}) {
-                    if (display) {
-                        loadingSpinner.classList.remove('hidden');
-                        newsGrid.innerHTML = '';
-                    }
-                    if (force) {
-                        clientRssCache.delete(rssUrl);
-                        console.log(`[CACHE] Đã xóa ${rssUrl} do yêu cầu Tải lại.`);
-                    }
-                    if (clientRssCache.has(rssUrl)) {
-                        if (display) {
-                            displayArticles(clientRssCache.get(rssUrl), sourceName);
-                            loadingSpinner.classList.add('hidden');
-                        }
-                        return;
-                    }
-                    try {
-                        const response = await fetch(`/get-rss?url=${encodeURIComponent(rssUrl)}`);
-                        if (!response.ok) throw new Error('Lỗi server (RSS)');
-                        const str = await response.text();
-                        const parser = new DOMParser();
-                        const xmlDoc = parser.parseFromString(str, "text/xml");
-                        if (xmlDoc.getElementsByTagName("parsererror").length) throw new Error("Lỗi phân tích XML");
-                        let items;
-                        const itemNodes = xmlDoc.querySelectorAll("item");
-                        if (itemNodes.length === 0) {
-                            const entryNodes = xmlDoc.querySelectorAll("entry");
-                            if (entryNodes.length > 0) items = Array.from(entryNodes);
-                            else throw new Error("Không tìm thấy bài viết");
-                        } else {
-                             items = Array.from(itemNodes);
-                        }
-                        clientRssCache.set(rssUrl, items);
-                        if (display) displayArticles(items, sourceName);
-                    } catch (error) {
-                        console.error(`Lỗi tải RSS ${sourceName}:`, error);
-                        if (display) newsGrid.innerHTML = `<p class="text-red-400 col-span-full text-center">${error.message}</p>`;
-                    } finally {
-                        if (display) loadingSpinner.classList.add('hidden');
-                    }
-                }
-                window.fetchRSS = fetchRSS;
-                function displayArticles(items, sourceName) {
+            }
+            async function fetchRSS(rssUrl, sourceName, { display = true, force = false } = {}) {
+                if (display) {
+                    loadingSpinner.classList.remove('hidden');
                     newsGrid.innerHTML = '';
-                    items.forEach(item => {
-                        const title = item.querySelector("title")?.textContent || "Không có tiêu đề";
-                        let description = item.querySelector("description")?.textContent || item.querySelector("summary")?.textContent || item.querySelector("content")?.textContent || "";
-                        let link = item.querySelector("link")?.textContent || "#";
-                        if (link === "#" && item.querySelector("link")?.hasAttribute("href")) {
-                            link = item.querySelector("link")?.getAttribute("href") || "#";
-                        }
-                        const pubDate = item.querySelector("pubDate")?.textContent || item.querySelector("updated")?.textContent || "";
-                        const descParser = new DOMParser();
-                        const descDoc = descParser.parseFromString(`<!doctype html><body>${description}`, 'text/html');
-                        const img = descDoc.querySelector("img");
-                        const imgSrc = img ? img.src : "https://placehold.co/600x400/374151/9CA3AF?text=Tin+Tuc";
-                        let descriptionText = descDoc.body.textContent.trim() || "Không có mô tả.";
-                        if (descriptionText.startsWith(title)) {
-                            descriptionText = descriptionText.substring(title.length).trim();
-                        }
-                        const card = document.createElement('a');
-                        card.href = link;
-                        card.className = "bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-[1.03] hover:shadow-blue-500/20 block";
-                        card.innerHTML = `
-                            <img src="${imgSrc}" alt="${title}" class="w-full h-48 object-cover" onerror="this.src='https://placehold.co/600x400/374151/9CA3AF?text=Error';">
-                            <div class="p-5">
-                                <span class="text-xs font-semibold text-blue-400">${sourceName}</span>
-                                <h3 class="text-lg font-bold text-white mt-2 mb-1 leading-tight line-clamp-2">${title}</h3>
-                                <p class="text-sm text-gray-400 mt-2 mb-3 line-clamp-3">${descriptionText}</p>
-                                <div class="flex justify-between items-center mt-4">
-                                    <p class="text-sm text-gray-400">${pubDate ? new Date(pubDate).toLocaleString('vi-VN') : ''}</p>
-                                    <button class="summary-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded-full transition-all duration-200 z-10 relative">
-                                        Tóm tắt
-                                    </button>
-                                </div>
+                }
+                if (force) {
+                    clientRssCache.delete(rssUrl);
+                    console.log(`[CACHE] Đã xóa ${rssUrl} do yêu cầu Tải lại.`);
+                }
+                if (clientRssCache.has(rssUrl)) {
+                    if (display) {
+                        displayArticles(clientRssCache.get(rssUrl), sourceName);
+                        loadingSpinner.classList.add('hidden');
+                    }
+                    return;
+                }
+                try {
+                    const response = await fetch(`/get-rss?url=${encodeURIComponent(rssUrl)}`);
+                    if (!response.ok) throw new Error('Lỗi server (RSS)');
+                    const str = await response.text();
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(str, "text/xml");
+                    if (xmlDoc.getElementsByTagName("parsererror").length) throw new Error("Lỗi phân tích XML");
+                    let items;
+                    const itemNodes = xmlDoc.querySelectorAll("item");
+                    if (itemNodes.length === 0) {
+                        const entryNodes = xmlDoc.querySelectorAll("entry");
+                        if (entryNodes.length > 0) items = Array.from(entryNodes);
+                        else throw new Error("Không tìm thấy bài viết");
+                    } else {
+                         items = Array.from(itemNodes);
+                    }
+                    clientRssCache.set(rssUrl, items);
+                    if (display) displayArticles(items, sourceName);
+                } catch (error) {
+                    console.error(`Lỗi tải RSS ${sourceName}:`, error);
+                    if (display) newsGrid.innerHTML = `<p class="text-red-400 col-span-full text-center">${error.message}</p>`;
+                } finally {
+                    if (display) loadingSpinner.classList.add('hidden');
+                }
+            }
+            function displayArticles(items, sourceName) {
+                newsGrid.innerHTML = '';
+                items.forEach(item => {
+                    const title = item.querySelector("title")?.textContent || "Không có tiêu đề";
+                    let description = item.querySelector("description")?.textContent || item.querySelector("summary")?.textContent || item.querySelector("content")?.textContent || "";
+                    let link = item.querySelector("link")?.textContent || "#";
+                    if (link === "#" && item.querySelector("link")?.hasAttribute("href")) {
+                        link = item.querySelector("link")?.getAttribute("href") || "#";
+                    }
+                    const pubDate = item.querySelector("pubDate")?.textContent || item.querySelector("updated")?.textContent || "";
+                    const descParser = new DOMParser();
+                    const descDoc = descParser.parseFromString(`<!doctype html><body>${description}`, 'text/html');
+                    const img = descDoc.querySelector("img");
+                    const imgSrc = img ? img.src : "https://placehold.co/600x400/374151/9CA3AF?text=Tin+Tuc";
+                    let descriptionText = descDoc.body.textContent.trim() || "Không có mô tả.";
+                    if (descriptionText.startsWith(title)) {
+                        descriptionText = descriptionText.substring(title.length).trim();
+                    }
+                    const card = document.createElement('a');
+                    card.href = link;
+                    card.className = "bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-[1.03] hover:shadow-blue-500/20 block";
+                    card.innerHTML = `
+                        <img src="${imgSrc}" alt="${title}" class="w-full h-48 object-cover" onerror="this.src='https://placehold.co/600x400/374151/9CA3AF?text=Error';">
+                        <div class="p-5">
+                            <span class="text-xs font-semibold text-blue-400">${sourceName}</span>
+                            <h3 class="text-lg font-bold text-white mt-2 mb-1 leading-tight line-clamp-2">${title}</h3>
+                            <p class="text-sm text-gray-400 mt-2 mb-3 line-clamp-3">${descriptionText}</p>
+                            <div class="flex justify-between items-center mt-4">
+                                <p class="text-sm text-gray-400">${pubDate ? new Date(pubDate).toLocaleString('vi-VN') : ''}</p>
+                                <button class="summary-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded-full transition-all duration-200 z-10 relative">
+                                    Tóm tắt
+                                </button>
                             </div>
-                        `;
-                         card.addEventListener('click', (e) => {
-                             if (e.target.closest('.summary-btn')) {
-                                 return;
-                             }
-                             e.preventDefault();
-                             window.open(card.href, '_blank');
-                         });
-                        const summaryButton = card.querySelector('.summary-btn');
-                        summaryButton.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleSummaryClick(title, descriptionText);
-                        });
-                        newsGrid.appendChild(card);
+                        </div>
+                    `;
+                     card.addEventListener('click', (e) => {
+                         if (e.target.closest('.summary-btn')) {
+                             return;
+                         }
+                         e.preventDefault();
+                         window.open(card.href, '_blank');
+                     });
+                    const summaryButton = card.querySelector('.summary-btn');
+                    summaryButton.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSummaryClick(title, descriptionText);
                     });
+                    newsGrid.appendChild(card);
+                });
+            }
+            function handleFeedButtonClick(e) {
+                 const clickedButton = e.target.closest('.feed-button');
+                 if (!clickedButton || clickedButton.classList.contains('active')) return;
+                 const rssUrl = clickedButton.dataset.rss;
+                 const sourceName = clickedButton.dataset.source;
+                 document.querySelectorAll('#feed-nav .feed-button, #rss-mobile-menu .feed-button').forEach(btn => btn.classList.remove('active'));
+                 document.querySelectorAll(`.feed-button[data-rss="${rssUrl}"]`).forEach(btn => btn.classList.add('active'));
+                 window.scrollTo({ top: 0, behavior: 'smooth' });
+                 fetchRSS(rssUrl, sourceName);
+                 rssMobileMenu.classList.add('hidden'); 
+            }
+            function handleSummaryClick(title, description) {
+                if (!description || description === "Không có mô tả.") {
+                     showToast("Không thể tóm tắt", "Bài viết không có đủ nội dung.", 'error', null, 4000);
+                    return;
                 }
-                window.displayArticles = displayArticles;
-                function handleFeedButtonClick(e) {
-                     const clickedButton = e.target.closest('.feed-button');
-                     if (!clickedButton || clickedButton.classList.contains('active')) return;
-                     const rssUrl = clickedButton.dataset.rss;
-                     const sourceName = clickedButton.dataset.source;
-                     document.querySelectorAll('#feed-nav .feed-button, #rss-mobile-menu .feed-button').forEach(btn => btn.classList.remove('active'));
-                     document.querySelectorAll(`.feed-button[data-rss="${rssUrl}"]`).forEach(btn => btn.classList.add('active'));
-                     window.scrollTo({ top: 0, behavior: 'smooth' });
-                     fetchRSS(rssUrl, sourceName);
-                     rssMobileMenu.classList.add('hidden'); 
+                const prompt = `Tóm tắt nội dung sau đây trong khoảng 200 từ:
+                Tiêu đề: ${title}
+                Nội dung: ${description}`;
+                callGeminiAPIStreaming(prompt, title);
+                showToast("Đang tóm tắt...", title.substring(0, 50) + "...", 'loading', null, 5000);
+            }
+             function showToast(mainMessage, detailMessage, state = 'ready', onClickAction, autoHideDelay = null) {
+                 if (toastTimeoutId) clearTimeout(toastTimeoutId);
+                 toastMainMessage.textContent = mainMessage;
+                 toastTitle.textContent = detailMessage;
+                 summaryToast.classList.remove('toast-loading', 'bg-blue-600', 'bg-red-600');
+                 if (state === 'loading') {
+                     toastIcon.innerHTML = iconSpinner;
+                     summaryToast.classList.add('toast-loading'); 
+                     summaryToast.style.cursor = 'default';
+                     toastCta.style.display = 'none';
+                     summaryToast.onclick = null;
+                 } else if (state === 'ready') {
+                     toastIcon.innerHTML = iconCheck;
+                     summaryToast.classList.add('bg-blue-600'); 
+                     summaryToast.style.cursor = 'pointer';
+                     toastCta.style.display = 'block';
+                     summaryToast.onclick = onClickAction;
+                 } else if (state === 'error') {
+                     toastIcon.innerHTML = iconError;
+                     summaryToast.classList.add('bg-red-600'); 
+                     summaryToast.style.cursor = 'default';
+                     toastCta.style.display = 'none';
+                     summaryToast.onclick = null;
+                 }
+                 summaryToast.classList.remove('hidden');
+                 setTimeout(() => summaryToast.classList.add('show'), 50);
+                 if (autoHideDelay) {
+                     toastTimeoutId = setTimeout(hideToast, autoHideDelay);
+                 }
+             }
+             function hideToast() {
+                  if (toastTimeoutId) clearTimeout(toastTimeoutId);
+                  toastTimeoutId = null;
+                  summaryToast.classList.remove('show');
+                  setTimeout(() => {
+                      summaryToast.classList.add('hidden');
+                      summaryToast.classList.remove('toast-loading', 'bg-blue-600', 'bg-red-600');
+                  }, 300);
+                  summaryToast.onclick = null;
+             }
+             function showSummaryReadyNotification(title) {
+                  showToast(
+                      "Tóm tắt đã sẵn sàng!",
+                      title.substring(0, 50) + "...",
+                      'ready', 
+                      () => { 
+                          summaryTitleElement.textContent = completedSummary.title;
+                          summaryTextElement.textContent = completedSummary.text;
+                          summaryModal.classList.remove('hidden');
+                          hideToast();
+                      },
+                      null 
+                  );
+             }
+            function renderChatHistory() {
+                chatDisplay.innerHTML = '';
+                if (chatHistory.length === 0) {
+                     chatDisplay.innerHTML = `<div class="model-bubble">Chào đại ca, Tèo xin trả lời bất kỳ câu hỏi nào của đại ca?</div>`;
+                     return;
                 }
-                window.handleFeedButtonClick = handleFeedButtonClick;
-                function handleSummaryClick(title, description) {
-                    if (!description || description === "Không có mô tả.") {
-                         showToast("Không thể tóm tắt", "Bài viết không có đủ nội dung.", 'error', null, 4000);
-                        return;
+                chatHistory.forEach(message => {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'chat-bubble';
+                    if (message.role === 'user') {
+                        bubble.classList.add('user-bubble');
+                    } else {
+                        bubble.classList.add('model-bubble');
                     }
-                    const prompt = `Tóm tắt nội dung sau đây trong khoảng 200 từ:
-                    Tiêu đề: ${title}
-                    Nội dung: ${description}`;
-                    callGeminiAPIStreaming(prompt, title);
-                    showToast("Đang tóm tắt...", title.substring(0, 50) + "...", 'loading', null, 5000);
-                }
-                window.handleSummaryClick = handleSummaryClick;
-                 function showToast(mainMessage, detailMessage, state = 'ready', onClickAction, autoHideDelay = null) {
-                     if (toastTimeoutId) clearTimeout(toastTimeoutId);
-                     toastMainMessage.textContent = mainMessage;
-                     toastTitle.textContent = detailMessage;
-                     summaryToast.classList.remove('toast-loading', 'bg-blue-600', 'bg-red-600');
-                     if (state === 'loading') {
-                         toastIcon.innerHTML = iconSpinner;
-                         summaryToast.classList.add('toast-loading'); 
-                         summaryToast.style.cursor = 'default';
-                         toastCta.style.display = 'none';
-                         summaryToast.onclick = null;
-                     } else if (state === 'ready') {
-                         toastIcon.innerHTML = iconCheck;
-                         summaryToast.classList.add('bg-blue-600'); 
-                         summaryToast.style.cursor = 'pointer';
-                         toastCta.style.display = 'block';
-                         summaryToast.onclick = onClickAction;
-                     } else if (state === 'error') {
-                         toastIcon.innerHTML = iconError;
-                         summaryToast.classList.add('bg-red-600'); 
-                         summaryToast.style.cursor = 'default';
-                         toastCta.style.display = 'none';
-                         summaryToast.onclick = null;
-                     }
-                     summaryToast.classList.remove('hidden');
-                     setTimeout(() => summaryToast.classList.add('show'), 50);
-                     if (autoHideDelay) {
-                         toastTimeoutId = setTimeout(hideToast, autoHideDelay);
-                     }
-                 }
-                 window.showToast = showToast;
-                 function hideToast() {
-                      if (toastTimeoutId) clearTimeout(toastTimeoutId);
-                      toastTimeoutId = null;
-                      summaryToast.classList.remove('show');
-                      setTimeout(() => {
-                          summaryToast.classList.add('hidden');
-                          summaryToast.classList.remove('toast-loading', 'bg-blue-600', 'bg-red-600');
-                      }, 300);
-                      summaryToast.onclick = null;
-                 }
-                 window.hideToast = hideToast;
-                 function showSummaryReadyNotification(title) {
-                      showToast(
-                          "Tóm tắt đã sẵn sàng!",
-                          title.substring(0, 50) + "...",
-                          'ready', 
-                          () => { 
-                              summaryTitleElement.textContent = completedSummary.title;
-                              summaryTextElement.textContent = completedSummary.text;
-                              summaryModal.classList.remove('hidden');
-                              hideToast();
-                          },
-                          null 
-                      );
-                 }
-                 window.showSummaryReadyNotification = showSummaryReadyNotification;
-                function renderChatHistory() {
-                    chatDisplay.innerHTML = '';
-                    if (chatHistory.length === 0) {
-                         chatDisplay.innerHTML = `<div class="model-bubble">Chào đại ca, Tèo xin trả lời bất kỳ câu hỏi nào của đại ca?</div>`;
-                         return;
-                    }
-                    chatHistory.forEach(message => {
-                        const bubble = document.createElement('div');
-                        bubble.className = 'chat-bubble';
-                        if (message.role === 'user') {
-                            bubble.classList.add('user-bubble');
-                        } else {
-                            bubble.classList.add('model-bubble');
-                        }
-                        bubble.style.whiteSpace = "pre-wrap";
-                        bubble.textContent = message.parts[0].text;
-                        chatDisplay.appendChild(bubble);
-                    });
-                    chatDisplay.scrollTop = chatDisplay.scrollHeight;
-                }
-                window.renderChatHistory = renderChatHistory;
-                async function handleSendChat(e) {
-                    e.preventDefault();
-                    const prompt = chatInput.value.trim();
-                    if (!prompt) return;
-                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-                    renderChatHistory();
-                    chatInput.value = '';
-                    await callChatAPI();
-                }
-                window.handleSendChat = handleSendChat;
-                function resetChat() {
-                    chatHistory = [];
-                    renderChatHistory();
-                }
-                window.resetChat = resetChat;
-                function prewarmCache() {
-                    console.log("[Cache-Warmer] Bắt đầu tải nền các feed khác...");
-                    const feedsToPrewarm = Array.from(feedNav.querySelectorAll('.feed-button:not(.active)'));
-                    feedsToPrewarm.forEach(feed => {
-                        fetchRSS(feed.dataset.rss, feed.dataset.source, { display: false });
-                    });
-                }
-                window.prewarmCache = prewarmCache;
-            })();
+                    bubble.style.whiteSpace = "pre-wrap";
+                    bubble.textContent = message.parts[0].text;
+                    chatDisplay.appendChild(bubble);
+                });
+                chatDisplay.scrollTop = chatDisplay.scrollHeight;
+            }
+            async function handleSendChat(e) {
+                e.preventDefault();
+                const prompt = chatInput.value.trim();
+                if (!prompt) return;
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                renderChatHistory();
+                chatInput.value = '';
+                await callChatAPI();
+            }
+            function resetChat() {
+                chatHistory = [];
+                renderChatHistory();
+            }
+            function prewarmCache() {
+                console.log("[Cache-Warmer] Bắt đầu tải nền các feed khác...");
+                const feedsToPrewarm = Array.from(feedNav.querySelectorAll('.feed-button:not(.active)'));
+                feedsToPrewarm.forEach(feed => {
+                    fetchRSS(feed.dataset.rss, feed.dataset.source, { display: false });
+                });
+            }
+            
+            // (ĐÃ XÓA) Xóa })();
+            
             
             // ===================================================================
-            // PHẦN 2: LOGIC LỊCH (Không thay đổi)
+            // PHẦN 2: LOGIC LỊCH
             // ===================================================================
-            // (Giữ nguyên toàn bộ code)
+
+            // (ĐÃ XÓA) Xóa (function() {
+
             let currentEditingDateStr = null;
+
             let noteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
             let appSettings = JSON.parse(localStorage.getItem('myScheduleSettings')) || {
                 notifyTimeNgay: "06:00",
@@ -974,373 +965,314 @@
                 notifyTimeOff: "08:00"
             };
             let currentViewDate = new Date(); 
+
             const EPOCH_DAYS = dateToDays('2025-10-26');
             const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
-            function getLocalDateString(date) { /* ... */ }
-            function dateToDays(dateStr) { /* ... */ }
-            function saveNoteData() { /* ... */ }
-            function saveSettings() { /* ... */ }
-            function getShiftForDate(dateStr) { /* ... */ }
-            function loadSettings() { /* ... */ }
-            function renderCalendar(date) { /* ... */ }
-            function renderMonthlyNoteSummary(date) { /* ... */ }
-            function openNoteModal(dateStr) { /* ... */ }
-            function renderNoteList(dateStr) { /* ... */ }
-            function urlBase64ToUint8Array(base64String) { /* ... */ }
-            async function getVapidPublicKey() { /* ... */ }
-            async function checkNotificationStatus() { /* ... */ }
-            async function handleSubscribeClick() { /* ... */ }
-            async function updateSubscriptionSettings() { /* ... */ }
-            async function syncNotesToServer() { /* ... */ }
-            // (Sao chép và dán toàn bộ các hàm ở PHẦN 2 từ file trước)
-            (function() {
-                // Dán code các hàm PHẦN 2 vào đây
-                function getLocalDateString(date) {
-                    const year = date.getFullYear();
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const day = String(date.getDate()).padStart(2, '0');
-                    return `${year}-${month}-${day}`;
-                }
-                window.getLocalDateString = getLocalDateString;
-                
-                function dateToDays(dateStr) {
-                    const [year, month, day] = dateStr.split('-').map(Number);
-                    const date = new Date(year, month - 1, day);
-                    return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
-                }
-                window.dateToDays = dateToDays;
-                
-                function saveNoteData() {
-                    const cleanData = {};
-                    for (const date in noteData) {
-                        if (Array.isArray(noteData[date]) && noteData[date].length > 0) {
-                            cleanData[date] = noteData[date];
-                        }
+
+            function getLocalDateString(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            function dateToDays(dateStr) {
+                const [year, month, day] = dateStr.split('-').map(Number);
+                const date = new Date(year, month - 1, day);
+                return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
+            }
+            
+            function saveNoteData() {
+                const cleanData = {};
+                for (const date in noteData) {
+                    if (Array.isArray(noteData[date]) && noteData[date].length > 0) {
+                        cleanData[date] = noteData[date];
                     }
-                    localStorage.setItem('myScheduleNotes', JSON.stringify(cleanData));
-                    
-                    syncNotesToServer().catch(err => console.error('Lỗi đồng bộ ghi chú:', err));
                 }
-                window.saveNoteData = saveNoteData;
-                function saveSettings() {
-                    localStorage.setItem('myScheduleSettings', JSON.stringify(appSettings));
-                    updateSubscriptionSettings();
-                }
-                window.saveSettings = saveSettings;
-                function getShiftForDate(dateStr) {
-                    const currentDays = dateToDays(dateStr);
-                    const diffDays = currentDays - EPOCH_DAYS;
-                    const patternIndex = (diffDays % SHIFT_PATTERN.length + SHIFT_PATTERN.length) % SHIFT_PATTERN.length;
-                    return SHIFT_PATTERN[patternIndex];
-                }
-                window.getShiftForDate = getShiftForDate;
-                function loadSettings() {
-                    notifyTimeNgay.value = appSettings.notifyTimeNgay;
-                    notifyTimeDem.value = appSettings.notifyTimeDem;
-                    notifyTimeOff.value = appSettings.notifyTimeOff;
-                }
-                window.loadSettings = loadSettings;
-                function renderCalendar(date) {
-                    calendarBody.innerHTML = '';
-                    const year = date.getFullYear();
-                    const month = date.getMonth(); 
+                localStorage.setItem('myScheduleNotes', JSON.stringify(cleanData));
+                
+                syncNotesToServer().catch(err => console.error('Lỗi đồng bộ ghi chú:', err));
+            }
+            function saveSettings() {
+                localStorage.setItem('myScheduleSettings', JSON.stringify(appSettings));
+                updateSubscriptionSettings();
+            }
+            function getShiftForDate(dateStr) {
+                const currentDays = dateToDays(dateStr);
+                const diffDays = currentDays - EPOCH_DAYS;
+                const patternIndex = (diffDays % SHIFT_PATTERN.length + SHIFT_PATTERN.length) % SHIFT_PATTERN.length;
+                return SHIFT_PATTERN[patternIndex];
+            }
+            function loadSettings() {
+                notifyTimeNgay.value = appSettings.notifyTimeNgay;
+                notifyTimeDem.value = appSettings.notifyTimeDem;
+                notifyTimeOff.value = appSettings.notifyTimeOff;
+            }
+            function renderCalendar(date) {
+                calendarBody.innerHTML = '';
+                const year = date.getFullYear();
+                const month = date.getMonth(); 
 
-                    currentMonthYearEl.textContent = `Tháng ${month + 1} ${year}`;
-                    const firstDayOfMonth = new Date(year, month, 1);
+                currentMonthYearEl.textContent = `Tháng ${month + 1} ${year}`;
+                const firstDayOfMonth = new Date(year, month, 1);
+                
+                let firstDayOfWeek = firstDayOfMonth.getDay();
+                if (firstDayOfWeek === 0) firstDayOfWeek = 7; 
+
+                const startDate = new Date(firstDayOfMonth);
+                startDate.setDate(firstDayOfMonth.getDate() - (firstDayOfWeek - 1));
+
+                const todayStr = getLocalDateString(new Date());
+
+                for (let i = 0; i < 42; i++) {
+                    const dayCell = document.createElement('div');
+                    dayCell.className = "bg-white rounded-lg p-2 min-h-[100px] flex flex-col justify-start relative cursor-pointer hover:bg-gray-50 transition-colors border border-gray-200";
+                    const currentDate = new Date(startDate);
+                    currentDate.setDate(startDate.getDate() + i);
+                    const dateStr = getLocalDateString(currentDate);
+                    const day = currentDate.getDate();
                     
-                    let firstDayOfWeek = firstDayOfMonth.getDay();
-                    if (firstDayOfWeek === 0) firstDayOfWeek = 7; 
-
-                    const startDate = new Date(firstDayOfMonth);
-                    startDate.setDate(firstDayOfMonth.getDate() - (firstDayOfWeek - 1));
-
-                    const todayStr = getLocalDateString(new Date());
-
-                    for (let i = 0; i < 42; i++) {
-                        const dayCell = document.createElement('div');
-                        dayCell.className = "bg-white rounded-lg p-2 min-h-[100px] flex flex-col justify-start relative cursor-pointer hover:bg-gray-50 transition-colors border border-gray-200";
-                        const currentDate = new Date(startDate);
-                        currentDate.setDate(startDate.getDate() + i);
-                        const dateStr = getLocalDateString(currentDate);
-                        const day = currentDate.getDate();
-                        
-                        const dayNumberEl = document.createElement('span');
-                        dayNumberEl.className = 'day-number font-semibold text-lg text-gray-800'; 
-                        dayNumberEl.textContent = day;
-                        dayCell.appendChild(dayNumberEl);
-                        
-                        dayCell.dataset.date = dateStr; 
-
-                        if (currentDate.getMonth() !== month) {
-                            dayCell.classList.add('other-month', 'bg-gray-50', 'opacity-70', 'cursor-default'); 
-                            dayCell.classList.remove('hover:bg-gray-50', 'cursor-pointer');
-                            dayNumberEl.classList.add('text-gray-400'); 
-                            dayNumberEl.classList.remove('text-gray-800');
-                        } else {
-                            const shift = getShiftForDate(dateStr);
-                            const notes = noteData[dateStr] || []; 
-
-                            if (shift === 'giãn ca') {
-                                dayCell.classList.add('bg-yellow-100'); 
-                                dayCell.classList.remove('bg-white');
-                            } else if (shift === 'off') {
-                                dayCell.classList.add('bg-gray-100'); 
-                                dayCell.classList.remove('bg-white');
-                            } else {
-                                const shiftEl = document.createElement('span');
-                                shiftEl.className = 'day-shift text-xs font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full self-start mt-1';
-                                shiftEl.textContent = shift;
-                                dayCell.appendChild(shiftEl);
-                            }
-                            
-                            if (notes.length > 0) {
-                                const noteListEl = document.createElement('ul');
-                                noteListEl.className = 'day-note-list';
-                                notes.forEach(noteText => {
-                                    const noteEl = document.createElement('li');
-                                    noteEl.className = 'day-note'; 
-                                    noteEl.textContent = noteText;
-                                    noteListEl.appendChild(noteEl);
-                                });
-                                dayCell.appendChild(noteListEl);
-                            }
-                            
-                            if (dateStr === todayStr) {
-                                dayCell.classList.add('today', 'border-2', 'border-blue-500'); 
-                                dayNumberEl.classList.add('text-blue-600'); 
-                                dayNumberEl.classList.remove('text-gray-800');
-                            }
-
-                            dayCell.addEventListener('click', () => {
-                                openNoteModal(dateStr);
-                            });
-                        }
-                        calendarBody.appendChild(dayCell);
-                    }
+                    const dayNumberEl = document.createElement('span');
+                    dayNumberEl.className = 'day-number font-semibold text-lg text-gray-800'; 
+                    dayNumberEl.textContent = day;
+                    dayCell.appendChild(dayNumberEl);
                     
-                    renderMonthlyNoteSummary(date); 
-                }
-                window.renderCalendar = renderCalendar;
-                function renderMonthlyNoteSummary(date) {
-                    const monthlyNoteList = document.getElementById('monthly-note-list');
-                    if (!monthlyNoteList) return; 
+                    dayCell.dataset.date = dateStr; 
 
-                    monthlyNoteList.innerHTML = ''; 
-                    
-                    const year = date.getFullYear();
-                    const month = date.getMonth();
-                    const daysInMonth = new Date(year, month + 1, 0).getDate();
-                    const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-                    
-                    const daysWithNotes = []; 
-                    for (let day = 1; day <= daysInMonth; day++) {
-                        const currentDate = new Date(year, month, day);
-                        const dateStr = getLocalDateString(currentDate); 
+                    if (currentDate.getMonth() !== month) {
+                        dayCell.classList.add('other-month', 'bg-gray-50', 'opacity-70', 'cursor-default'); 
+                        dayCell.classList.remove('hover:bg-gray-50', 'cursor-pointer');
+                        dayNumberEl.classList.add('text-gray-400'); 
+                        dayNumberEl.classList.remove('text-gray-800');
+                    } else {
+                        const shift = getShiftForDate(dateStr);
                         const notes = noteData[dateStr] || []; 
 
-                        if (notes.length > 0) {
-                            const dayName = daysOfWeek[currentDate.getDay()]; 
-                            const dateDisplay = `${currentDate.getDate()}/${currentDate.getMonth() + 1}`; 
-                            const shift = getShiftForDate(dateStr); 
-                            let shiftDisplay = shift; 
-                            if (shift === 'ngày' || shift === 'đêm') {
-                                shiftDisplay = `ca ${shift}`; 
-                            }
-                            const datePrefix = `${dayName} ngày ${dateDisplay} (${shiftDisplay}): `;
-                            daysWithNotes.push({ 
-                                datePrefix: datePrefix, 
-                                notes: notes 
-                            });
+                        if (shift === 'giãn ca') {
+                            dayCell.classList.add('bg-yellow-100'); 
+                            dayCell.classList.remove('bg-white');
+                        } else if (shift === 'off') {
+                            dayCell.classList.add('bg-gray-100'); 
+                            dayCell.classList.remove('bg-white');
+                        } else {
+                            const shiftEl = document.createElement('span');
+                            shiftEl.className = 'day-shift text-xs font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full self-start mt-1';
+                            shiftEl.textContent = shift;
+                            dayCell.appendChild(shiftEl);
                         }
-                    }
-
-                    if (daysWithNotes.length === 0) {
-                        monthlyNoteList.style.display = 'block';
-                        monthlyNoteList.className = ''; 
-                        monthlyNoteList.style.gridTemplateColumns = '';
-                        monthlyNoteList.innerHTML = `<p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>`;
-                    
-                    } else {
-                        monthlyNoteList.style.display = 'grid';
-                        monthlyNoteList.className = 'grid gap-2'; 
-                        monthlyNoteList.style.gridTemplateColumns = 'auto 1fr';
-
-                        daysWithNotes.forEach(dayData => {
-                            
-                            const prefixWrapper = document.createElement('div');
-                            prefixWrapper.className = 'bg-gray-700 rounded-md text-gray-200 text-sm p-2 whitespace-nowrap';
-                            prefixWrapper.textContent = dayData.datePrefix;
-                            
-                            const contentWrapper = document.createElement('div');
-                            contentWrapper.className = 'bg-gray-700 rounded-md text-sm text-gray-200 divide-y divide-gray-600'; 
-                            
-                            dayData.notes.forEach(noteText => {
-                                const noteEl = document.createElement('p');
-                                noteEl.className = 'p-2'; 
+                        
+                        if (notes.length > 0) {
+                            const noteListEl = document.createElement('ul');
+                            noteListEl.className = 'day-note-list';
+                            notes.forEach(noteText => {
+                                const noteEl = document.createElement('li');
+                                noteEl.className = 'day-note'; 
                                 noteEl.textContent = noteText;
-                                contentWrapper.appendChild(noteEl);
+                                noteListEl.appendChild(noteEl);
                             });
+                            dayCell.appendChild(noteListEl);
+                        }
+                        
+                        if (dateStr === todayStr) {
+                            dayCell.classList.add('today', 'border-2', 'border-blue-500'); 
+                            dayNumberEl.classList.add('text-blue-600'); 
+                            dayNumberEl.classList.remove('text-gray-800');
+                        }
 
-                            monthlyNoteList.appendChild(prefixWrapper);
-                            monthlyNoteList.appendChild(contentWrapper);
+                        dayCell.addEventListener('click', () => {
+                            openNoteModal(dateStr);
+                        });
+                    }
+                    calendarBody.appendChild(dayCell);
+                }
+                
+                renderMonthlyNoteSummary(date); 
+            }
+            function renderMonthlyNoteSummary(date) {
+                const monthlyNoteList = document.getElementById('monthly-note-list');
+                if (!monthlyNoteList) return; 
+
+                monthlyNoteList.innerHTML = ''; 
+                
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const daysOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+                
+                const daysWithNotes = []; 
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const currentDate = new Date(year, month, day);
+                    const dateStr = getLocalDateString(currentDate); 
+                    const notes = noteData[dateStr] || []; 
+
+                    if (notes.length > 0) {
+                        const dayName = daysOfWeek[currentDate.getDay()]; 
+                        const dateDisplay = `${currentDate.getDate()}/${currentDate.getMonth() + 1}`; 
+                        const shift = getShiftForDate(dateStr); 
+                        let shiftDisplay = shift; 
+                        if (shift === 'ngày' || shift === 'đêm') {
+                            shiftDisplay = `ca ${shift}`; 
+                        }
+                        const datePrefix = `${dayName} ngày ${dateDisplay} (${shiftDisplay}): `;
+                        daysWithNotes.push({ 
+                            datePrefix: datePrefix, 
+                            notes: notes 
                         });
                     }
                 }
-                window.renderMonthlyNoteSummary = renderMonthlyNoteSummary;
-                function openNoteModal(dateStr) {
-                    const date = new Date(dateStr + 'T12:00:00'); 
-                    noteModal.style.display = 'flex';
-                    noteModalTitle.textContent = `Cập nhật (${date.toLocaleDateString('vi-VN')})`;
-                    currentEditingDateStr = dateStr; 
-                    const shift = getShiftForDate(dateStr);
-                    modalShiftInfo.innerHTML = `Ca tự động: <strong>${shift.toUpperCase()}</strong>`;
-                    renderNoteList(dateStr);
-                    newNoteInput.value = ''; 
-                    newNoteInput.focus();
-                }
-                window.openNoteModal = openNoteModal;
-                function renderNoteList(dateStr) {
-                    noteList.innerHTML = ''; 
-                    const notes = noteData[dateStr] || [];
-                    if (notes.length === 0) {
-                        noteList.innerHTML = `<li class="text-gray-400 text-sm italic">Không có ghi chú.</li>`;
-                        return;
-                    }
-                    notes.forEach((noteText, index) => {
-                        const li = document.createElement('li');
-                        li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded';
-                        li.innerHTML = `
-                            <span class="text-gray-100">${noteText}</span>
-                            <div class="flex-shrink-0 ml-2">
-                                <button data-index="${index}" class="edit-note text-blue-400 hover:text-blue-300 text-xs font-medium mr-2">Sửa</button>
-                                <button data-index="${index}" class="delete-note text-red-400 hover:text-red-300 text-xs font-medium">Xóa</button>
-                            </div>
-                        `;
-                        noteList.appendChild(li);
+
+                if (daysWithNotes.length === 0) {
+                    monthlyNoteList.style.display = 'block';
+                    monthlyNoteList.className = ''; 
+                    monthlyNoteList.style.gridTemplateColumns = '';
+                    monthlyNoteList.innerHTML = `<p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>`;
+                
+                } else {
+                    monthlyNoteList.style.display = 'grid';
+                    monthlyNoteList.className = 'grid gap-2'; 
+                    monthlyNoteList.style.gridTemplateColumns = 'auto 1fr';
+
+                    daysWithNotes.forEach(dayData => {
+                        
+                        const prefixWrapper = document.createElement('div');
+                        prefixWrapper.className = 'bg-gray-700 rounded-md text-gray-200 text-sm p-2 whitespace-nowrap';
+                        prefixWrapper.textContent = dayData.datePrefix;
+                        
+                        const contentWrapper = document.createElement('div');
+                        contentWrapper.className = 'bg-gray-700 rounded-md text-sm text-gray-200 divide-y divide-gray-600'; 
+                        
+                        dayData.notes.forEach(noteText => {
+                            const noteEl = document.createElement('p');
+                            noteEl.className = 'p-2'; 
+                            noteEl.textContent = noteText;
+                            contentWrapper.appendChild(noteEl);
+                        });
+
+                        monthlyNoteList.appendChild(prefixWrapper);
+                        monthlyNoteList.appendChild(contentWrapper);
                     });
                 }
-                window.renderNoteList = renderNoteList;
-                function urlBase64ToUint8Array(base64String) {
-                    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-                    const base64 = (base64String + padding)
-                        .replace(/-/g, '+')
-                        .replace(/_/g, '/');
-                    const rawData = window.atob(base64);
-                    const outputArray = new Uint8Array(rawData.length);
-                    for (let i = 0; i < rawData.length; ++i) {
-                        outputArray[i] = rawData.charCodeAt(i);
-                    }
-                    return outputArray;
+            }
+            function openNoteModal(dateStr) {
+                const date = new Date(dateStr + 'T12:00:00'); 
+                noteModal.style.display = 'flex';
+                noteModalTitle.textContent = `Cập nhật (${date.toLocaleDateString('vi-VN')})`;
+                currentEditingDateStr = dateStr; 
+                const shift = getShiftForDate(dateStr);
+                modalShiftInfo.innerHTML = `Ca tự động: <strong>${shift.toUpperCase()}</strong>`;
+                renderNoteList(dateStr);
+                newNoteInput.value = ''; 
+                newNoteInput.focus();
+            }
+            function renderNoteList(dateStr) {
+                noteList.innerHTML = ''; 
+                const notes = noteData[dateStr] || [];
+                if (notes.length === 0) {
+                    noteList.innerHTML = `<li class="text-gray-400 text-sm italic">Không có ghi chú.</li>`;
+                    return;
                 }
-                window.urlBase64ToUint8Array = urlBase64ToUint8Array;
-                async function getVapidPublicKey() {
+                notes.forEach((noteText, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded';
+                    li.innerHTML = `
+                        <span class="text-gray-100">${noteText}</span>
+                        <div class="flex-shrink-0 ml-2">
+                            <button data-index="${index}" class="edit-note text-blue-400 hover:text-blue-300 text-xs font-medium mr-2">Sửa</button>
+                            <button data-index="${index}" class="delete-note text-red-400 hover:text-red-300 text-xs font-medium">Xóa</button>
+                        </div>
+                    `;
+                    noteList.appendChild(li);
+                });
+            }
+            function urlBase64ToUint8Array(base64String) {
+                const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                const base64 = (base64String + padding)
+                    .replace(/-/g, '+')
+                    .replace(/_/g, '/');
+                const rawData = window.atob(base64);
+                const outputArray = new Uint8Array(rawData.length);
+                for (let i = 0; i < rawData.length; ++i) {
+                    outputArray[i] = rawData.charCodeAt(i);
+                }
+                return outputArray;
+            }
+            async function getVapidPublicKey() {
+                try {
+                    const response = await fetch('/vapid-public-key');
+                    vapidPublicKey = await response.text();
+                    console.log("Đã lấy VAPID Public Key.");
+                } catch (err) {
+                    console.error("Lỗi khi lấy VAPID Public Key:", err);
+                }
+            }
+            async function checkNotificationStatus() {
+                if (!swRegistration) return;
+                const subscription = await swRegistration.pushManager.getSubscription();
+                if (subscription) {
+                    console.log("Người dùng đã đăng ký.");
+                    notifyButton.textContent = "Tắt Thông Báo";
+                    notifyButton.classList.add('subscribed');
+                } else {
+                    console.log("Người dùng chưa đăng ký.");
+                    notifyButton.textContent = "Bật Thông Báo";
+                    notifyButton.classList.remove('subscribed');
+                }
+            }
+            async function handleSubscribeClick() {
+                if (!swRegistration || !vapidPublicKey) {
+                    alert("Service Worker hoặc VAPID Key chưa sẵn sàng. Vui lòng thử lại.");
+                    return;
+                }
+                
+                const existingSubscription = await swRegistration.pushManager.getSubscription();
+
+                if (existingSubscription) {
+                    console.log("Đang hủy đăng ký...");
+                    notifyButton.disabled = true;
                     try {
-                        const response = await fetch('/vapid-public-key');
-                        vapidPublicKey = await response.text();
-                        console.log("Đã lấy VAPID Public Key.");
-                    } catch (err) {
-                        console.error("Lỗi khi lấy VAPID Public Key:", err);
-                    }
-                }
-                window.getVapidPublicKey = getVapidPublicKey;
-                async function checkNotificationStatus() {
-                    if (!swRegistration) return;
-                    const subscription = await swRegistration.pushManager.getSubscription();
-                    if (subscription) {
-                        console.log("Người dùng đã đăng ký.");
-                        notifyButton.textContent = "Tắt Thông Báo";
-                        notifyButton.classList.add('subscribed');
-                    } else {
-                        console.log("Người dùng chưa đăng ký.");
-                        notifyButton.textContent = "Bật Thông Báo";
-                        notifyButton.classList.remove('subscribed');
-                    }
-                }
-                window.checkNotificationStatus = checkNotificationStatus;
-                async function handleSubscribeClick() {
-                    if (!swRegistration || !vapidPublicKey) {
-                        alert("Service Worker hoặc VAPID Key chưa sẵn sàng. Vui lòng thử lại.");
-                        return;
-                    }
-                    const existingSubscription = await swRegistration.pushManager.getSubscription();
-                    if (existingSubscription) {
-                        console.log("Đang hủy đăng ký...");
-                        notifyButton.disabled = true;
-                        try {
-                            const unsubscribed = await existingSubscription.unsubscribe();
-                            if (unsubscribed) {
-                                await fetch('/unsubscribe', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ endpoint: existingSubscription.endpoint })
-                                });
-                                console.log("Đã hủy đăng ký thành công.");
-                                alert("Đã tắt thông báo.");
-                            }
-                        } catch (err) {
-                            console.error("Lỗi khi hủy đăng ký:", err);
-                            alert("Lỗi khi tắt thông báo.");
-                        }
-                    } else {
-                        console.log("Đang đăng ký mới...");
-                        notifyButton.disabled = true;
-                        const permission = await Notification.requestPermission();
-                        if (permission !== 'granted') {
-                            alert("Đại ca đã từ chối quyền thông báo. Vui lòng bật thủ công trong cài đặt trình duyệt.");
-                            notifyButton.disabled = false;
-                            return;
-                        }
-                        try {
-                            const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
-                            const subscription = await swRegistration.pushManager.subscribe({
-                                userVisibleOnly: true,
-                                applicationServerKey: applicationServerKey
-                            });
-                            const settings = {
-                                notifyTimeNgay: notifyTimeNgay.value,
-                                notifyTimeDem: notifyTimeDem.value,
-                                notifyTimeOff: notifyTimeOff.value
-                            };
-                            const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
-                            const noteData = JSON.parse(noteDataStr);
-                            await fetch('/subscribe', {
+                        const unsubscribed = await existingSubscription.unsubscribe();
+                        if (unsubscribed) {
+                            await fetch('/unsubscribe', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ 
-                                    subscription: subscription, 
-                                    settings: settings,
-                                    noteData: noteData 
-                                })
+                                body: JSON.stringify({ endpoint: existingSubscription.endpoint })
                             });
-                            console.log("Đã đăng ký và gửi (cả ghi chú) lên server.");
-                            alert("Đã bật thông báo thành công!");
-                        } catch (err) {
-                            console.error("Lỗi khi đăng ký push:", err);
-                            alert("Lỗi khi bật thông báo. Key hoặc Service Worker có vấn đề.");
+                            console.log("Đã hủy đăng ký thành công.");
+                            alert("Đã tắt thông báo.");
                         }
+                    } catch (err) {
+                        console.error("Lỗi khi hủy đăng ký:", err);
+                        alert("Lỗi khi tắt thông báo.");
                     }
-                    notifyButton.disabled = false;
-                    checkNotificationStatus(); 
-                }
-                window.handleSubscribeClick = handleSubscribeClick;
-                async function updateSubscriptionSettings() {
-                    if (!swRegistration) return;
-                    const subscription = await swRegistration.pushManager.getSubscription();
-                    if (!subscription) {
-                        console.log("Chưa đăng ký, không cần cập nhật settings.");
+                } else {
+                    console.log("Đang đăng ký mới...");
+                    notifyButton.disabled = true;
+                    
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') {
+                        alert("Đại ca đã từ chối quyền thông báo. Vui lòng bật thủ công trong cài đặt trình duyệt.");
+                        notifyButton.disabled = false;
                         return;
                     }
-                    console.log("Đang cập nhật settings (giờ) lên server...");
+
                     try {
+                        const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+                        const subscription = await swRegistration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: applicationServerKey
+                        });
+                        
                         const settings = {
                             notifyTimeNgay: notifyTimeNgay.value,
                             notifyTimeDem: notifyTimeDem.value,
                             notifyTimeOff: notifyTimeOff.value
                         };
+                        
                         const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
                         const noteData = JSON.parse(noteDataStr);
-                        await fetch('/subscribe', { 
-                            method: 'POST', 
+                        
+                        await fetch('/subscribe', {
+                            method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ 
                                 subscription: subscription, 
@@ -1348,39 +1280,83 @@
                                 noteData: noteData 
                             })
                         });
-                        console.log("Đã cập nhật settings (và ghi chú) trên server.");
-                    } catch (err) {
-                        console.error("Lỗi khi cập nhật settings:", err);
-                    }
-                }
-                window.updateSubscriptionSettings = updateSubscriptionSettings;
-                async function syncNotesToServer() {
-                    if (!swRegistration) return;
-                    const subscription = await swRegistration.pushManager.getSubscription();
-                    if (!subscription) {
-                        return;
-                    }
-                    console.log("Đang đồng bộ ghi chú lên server...");
-                    try {
-                        const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
-                        const noteData = JSON.parse(noteDataStr);
-                        await fetch('/update-notes', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                endpoint: subscription.endpoint, 
-                                noteData: noteData
-                            })
-                        });
-                        console.log("Đồng bộ ghi chú thành công.");
-                    } catch (err) {
-                        console.error("Lỗi khi đồng bộ ghi chú:", err);
-                    }
-                }
-                window.syncNotesToServer = syncNotesToServer;
-            })();
+                        
+                        console.log("Đã đăng ký và gửi (cả ghi chú) lên server.");
+                        alert("Đã bật thông báo thành công!");
 
-            
+                    } catch (err) {
+                        console.error("Lỗi khi đăng ký push:", err);
+                        alert("Lỗi khi bật thông báo. Key hoặc Service Worker có vấn đề.");
+                    }
+                }
+                
+                notifyButton.disabled = false;
+                checkNotificationStatus(); 
+            }
+            async function updateSubscriptionSettings() {
+                if (!swRegistration) return;
+                const subscription = await swRegistration.pushManager.getSubscription();
+                
+                if (!subscription) {
+                    console.log("Chưa đăng ký, không cần cập nhật settings.");
+                    return;
+                }
+                
+                console.log("Đang cập nhật settings (giờ) lên server...");
+                try {
+                    const settings = {
+                        notifyTimeNgay: notifyTimeNgay.value,
+                        notifyTimeDem: notifyTimeDem.value,
+                        notifyTimeOff: notifyTimeOff.value
+                    };
+
+                    const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
+                    const noteData = JSON.parse(noteDataStr);
+                    
+                    await fetch('/subscribe', { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            subscription: subscription, 
+                            settings: settings,
+                            noteData: noteData 
+                        })
+                    });
+                    console.log("Đã cập nhật settings (và ghi chú) trên server.");
+                } catch (err) {
+                    console.error("Lỗi khi cập nhật settings:", err);
+                }
+            }
+            async function syncNotesToServer() {
+                if (!swRegistration) return;
+                const subscription = await swRegistration.pushManager.getSubscription();
+                
+                if (!subscription) {
+                    return;
+                }
+                
+                console.log("Đang đồng bộ ghi chú lên server...");
+                try {
+                    const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
+                    const noteData = JSON.parse(noteDataStr);
+                    
+                    await fetch('/update-notes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            endpoint: subscription.endpoint, 
+                            noteData: noteData
+                        })
+                    });
+                    console.log("Đồng bộ ghi chú thành công.");
+                } catch (err) {
+                    console.error("Lỗi khi đồng bộ ghi chú:", err);
+                }
+            }
+
+            // (ĐÃ XÓA) Xóa })();
+
+
             // ===================================================================
             // PHẦN 3: LOGIC ĐỒNG BỘ ONLINE (SYNC)
             // ===================================================================
@@ -1394,7 +1370,6 @@
             }
 
             async function handleSyncUp() {
-                // (Giữ nguyên code)
                 const username = syncUsernameInput.value.trim();
                 const password = syncPasswordInput.value.trim();
                 
@@ -1438,7 +1413,6 @@
                 }
             }
 
-            // (CẬP NHẬT) Xử lý response mới có { notes, isAdmin }
             async function handleSyncDown() {
                 const username = syncUsernameInput.value.trim();
                 const password = syncPasswordInput.value.trim();
@@ -1456,7 +1430,6 @@
                 syncDownBtn.disabled = true;
                 syncDownBtn.textContent = "Đang tải về...";
                 
-                // (MỚI) Ẩn bảng admin khi bắt đầu tải
                 adminPanelFieldset.classList.add('hidden');
                 adminUserList.innerHTML = '';
 
@@ -1470,20 +1443,18 @@
                         })
                     });
                     
-                    const result = await response.json(); // (CẬP NHẬT)
+                    const result = await response.json(); 
                     
                     if (!response.ok) {
                         throw new Error(result.error || `Lỗi ${response.status}`);
                     }
                     
-                    const restoredNoteData = result.notes || {}; // (CẬP NHẬT)
+                    const restoredNoteData = result.notes || {}; 
                     
-                    // Cập nhật dữ liệu
                     noteData = restoredNoteData; 
                     saveNoteData(); 
-                    renderCalendar(currentViewDate); 
+                    renderCalendar(currentViewDate); // (SỬA LỖI) Hàm này giờ đã hoạt động
                     
-                    // (MỚI) Kiểm tra và hiển thị bảng Admin
                     if (result.isAdmin) {
                         adminPanelFieldset.classList.remove('hidden');
                         showSyncMessage('Tải về thành công! (Quyền Admin)', false);
@@ -1502,7 +1473,7 @@
             }
             
             // ===================================================================
-            // (MỚI) PHẦN 5: LOGIC ADMIN
+            // PHẦN 5: LOGIC ADMIN
             // ===================================================================
             
             async function handleAdminGetUsers(e) {
@@ -1604,7 +1575,7 @@
                     }
                     
                     showSyncMessage(result.message || `Đã xóa ${targetUsername}`, false);
-                    btn.closest('.admin-user-card').remove(); // Xóa thẻ khỏi giao diện
+                    btn.closest('.admin-user-card').remove(); 
                     
                 } catch (err) {
                     console.error("Lỗi khi xóa user:", err);
@@ -1622,7 +1593,6 @@
             let currentTab = 'news'; 
             
             function showTab(tabName) {
-                // (Giữ nguyên code)
                 if (tabName === currentTab) return; 
                 if (currentTab === 'chat') {
                     resetChat();
@@ -1676,7 +1646,6 @@
             }
 
             // --- Gắn sự kiện cho TAB ---
-            // (Giữ nguyên code)
             if (newsTabBtn) newsTabBtn.addEventListener('click', () => showTab('news'));
             if (calendarTabBtn) calendarTabBtn.addEventListener('click', () => showTab('calendar')); 
             if (settingsBtn) settingsBtn.addEventListener('click', () => showTab('settings'));
@@ -1699,24 +1668,18 @@
             }
             
             // --- KHỞI ĐỘNG (TIN TỨC) ---
-            // (Giữ nguyên code)
             (async () => {
                 feedNav.addEventListener('click', handleFeedButtonClick);
                 rssMobileMenu.addEventListener('click', handleFeedButtonClick); 
                 refreshFeedButton.addEventListener('click', handleRefreshClick);
                 refreshFeedButtonMobile.addEventListener('click', handleRefreshClick); 
+
                 const defaultFeed = feedNav.querySelector('.feed-button.active');
                 if (defaultFeed) {
-                    await fetchRSS(defaultFeed.dataset.rss, defaultFeed.dataset.source);
+                    await fetchRSS(defaultFeed.dataset.rss, defaultFeed.dataset.source); // (SỬA LỖI) Hàm này giờ đã hoạt động
                 }
-                setTimeout(prewarmCache, 0);
-                closeSummaryModalButton.addEventListener('click', () => { /* ... */ });
-                summaryModal.addEventListener('click', (e) => { /* ... */ });
-                toastCloseButton.addEventListener('click', (e) => { /* ... */ });
-                chatForm.addEventListener('submit', handleSendChat);
-            })();
-            (async () => {
-                // ... (code khởi động tin tức)
+                setTimeout(prewarmCache, 0); // (SỬA LỖI) Hàm này giờ đã hoạt động
+
                 closeSummaryModalButton.addEventListener('click', () => {
                      summaryModal.classList.add('hidden');
                      if (summaryEventSource) {
@@ -1737,34 +1700,15 @@
                      e.stopPropagation();
                      hideToast();
                  });
+                 
+                chatForm.addEventListener('submit', handleSendChat);
             })();
             
             // --- KHỞI ĐỘNG (LỊCH) ---
             (async () => {
-                // (Giữ nguyên code)
-                renderCalendar(currentViewDate);
-                loadSettings();
-                notifyTimeNgay.addEventListener('change', (e) => { /* ... */ });
-                notifyTimeDem.addEventListener('change', (e) => { /* ... */ });
-                notifyTimeOff.addEventListener('change', (e) => { /* ... */ });
-                notifyButton.addEventListener('click', handleSubscribeClick);
-                prevMonthBtn.addEventListener('click', () => { /* ... */ });
-                nextMonthBtn.addEventListener('click', () => { /* ... */ });
-                closeNoteModalBtn.addEventListener('click', () => { /* ... */ });
-                noteModal.addEventListener('click', (e) => { /* ... */ });
-                addNoteForm.addEventListener('submit', (e) => { /* ... */ });
-                noteList.addEventListener('click', (e) => { /* ... */ });
-                cal_aiForm.addEventListener('submit', async (e) => { /* ... */ });
+                renderCalendar(currentViewDate); // (SỬA LỖI) Hàm này giờ đã hoạt động
+                loadSettings(); // (SỬA LỖI) Hàm này giờ đã hoạt động
                 
-                // (CẬP NHẬT) Thêm sự kiện cho các nút mới
-                syncUpBtn.addEventListener('click', handleSyncUp);
-                syncDownBtn.addEventListener('click', handleSyncDown);
-                adminGetUsersBtn.addEventListener('click', handleAdminGetUsers);
-                adminUserList.addEventListener('click', handleAdminDeleteUser);
-                
-            })();
-            (async () => {
-                // ... (code khởi động lịch)
                 notifyTimeNgay.addEventListener('change', (e) => {
                     appSettings.notifyTimeNgay = e.target.value;
                     saveSettings(); 
@@ -1777,6 +1721,9 @@
                     appSettings.notifyTimeOff = e.target.value;
                     saveSettings();
                 });
+                
+                notifyButton.addEventListener('click', handleSubscribeClick);
+
                 prevMonthBtn.addEventListener('click', () => {
                     currentViewDate.setMonth(currentViewDate.getMonth() - 1);
                     renderCalendar(currentViewDate);
@@ -1795,6 +1742,7 @@
                         currentEditingDateStr = null;
                     }
                 });
+                
                 addNoteForm.addEventListener('submit', (e) => {
                     e.preventDefault();
                     const noteText = newNoteInput.value.trim();
@@ -1808,6 +1756,7 @@
                     renderCalendar(currentViewDate); 
                     newNoteInput.value = ''; 
                 });
+                
                 noteList.addEventListener('click', (e) => {
                     const target = e.target;
                     const index = target.dataset.index;
@@ -1832,6 +1781,7 @@
                         }
                     }
                 });
+                
                 cal_aiForm.addEventListener('submit', async (e) => {
                     e.preventDefault(); 
                     const text = cal_aiInput.value.trim();
@@ -1871,10 +1821,15 @@
                     cal_aiForm.querySelector('button').disabled = false;
                     cal_aiForm.querySelector('button').textContent = "Phân tích";
                 });
+                
+                syncUpBtn.addEventListener('click', handleSyncUp);
+                syncDownBtn.addEventListener('click', handleSyncDown);
+                adminGetUsersBtn.addEventListener('click', handleAdminGetUsers);
+                adminUserList.addEventListener('click', handleAdminDeleteUser);
+                
             })();
             
             // --- KHỞI ĐỘNG (TAB) ---
-            // (Giữ nguyên code)
             (async () => {
                 if (window.location.hash === '#calendar') {
                     showTab('calendar');
