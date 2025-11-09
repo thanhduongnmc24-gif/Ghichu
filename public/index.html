@@ -1475,10 +1475,10 @@
                 const subscription = await swRegistration.pushManager.getSubscription();
                 
                 if (!subscription) {
-                    return;
+                    return; // Nếu chưa đăng ký thông báo thì không làm gì
                 }
                 
-                console.log("Đang đồng bộ ghi chú lên server...");
+                console.log("Đang đồng bộ ghi chú (vì mở tab Cài đặt) lên server...");
                 try {
                     const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
                     const noteData = JSON.parse(noteDataStr);
@@ -1491,9 +1491,9 @@
                             noteData: noteData
                         })
                     });
-                    console.log("Đồng bộ ghi chú thành công.");
+                    console.log("Đồng bộ ghi chú (tab Cài đặt) thành công.");
                 } catch (err) {
-                    console.error("Lỗi khi đồng bộ ghi chú:", err);
+                    console.error("Lỗi khi đồng bộ ghi chú (tab Cài đặt):", err);
                 }
             }
 
@@ -1566,6 +1566,12 @@
                         break;
                     case 'settings':
                         settingsMain.classList.remove('hidden');
+                        
+                        // ==========================================================
+                        // ===== (MỚI) ÉP ĐỒNG BỘ GHI CHÚ VỚI SERVER THÔNG BÁO =====
+                        syncNotesToServer();
+                        // ==========================================================
+                        
                         if (settingsBtn) settingsBtn.classList.add('active');
                         bottomTabSettings.classList.add('active');
                         if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Cài đặt";
