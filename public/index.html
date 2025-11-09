@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ghichu App</title> <script src="https://cdn.tailwindcss.com"></script>
     
-   <script src="https://cdn.jsdelivr.net/npm/solarlunar@2.0.7/lib/solarlunar.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/solarlunar@2.0.7/lib/solarlunar.min.js"></script>
+
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1F2937">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -131,7 +132,7 @@
               color: white;
           }
           
-        /* ===== (CẬP NHẬT 1/3) Co nhỏ Lịch ===== */
+        /* ===== (CẬP NHẬT) Co nhỏ Lịch ===== */
         .day-note-list {
             margin-top: 2px;
             padding-left: 8px; /* (Co lại) */
@@ -158,7 +159,7 @@
                 margin-left: 0;
             }
         }
-        /* ===== Hết Cập nhật 1/3 ===== */
+        /* ===== Hết Cập nhật ===== */
 
         .time-setting-label {
             display: flex;
@@ -1184,8 +1185,8 @@
                 notifyTimeDem.value = appSettings.notifyTimeDem;
                 notifyTimeOff.value = appSettings.notifyTimeOff;
             }
-            
-           // ===== (CẬP NHẬT) Sửa lỗi Lịch Âm & Co nhỏ Lịch =====
+
+            // ===== (CẬP NHẬT LỊCH ÂM) Thay thế toàn bộ hàm renderCalendar =====
             function renderCalendar(date) {
                 calendarBody.innerHTML = '';
                 const year = date.getFullYear();
@@ -1309,7 +1310,7 @@
                 
                 renderMonthlyNoteSummary(date); 
             }
-            // ===== Hết Cập nhật 3/3 =====
+            // ===== Hết Cập nhật Lịch Âm =====
 
             function renderMonthlyNoteSummary(date) {
                 const monthlyNoteList = document.getElementById('monthly-note-list');
@@ -1584,7 +1585,7 @@
             
             let currentTab = 'news'; // (MỚI) Theo dõi tab hiện tại
             
-            // ===== (CẬP NHẬT) Toàn bộ hàm showTab đã được cập nhật =====
+            // ===== (CẬP NHẬT) Toàn bộ hàm showTab đã được sửa lỗi bố cục Cài đặt =====
             function showTab(tabName) {
                 if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
                 
