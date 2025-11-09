@@ -1524,6 +1524,7 @@
             let currentTab = 'news'; // (MỚI) Theo dõi tab hiện tại
             
             // ===== (CẬP NHẬT 4/4) Toàn bộ hàm showTab đã được cập nhật =====
+            // (CẬP NHẬT 4/4) Toàn bộ hàm showTab đã được cập nhật
             function showTab(tabName) {
                 if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
                 
@@ -1539,12 +1540,16 @@
                 
                 currentTab = tabName;
                 
-                // (MỚI) Xử lý padding-bottom của body cho các tab (SỬA LỖI BỐ CỤC)
-                if (tabName === 'chat' || tabName === 'settings') {
+                // ==========================================================
+                // ===== (SỬA LỖI BỐ CỤC) Chỉ xóa padding cho trang CHAT =====
+                // ==========================================================
+                if (tabName === 'chat') {
                     document.body.style.paddingBottom = '0';
                 } else {
-                    document.body.style.paddingBottom = ''; // Trả về mặc định của CSS
+                    // Tất cả các trang khác (News, Calendar, Settings) dùng padding mặc định
+                    document.body.style.paddingBottom = ''; 
                 }
+                // ==========================================================
 
                 // 1. Ẩn tất cả các trang
                 newsMain.classList.add('hidden');
