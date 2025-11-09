@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ghichu App</title> <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="https://unpkg.com/van-su-kien@1.0.1/js/solarlunar.min.js"></script>
+
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1F2937">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -311,7 +313,7 @@
     </main>
     
     <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
-      <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6">
+        <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6">
             <h2 class="text-xl font-bold text-white mb-4">Thêm Nhanh (AI)</h2>
             
             <form id="ai-form" class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
@@ -1183,8 +1185,8 @@
                 notifyTimeDem.value = appSettings.notifyTimeDem;
                 notifyTimeOff.value = appSettings.notifyTimeOff;
             }
-
-            // ===== (CẬP NHẬT) Co nhỏ Lịch & Thêm Lịch Âm =====
+            
+            // ===== (CẬP NHẬT 3/3) Co nhỏ Lịch & Thêm Lịch Âm =====
             function renderCalendar(date) {
                 calendarBody.innerHTML = '';
                 const year = date.getFullYear();
@@ -1209,7 +1211,7 @@
                     currentDate.setDate(startDate.getDate() + i);
                     const dateStr = getLocalDateString(currentDate);
                     const day = currentDate.getDate();
-                    
+
                     // (MỚI) Lấy thông tin ngày/tháng/năm để tính Lịch Âm
                     const currentMonth = currentDate.getMonth(); // tháng 0-11
                     const currentYear = currentDate.getFullYear();
@@ -1238,7 +1240,7 @@
                     // ==========================================================
                     // ===== (MỚI) KẾT THÚC LOGIC LỊCH ÂM =====
                     // ==========================================================
-
+                    
                     const dayNumberEl = document.createElement('span');
                     // (Sửa) Đổi text-lg -> text-sm sm:text-lg
                     dayNumberEl.className = 'day-number font-semibold text-sm sm:text-lg text-gray-800'; 
@@ -1297,6 +1299,7 @@
                 
                 renderMonthlyNoteSummary(date); 
             }
+            // ===== Hết Cập nhật 3/3 =====
 
             function renderMonthlyNoteSummary(date) {
                 const monthlyNoteList = document.getElementById('monthly-note-list');
@@ -1571,7 +1574,7 @@
             
             let currentTab = 'news'; // (MỚI) Theo dõi tab hiện tại
             
-            // ===== (CẬP NHẬT 4/4) Toàn bộ hàm showTab đã được cập nhật =====
+            // ===== (CẬP NHẬT) Toàn bộ hàm showTab đã được cập nhật =====
             function showTab(tabName) {
                 if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
                 
