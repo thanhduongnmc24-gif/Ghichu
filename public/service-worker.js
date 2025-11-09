@@ -50,7 +50,7 @@ self.addEventListener('activate', event => {
     );
 });
 
-// 4. (MỚI) Lắng nghe Push Notification từ Server
+// 4. (CẬP NHẬT CHO IOS) Lắng nghe Push Notification từ Server
 self.addEventListener('push', event => {
     let data;
     try {
@@ -59,9 +59,25 @@ self.addEventListener('push', event => {
         data = { title: 'Thông báo', body: event.data.text() };
     }
 
-    const title = data.title || 'Ghichu App';
+    // (MỚI) Biến logic để lưu tiêu đề và nội dung
+    let title;
+    let body;
+
+    // Kiểm tra xem đây là payload APNs (Apple) hay VAPID (Chuẩn)
+    if (data.aps && data.aps.alert) {
+        // Đây là định dạng của Apple: { "aps": { "alert": { "title": "...", "body": "..." } } }
+        title = data.aps.alert.title;
+        body = data.aps.alert.body;
+    } else {
+        // Đây là định dạng chuẩn: { "title": "...", "body": "..." }
+        title = data.title;
+        body = data.body;
+    }
+
+    // (CẬP NHẬT) Dùng các biến mới, với dự phòng
+    const finalTitle = title || 'Ghichu App';
     const options = {
-        body: data.body || 'Bạn có thông báo mới.',
+        body: body || 'Bạn có thông báo mới.',
         icon: '/icons/icon-192x192.png',
         badge: '/icons/icon-192x192.png', // Dành cho Android
         vibrate: [100, 50, 100],
@@ -71,7 +87,7 @@ self.addEventListener('push', event => {
     };
 
     event.waitUntil(
-        self.registration.showNotification(title, options)
+        self.registration.showNotification(finalTitle, options)
     );
 });
 
