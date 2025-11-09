@@ -621,6 +621,9 @@
             const bottomTabChat = document.getElementById('bottom-tab-chat'); // (MỚI)
             const bottomTabSettings = document.getElementById('bottom-tab-settings');
             
+            // (MỚI) Thêm biến cho thanh nav dưới
+            const bottomNav = document.getElementById('bottom-nav'); 
+
             // (MỚI) Biến Phần 5 (Đồng bộ Online)
             const syncUsernameInput = document.getElementById('sync-username');
             const syncPasswordInput = document.getElementById('sync-password');
@@ -928,6 +931,27 @@
                 chatInput.value = '';
                 await callChatAPI();
             }
+
+            // ==========================================================
+            // ===== (MỚI) ẨN/HIỆN NAV KHI MỞ BÀN PHÍM =====
+            // ==========================================================
+            if (chatInput && bottomNav) {
+                // Khi bấm vào ô chat (bàn phím mở)
+                chatInput.addEventListener('focus', () => {
+                    // Ẩn thanh nav đi
+                    bottomNav.style.display = 'none';
+                });
+
+                // Khi bấm ra ngoài ô chat (bàn phím đóng)
+                chatInput.addEventListener('blur', () => {
+                    // Chờ 100ms (cho bàn phím đóng hẳn) rồi hiện lại
+                    setTimeout(() => {
+                        bottomNav.style.display = 'flex';
+                    }, 100);
+                });
+            }
+            // ==========================================================
+
             function resetChat() {
                 chatHistory = [];
                 renderChatHistory();
@@ -1499,8 +1523,7 @@
             
             let currentTab = 'news'; // (MỚI) Theo dõi tab hiện tại
             
-            // (CẬP NHẬT 3/3) Đã xóa `chatInput.focus()` và khối `if (window.innerWidth ...)`
-            // (CẬP NHẬT) Hàm showTab (Xử lý 4 trang)
+            // ===== (CẬP NHẬT 4/4) Toàn bộ hàm showTab đã được cập nhật =====
             function showTab(tabName) {
                 if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
                 
@@ -1516,6 +1539,13 @@
                 
                 currentTab = tabName;
                 
+                // (MỚI) Xử lý padding-bottom của body cho các tab (SỬA LỖI BỐ CỤC)
+                if (tabName === 'chat' || tabName === 'settings') {
+                    document.body.style.paddingBottom = '0';
+                } else {
+                    document.body.style.paddingBottom = ''; // Trả về mặc định của CSS
+                }
+
                 // 1. Ẩn tất cả các trang
                 newsMain.classList.add('hidden');
                 calendarMain.classList.add('hidden');
@@ -1558,7 +1588,7 @@
                         chatMain.classList.remove('hidden');
                         bottomTabChat.classList.add('active');
                         if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Trò chuyện";
-                        // ĐÃ XÓA: chatInput.focus();
+                        // (ĐÃ XÓA) chatInput.focus();
                         break;
                     case 'settings':
                         settingsMain.classList.remove('hidden');
