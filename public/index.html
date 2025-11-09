@@ -214,14 +214,12 @@
             }
         }
         
-        /* (MỚI) CSS Cho Trang Chat */
         #chat-main-wrapper {
             background-color: #1F2937; /* bg-gray-800 */
             border-radius: 0.5rem; /* rounded-lg */
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
             display: flex;
             flex-direction: column;
-            /* (MỚI) Đặt chiều cao cho trang chat/cài đặt */
             height: calc(100vh - 12rem); /* 100vh - header - bottom_nav - padding */
             max-width: 1024px; /* max-w-5xl */
             margin-left: auto;
@@ -415,18 +413,57 @@
                 
                 <div class="flex space-x-3 mt-4">
                     <button id="sync-up-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                        Tải lên (Backup)
+                        Tải lên
                     </button>
                     <button id="sync-down-btn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
-                        Tải về (Restore)
+                        Tải về
                     </button>
                 </div>
+                
+                <button id="admin-login-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors mt-3">
+                    Đăng nhập Quản trị
+                </button>
                 
                 <p id="sync-status-msg" class="text-sm text-gray-400 mt-3 text-center hidden"></p>
 
             </fieldset>
+
+            <fieldset id="admin-panel" class="border border-gray-600 p-4 rounded-lg mt-6 hidden">
+                <legend class="text-lg font-semibold text-red-400 px-2">Bảng Quản Trị</legend>
+                
+                <button id="admin-logout-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors mb-4">
+                    Đăng xuất Admin
+                </button>
+
+                <h3 class="text-md font-semibold text-white mb-2">Danh sách Người dùng:</h3>
+                <div id="admin-user-list-wrapper" class="bg-gray-900 p-3 rounded-lg max-h-[300px] overflow-y-auto">
+                    <p id="admin-user-loading" class="text-gray-400 italic">Đang tải...</p>
+                    <table id="admin-user-list" class="min-w-full hidden">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Tên</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700" id="admin-user-list-body">
+                            </tbody>
+                    </table>
+                </div>
+            </fieldset>
             </div>
     </main>
+
+    <div id="admin-note-viewer-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[60] transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="admin-note-viewer-title" class="text-2xl font-bold text-white">Ghi chú của...</h2>
+                <button id="admin-close-note-viewer" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+            <div id="admin-note-viewer-content" class="flex-grow overflow-y-auto bg-gray-900 p-4 rounded-lg min-h-[200px]">
+                <p class="text-gray-400">Đang tải ghi chú...</p>
+            </div>
+        </div>
+    </div>
 
     <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
@@ -595,6 +632,22 @@
             const syncUpBtn = document.getElementById('sync-up-btn');
             const syncDownBtn = document.getElementById('sync-down-btn');
             const syncStatusMsg = document.getElementById('sync-status-msg');
+
+            // (MỚI) Biến Phần 6 (Admin)
+            const adminLoginBtn = document.getElementById('admin-login-btn');
+            const adminPanel = document.getElementById('admin-panel');
+            const adminLogoutBtn = document.getElementById('admin-logout-btn');
+            const adminUserListWrapper = document.getElementById('admin-user-list-wrapper');
+            const adminUserLoading = document.getElementById('admin-user-loading');
+            const adminUserList = document.getElementById('admin-user-list');
+            const adminUserListBody = document.getElementById('admin-user-list-body');
+            const adminNoteViewerModal = document.getElementById('admin-note-viewer-modal');
+            const adminCloseNoteViewer = document.getElementById('admin-close-note-viewer');
+            const adminNoteViewerTitle = document.getElementById('admin-note-viewer-title');
+            const adminNoteViewerContent = document.getElementById('admin-note-viewer-content');
+            
+            // (MỚI) Biến tạm để lưu trữ thông tin đăng nhập Admin
+            let currentAdminCreds = null;
 
             // ===================================================================
             // PHẦN 1: LOGIC TIN TỨC (CHỈ CÓ HÀM VÀ BIẾN LOGIC)
@@ -921,9 +974,142 @@
 
                 // Tự động ẩn sau 5 giây
                 setTimeout(() => {
-                    syncStatusMsg.classList.add('hidden');
+                    if (syncStatusMsg.textContent === message) { // Chỉ ẩn nếu thông báo còn đó
+                        syncStatusMsg.classList.add('hidden');
+                    }
                 }, 5000);
             }
+
+            // ==========================================================
+            // ===== (MỚI - ADMIN) CÁC HÀM ADMIN =====
+            // ==========================================================
+            
+            // (Hàm này sẽ được gọi khi đăng nhập thành công)
+            async function loadAdminPanel() {
+                if (!currentAdminCreds) return;
+                
+                // Ẩn các fieldset cũ
+                document.querySelector('#settings-main fieldset:nth-of-type(1)').classList.add('hidden'); // Push
+                document.querySelector('#settings-main fieldset:nth-of-type(2)').classList.add('hidden'); // Sync
+                
+                // Hiện panel admin
+                adminPanel.classList.remove('hidden');
+                adminUserList.classList.add('hidden');
+                adminUserLoading.classList.remove('hidden');
+                
+                try {
+                    const response = await fetch('/api/admin/get-users', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(currentAdminCreds) // Gửi { adminUser, adminPass }
+                    });
+                    
+                    const users = await response.json();
+                    if (!response.ok) throw new Error(users.error || 'Lỗi không xác định');
+
+                    // Hiển thị danh sách
+                    adminUserListBody.innerHTML = '';
+                    users.forEach(user => {
+                        const tr = document.createElement('tr');
+                        tr.className = user.is_admin ? 'bg-gray-800' : '';
+                        tr.innerHTML = `
+                            <td class="px-3 py-2 whitespace-nowrap text-sm">
+                                <span class="text-white">${user.username}</span>
+                                ${user.is_admin ? '<span class="ml-2 text-xs text-red-400 font-bold">[ADMIN]</span>' : ''}
+                            </td>
+                            <td class="px-3 py-2 whitespace-nowrap text-sm space-x-2">
+                                <button data-user="${user.username}" class="text-blue-400 hover:text-blue-300 text-xs font-medium admin-view-notes">Xem</button>
+                                <button data-user="${user.username}" class="text-red-400 hover:text-red-300 text-xs font-medium admin-delete-user">Xóa</button>
+                            </td>
+                        `;
+                        adminUserListBody.appendChild(tr);
+                    });
+
+                    adminUserLoading.classList.add('hidden');
+                    adminUserList.classList.remove('hidden');
+
+                } catch (err) {
+                    showSyncStatus(`Lỗi Admin: ${err.message}`, true);
+                    adminLogout(); // Đăng xuất nếu có lỗi
+                }
+            }
+            
+            // (Hàm đăng xuất admin)
+            function adminLogout() {
+                currentAdminCreds = null;
+                // Ẩn panel admin
+                adminPanel.classList.add('hidden');
+                // Hiện lại các fieldset cũ
+                document.querySelector('#settings-main fieldset:nth-of-type(1)').classList.remove('hidden'); // Push
+                document.querySelector('#settings-main fieldset:nth-of-type(2)').classList.remove('hidden'); // Sync
+                // Xóa thông tin đăng nhập
+                // syncUsernameInput.value = ''; // Giữ lại tên để đăng nhập lại
+                syncPasswordInput.value = '';
+            }
+
+            // (Hàm xem ghi chú)
+            async function adminViewNotes(targetUser) {
+                if (!currentAdminCreds) return;
+                
+                adminNoteViewerTitle.textContent = `Ghi chú của: ${targetUser}`;
+                adminNoteViewerContent.innerHTML = `<p class="text-gray-400">Đang tải ghi chú...</p>`;
+                adminNoteViewerModal.classList.remove('hidden');
+                
+                try {
+                    const payload = {
+                        ...currentAdminCreds, // { adminUser, adminPass }
+                        targetUser: targetUser
+                    };
+                    
+                    const response = await fetch('/api/admin/get-notes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const notes = await response.json();
+                    if (!response.ok) throw new Error(notes.error || 'Lỗi không xác định');
+
+                    // Hiển thị Ghi chú (dạng JSON)
+                    const formattedNotes = JSON.stringify(notes, null, 2);
+                    adminNoteViewerContent.innerHTML = `<pre class="whitespace-pre-wrap text-white text-sm">${formattedNotes}</pre>`;
+
+                } catch (err) {
+                     adminNoteViewerContent.innerHTML = `<p class="text-red-400">Lỗi: ${err.message}</p>`;
+                }
+            }
+            
+            // (Hàm xóa người dùng)
+            async function adminDeleteUser(targetUser) {
+                if (!currentAdminCreds) return;
+
+                if (!confirm(`ĐẠI CA ADMIN!\n\nĐại ca có chắc chắn muốn XÓA VĨNH VIỄN người dùng "${targetUser}" không?\n\nHành động này không thể hoàn tác.`)) {
+                    return;
+                }
+
+                try {
+                    const payload = {
+                        ...currentAdminCreds, // { adminUser, adminPass }
+                        targetUser: targetUser
+                    };
+                    
+                    const response = await fetch('/api/admin/delete-user', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || 'Lỗi không xác định');
+                    
+                    alert(result.message); // Thông báo thành công
+                    loadAdminPanel(); // Tải lại danh sách
+                    
+                } catch (err) {
+                    alert(`Lỗi khi xóa: ${err.message}`);
+                }
+            }
+
 
             function getLocalDateString(date) {
                 const year = date.getFullYear();
@@ -1327,6 +1513,11 @@
                     resetChat();
                 }
                 
+                // (MỚI - ADMIN) Reset admin panel nếu rời tab settings
+                if (currentTab === 'settings' && currentAdminCreds) {
+                    adminLogout();
+                }
+                
                 currentTab = tabName;
                 
                 // 1. Ẩn tất cả các trang
@@ -1453,8 +1644,6 @@
                      hideToast();
                  });
                  
-                // (XÓA) Sự kiện nút chat đã chuyển lên trên
-                // (XÓA) Sự kiện đóng modal chat đã bị xóa
                 chatForm.addEventListener('submit', handleSendChat);
             })();
             
@@ -1463,8 +1652,6 @@
                 renderCalendar(currentViewDate);
                 loadSettings();
                 
-                // (XÓA) Sự kiện đóng modal cài đặt đã bị xóa
-
                 notifyTimeNgay.addEventListener('change', (e) => {
                     appSettings.notifyTimeNgay = e.target.value;
                     saveSettings(); 
@@ -1594,6 +1781,7 @@
                         showSyncStatus('Đang tải lên...', false);
                         syncUpBtn.disabled = true;
                         syncDownBtn.disabled = true;
+                        if(adminLoginBtn) adminLoginBtn.disabled = true;
 
                         try {
                             const response = await fetch('/api/sync/up', {
@@ -1615,6 +1803,7 @@
                         } finally {
                             syncUpBtn.disabled = false;
                             syncDownBtn.disabled = false;
+                            if(adminLoginBtn) adminLoginBtn.disabled = false;
                         }
                     });
                 }
@@ -1635,6 +1824,7 @@
                         showSyncStatus('Đang tải về...', false);
                         syncUpBtn.disabled = true;
                         syncDownBtn.disabled = true;
+                        if(adminLoginBtn) adminLoginBtn.disabled = true;
 
                         try {
                             const response = await fetch('/api/sync/down', {
@@ -1667,12 +1857,93 @@
                         } finally {
                             syncUpBtn.disabled = false;
                             syncDownBtn.disabled = false;
+                            if(adminLoginBtn) adminLoginBtn.disabled = false;
                         }
                     });
                 }
                 
                 // ==========================================================
-                // ===== (MỚI) KẾT THÚC LOGIC ĐỒNG BỘ ONLINE =====
+                // ===== (MỚI - ADMIN) BẮT ĐẦU LOGIC ADMIN =====
+                // ==========================================================
+
+                if (adminLoginBtn) {
+                    adminLoginBtn.addEventListener('click', async () => {
+                        const username = syncUsernameInput.value.trim();
+                        const password = syncPasswordInput.value.trim();
+                        if (!username || !password) {
+                            showSyncStatus('Vui lòng nhập Tên và Mật khẩu Admin.', true);
+                            return;
+                        }
+                        
+                        showSyncStatus('Đang đăng nhập Admin...', false);
+                        adminLoginBtn.disabled = true;
+                        syncUpBtn.disabled = true;
+                        syncDownBtn.disabled = true;
+
+                        const creds = { adminUser: username, adminPass: password };
+
+                        try {
+                            // Chúng ta dùng API 'get-users' để kiểm tra đăng nhập
+                            const response = await fetch('/api/admin/get-users', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(creds)
+                            });
+                            
+                            const result = await response.json();
+                            if (!response.ok) throw new Error(result.error || 'Lỗi không xác định');
+                            
+                            // Đăng nhập thành công
+                            showSyncStatus('Đăng nhập Admin thành công!', false);
+                            currentAdminCreds = creds; // Lưu lại thông tin đăng nhập
+                            loadAdminPanel(); // Tải bảng admin
+
+                        } catch (err) {
+                            showSyncStatus(err.message, true);
+                            currentAdminCreds = null;
+                        } finally {
+                            adminLoginBtn.disabled = false;
+                            syncUpBtn.disabled = false;
+                            syncDownBtn.disabled = false;
+                        }
+                    });
+                }
+                
+                if (adminLogoutBtn) {
+                    adminLogoutBtn.addEventListener('click', adminLogout);
+                }
+
+                // Gắn listener cho các nút trong danh sách (event delegation)
+                if (adminUserListBody) {
+                    adminUserListBody.addEventListener('click', (e) => {
+                        const target = e.target;
+                        const username = target.dataset.user;
+                        if (!username) return;
+
+                        if (target.classList.contains('admin-view-notes')) {
+                            adminViewNotes(username);
+                        } else if (target.classList.contains('admin-delete-user')) {
+                            adminDeleteUser(username);
+                        }
+                    });
+                }
+                
+                // Đóng modal xem ghi chú
+                if (adminCloseNoteViewer) {
+                    adminCloseNoteViewer.addEventListener('click', () => {
+                        adminNoteViewerModal.classList.add('hidden');
+                    });
+                }
+                if (adminNoteViewerModal) {
+                     adminNoteViewerModal.addEventListener('click', (e) => {
+                         if (e.target === adminNoteViewerModal) {
+                            adminNoteViewerModal.classList.add('hidden');
+                 }
+             });
+                }
+
+                // ==========================================================
+                // ===== (MỚI) KẾT THÚC LOGIC ADMIN =====
                 // ==========================================================
 
             })();
