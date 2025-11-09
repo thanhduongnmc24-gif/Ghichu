@@ -96,10 +96,11 @@ function verifyPassword(inputPassword, storedHash, salt) {
                 password_hash TEXT NOT NULL,
                 salt TEXT NOT NULL,
                 notes JSONB DEFAULT '{}'::jsonb,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_admin BOOLEAN DEFAULT false
             );
         `);
-        console.log("Bảng 'user_notes' đã sẵn sàng trên Supabase.");
+        console.log("Bảng 'user_notes' (có is_admin) đã sẵn sàng trên Supabase.");
 
         // 3. (MỚI - ADMIN) Cập nhật bảng user_notes để thêm cột 'is_admin'
         try {
@@ -109,7 +110,7 @@ function verifyPassword(inputPassword, storedHash, salt) {
             `);
             console.log("Bảng 'user_notes' đã được cập nhật với cột 'is_admin'.");
         } catch (alterErr) {
-            console.error("Lỗi khi thêm cột 'is_admin':", alterErr.message);
+            // Lỗi này có thể xảy ra nếu cột đã tồn tại (race condition), bỏ qua
         }
 
     } catch (err) {
@@ -122,7 +123,6 @@ function verifyPassword(inputPassword, storedHash, salt) {
 
 // ----- (MỚI - ADMIN) HÀM MIDDLEWARE KIỂM TRA ADMIN -----
 const checkAdmin = async (req, res, next) => {
-    // Chúng ta lấy thông tin admin từ body của request
     const { adminUser, adminPass } = req.body;
 
     if (!adminUser || !adminPass) {
@@ -139,18 +139,15 @@ const checkAdmin = async (req, res, next) => {
 
         const admin = userResult.rows[0];
         
-        // 1. Kiểm tra mật khẩu
         const isVerified = verifyPassword(adminPass, admin.password_hash, admin.salt);
         if (!isVerified) {
             return res.status(401).json({ error: 'Mật khẩu Admin không đúng.' });
         }
 
-        // 2. Kiểm tra quyền Admin
         if (admin.is_admin !== true) {
             return res.status(403).json({ error: 'Tài khoản này không có quyền Admin.' });
         }
         
-        // Nếu mọi thứ OK, tiếp tục
         next();
 
     } catch (error) {
@@ -163,8 +160,6 @@ const checkAdmin = async (req, res, next) => {
 
 
 // ----- CÁC ENDPOINT CỦA TIN TỨC (Không thay đổi) -----
-// ... (Giữ nguyên Endpoint 1, 2, 3) ...
-// Endpoint 1: Lấy RSS feed (Không thay đổi)
 app.get('/get-rss', async (req, res) => {
     const rssUrl = req.query.url;
     if (!rssUrl) return res.status(400).send('Thiếu tham số url');
@@ -195,7 +190,6 @@ app.get('/get-rss', async (req, res) => {
     }
 });
 
-// Endpoint 2: Tóm tắt AI (Streaming - Không thay đổi)
 app.get('/summarize-stream', async (req, res) => {
     const { prompt } = req.query; 
 
@@ -239,8 +233,6 @@ app.get('/summarize-stream', async (req, res) => {
      });
 });
 
-
-// Endpoint 3: Chat AI (Không thay đổi)
 app.post('/chat', async (req, res) => {
     const { history } = req.body;
 
@@ -319,8 +311,8 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
         Input: "Q 30/10 2/11 3/11"
         Output: [
             { "date": "${currentYear}-10-30", "note": "Q" },
-            { "date": "2024-11-02", "note": "Q" },
-            { "date": "2024-11-03", "note": "Q" }
+            { "date": "${currentYear}-11-02", "note": "Q" },
+            { "date": "${currentYear}-11-03", "note": "Q" }
         ]
         Văn bản của người dùng: "${text}"
         Chỉ trả về MỘT MẢNG JSON (JSON Array). Không thêm bất kỳ văn bản giải thích nào.
@@ -349,8 +341,6 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
 
 
 // ----- CÁC ENDPOINT CHO PUSH NOTIFICATION (Không thay đổi) -----
-// ... (Giữ nguyên Endpoint 1, 2, 3, 4) ...
-// Endpoint 1: Gửi VAPID Public Key (Không thay đổi)
 app.get('/vapid-public-key', (req, res) => {
     if (!VAPID_PUBLIC_KEY) {
         return res.status(500).send("VAPID Public Key chưa được cấu hình trên server.");
@@ -358,7 +348,6 @@ app.get('/vapid-public-key', (req, res) => {
     res.send(VAPID_PUBLIC_KEY);
 });
 
-// Endpoint 2: Đăng ký nhận thông báo (Không thay đổi)
 app.post('/subscribe', async (req, res) => {
     const { subscription, settings, noteData } = req.body;
     if (!subscription || !settings || !subscription.endpoint || !subscription.keys) {
@@ -385,7 +374,6 @@ app.post('/subscribe', async (req, res) => {
     }
 });
 
-// Endpoint 3: Hủy đăng ký (Không thay đổi)
 app.post('/unsubscribe', async (req, res) => {
     const { endpoint } = req.body;
     if (!endpoint) {
@@ -408,7 +396,6 @@ app.post('/unsubscribe', async (req, res) => {
     }
 });
 
-// Endpoint 4: Cập nhật Ghi chú (Không thay đổi)
 app.post('/update-notes', async (req, res) => {
     const { endpoint, noteData } = req.body;
     if (!endpoint || !noteData) {
@@ -429,8 +416,6 @@ app.post('/update-notes', async (req, res) => {
 
 
 // ----- CÁC ENDPOINT CHO SYNC ONLINE (Không thay đổi) -----
-// ... (Giữ nguyên Endpoint 5, 6) ...
-// Endpoint 5: Tải lên (Backup)
 app.post('/api/sync/up', async (req, res) => {
     const { username, password, noteData } = req.body;
     if (!username || !password || !noteData) {
@@ -470,7 +455,6 @@ app.post('/api/sync/up', async (req, res) => {
     }
 });
 
-// Endpoint 6: Tải về (Restore)
 app.post('/api/sync/down', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -504,14 +488,9 @@ app.post('/api/sync/down', async (req, res) => {
 
 
 // ----- (MỚI - ADMIN) CÁC ENDPOINT CHO ADMIN -----
-
-// Endpoint Admin 1: Lấy danh sách người dùng
-// Dùng checkAdmin làm middleware
 app.post('/api/admin/get-users', checkAdmin, async (req, res) => {
     const client = await pool.connect();
     try {
-        // Lấy tất cả user, ngoại trừ admin (adminUser)
-        // Chỉ lấy username, created_at, và is_admin
         const result = await client.query(
             "SELECT username, created_at, is_admin FROM user_notes WHERE username != $1 ORDER BY created_at DESC",
             [req.body.adminUser]
@@ -525,7 +504,6 @@ app.post('/api/admin/get-users', checkAdmin, async (req, res) => {
     }
 });
 
-// Endpoint Admin 2: Lấy ghi chú của người dùng cụ thể
 app.post('/api/admin/get-notes', checkAdmin, async (req, res) => {
     const { targetUser } = req.body;
     if (!targetUser) {
@@ -547,14 +525,12 @@ app.post('/api/admin/get-notes', checkAdmin, async (req, res) => {
     }
 });
 
-// Endpoint Admin 3: Xóa người dùng
 app.post('/api/admin/delete-user', checkAdmin, async (req, res) => {
     const { targetUser } = req.body;
     if (!targetUser) {
         return res.status(400).json({ error: 'Thiếu targetUser.' });
     }
     
-    // An toàn: Không cho admin tự xóa mình qua API này
     if (targetUser === req.body.adminUser) {
          return res.status(400).json({ error: 'Không thể tự xóa tài khoản Admin.' });
     }
@@ -577,9 +553,9 @@ app.post('/api/admin/delete-user', checkAdmin, async (req, res) => {
 });
 
 
-// ----- LOGIC GỬI THÔNG BÁO (Không thay đổi) -----
-// ... (Giữ nguyên toàn bộ logic) ...
-// Logic tính ca (Không thay đổi)
+// ----- LOGIC GỬI THÔNG BÁO -----
+
+// Logic tính ca
 const EPOCH_DAYS = dateToDays('2025-10-26');
 const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
 function dateToDays(dateStr) {
@@ -611,8 +587,7 @@ async function deleteSubscription(endpoint) {
     }
 }
 
-// Hàm kiểm tra và gửi thông báo (Không thay đổi)
-// Hàm kiểm tra và gửi thông báo (ĐÃ CẬP NHẬT CHO IOS)
+// (ĐÃ CẬP NHẬT CHO IOS)
 let lastNotificationCheckTime = null;
 async function checkAndSendNotifications() {
     const { timeStr, dateStr } = getHanoiTime();
@@ -664,44 +639,32 @@ async function checkAndSendNotifications() {
             const title = `Lịch Luân Phiên - Ca ${todayShift.toUpperCase()}`;
             const body = `Hôm nay là ${dateStr}.${notesString}`;
             
-            // ==========================================================
-            // ===== (MỚI) BẮT ĐẦU LOGIC KIỂM TRA IOS =====
-            // ==========================================================
-            
+            // --- Logic kiểm tra iOS ---
             let notificationPayload;
-            
-            // Các thiết bị Apple có endpoint bắt đầu bằng "https://web.push.apple.com"
             if (endpoint.startsWith('https://web.push.apple.com')) {
-                // Định dạng APNs (Apple) yêu cầu
-                console.log("-> Gửi payload định dạng APNs (iOS)");
+                // Định dạng APNs (Apple)
                 notificationPayload = JSON.stringify({
                     aps: {
                         alert: {
                             title: title,
                             body: body
-                        },
-                        // (Tùy chọn) Nếu muốn hiển thị số trên icon app:
-                        // badge: 1 
+                        }
                     }
                 });
             } else {
                 // Định dạng VAPID chuẩn (Android, Desktop)
-                console.log("-> Gửi payload định dạng VAPID chuẩn");
                 notificationPayload = JSON.stringify({
                     title: title,
                     body: body
                 });
             }
-            // ==========================================================
-            // ===== (MỚI) KẾT THÚC LOGIC KIỂM TRA IOS =====
-            // ==========================================================
+            // --- Kết thúc logic iOS ---
 
             const pushSubscription = {
                 endpoint: endpoint,
                 keys: keys
             };
             
-            // Gửi payload đã được định dạng
             return webpush.sendNotification(pushSubscription, notificationPayload)
                 .catch(err => {
                     if (err.statusCode === 410 || err.statusCode === 404) {
@@ -717,7 +680,7 @@ async function checkAndSendNotifications() {
     await Promise.all(sendPromises);
 }
 
-// Endpoint của Cron Job (Không thay đổi)
+// Endpoint của Cron Job (Giữ lại để test, nhưng không dùng chính)
 app.get('/trigger-notifications', async (req, res) => {
     const cronSecret = req.headers['x-cron-secret'];
     if (cronSecret !== process.env.VAPID_PRIVATE_KEY) { 
@@ -726,7 +689,7 @@ app.get('/trigger-notifications', async (req, res) => {
     }
 
     try {
-        console.log("Cron Job triggered: Đang chạy kiểm tra thông báo...");
+        console.log("Cron Job triggered MANUALLY: Đang chạy kiểm tra thông báo...");
         await checkAndSendNotifications();
         res.status(200).send('Notification check OK.');
     } catch (err) {
@@ -742,7 +705,32 @@ app.get('*', (req, res) => {
 });
 
 
-// --- Khởi động Server ---
+// ==========================================================
+// ===== (CẬP NHẬT) KHỞI ĐỘNG SERVER =====
+// ==========================================================
 app.listen(PORT, () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);
+    
+    // (MỚI) Tự động kiểm tra thông báo mỗi phút, thay vì dùng Cron Job
+    console.log("Khởi động bộ đếm thời gian thông báo (kiểm tra mỗi 60 giây)...");
+    
+    // Chạy ngay lần đầu tiên khi khởi động để kiểm tra
+    (async () => {
+        console.log("Khởi động: Chạy kiểm tra thông báo lần đầu...");
+        try {
+            await checkAndSendNotifications();
+        } catch (err) {
+            console.error("Lỗi khi chạy kiểm tra thông báo lần đầu:", err);
+        }
+    })();
+
+    // Sau đó chạy định kỳ mỗi phút
+    setInterval(async () => {
+        try {
+            // Hàm này đã có log riêng ("Notify Check...") nên không cần log thêm
+            await checkAndSendNotifications();
+        } catch (err) {
+            console.error("Lỗi trong quá trình kiểm tra thông báo tự động:", err);
+        }
+    }, 60 * 1000); // 60 giây
 });
