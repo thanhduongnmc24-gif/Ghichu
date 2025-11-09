@@ -1185,7 +1185,7 @@
                 notifyTimeOff.value = appSettings.notifyTimeOff;
             }
             
-            // ===== (CẬP NHẬT 3/3) Co nhỏ Lịch & Thêm Lịch Âm =====
+           // ===== (CẬP NHẬT) Sửa lỗi Lịch Âm & Co nhỏ Lịch =====
             function renderCalendar(date) {
                 calendarBody.innerHTML = '';
                 const year = date.getFullYear();
@@ -1216,26 +1216,37 @@
                     const currentYear = currentDate.getFullYear();
                     
                     // ==========================================================
-                    // ===== (MỚI) BẮT ĐẦU LOGIC LỊCH ÂM =====
+                    // ===== (MỚI) BẮT ĐẦU LOGIC LỊCH ÂM (VỚI THƯ VIỆN MỚI) =====
                     // ==========================================================
-                    
-                    // Thư viện solarlunar.min.js dùng tháng 1-12
-                    // Trả về mảng: [ngày âm, tháng âm, có phải tháng nhuận không]
-                    const [lunarDay, lunarMonth, isLeap] = convertSolar2Lunar(day, currentMonth + 1, currentYear);
-                    
-                    const lunarDayEl = document.createElement('span');
-                    // Style: absolute, top-right, extra-small, màu đỏ, hơi mờ
-                    lunarDayEl.className = 'absolute top-1 right-2 text-xs font-medium text-red-600 opacity-80';
-                    
-                    let lunarText = lunarDay; // Mặc định chỉ hiện ngày âm
-                    if (lunarDay === 1) {
-                        // Nếu là mùng 1, hiển thị cả tháng (ví dụ: 1/10N)
-                        lunarText = `${lunarDay}/${lunarMonth}${isLeap ? 'N' : ''}`;
+                    try {
+                        // Kiểm tra xem thư viện 'solarlunar' đã tải xong chưa
+                        if (typeof solarLunar !== 'undefined') {
+                            
+                            // 1. Gọi thư viện mới: solarLunar.solar2lunar()
+                            const lunarData = solarLunar.solar2lunar(currentYear, currentMonth + 1, day);
+                            
+                            // 2. Lấy dữ liệu từ đối tượng (thay vì mảng)
+                            const lunarDay = lunarData.lDay;
+                            const lunarMonth = lunarData.lMonth;
+                            const isLeap = lunarData.isLeap;
+
+                            const lunarDayEl = document.createElement('span');
+                            // Style: absolute, top-right, extra-small, màu đỏ, hơi mờ
+                            lunarDayEl.className = 'absolute top-1 right-2 text-xs font-medium text-red-600 opacity-80';
+                            
+                            let lunarText = lunarDay; // Mặc định chỉ hiện ngày âm
+                            if (lunarDay === 1) {
+                                // Nếu là mùng 1, hiển thị cả tháng (ví dụ: 1/10N)
+                                lunarText = `${lunarDay}/${lunarMonth}${isLeap ? 'N' : ''}`;
+                            }
+                            
+                            lunarDayEl.textContent = lunarText;
+                            dayCell.appendChild(lunarDayEl); // Thêm lịch âm vào ô
+                        }
+                    } catch (err) {
+                        // Bỏ qua lỗi nếu thư viện lịch âm không tải được
+                        console.error("Lỗi tải lịch âm, đã bỏ qua:", err.message);
                     }
-                    
-                    lunarDayEl.textContent = lunarText;
-                    dayCell.appendChild(lunarDayEl); // Thêm lịch âm vào ô
-                    
                     // ==========================================================
                     // ===== (MỚI) KẾT THÚC LOGIC LỊCH ÂM =====
                     // ==========================================================
