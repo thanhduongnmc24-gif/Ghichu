@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import webpush from 'web-push'; 
 import pg from 'pg'; 
-import crypto from 'crypto'; // (MỚI) Thêm module crypto để mã hóa
+import crypto from 'crypto'; 
 
 // ----- CÀI ĐẶT CACHE (RSS) -----
 const cache = new Map();
@@ -50,17 +50,15 @@ if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_SUBJECT) {
     console.log("Web Push đã được cấu hình.");
 }
 
-// ----- (CẬP NHẬT) CÀI ĐẶT DATABASE (Sửa lỗi SSL) -----
+// ----- CÀI ĐẶT DATABASE -----
 const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
-    // (CẬP NHẬT) Thêm rejectUnauthorized: false để chấp nhận cert của Supabase
     ssl: {
         rejectUnauthorized: false
     }
 });
 
-// (MỚI) --- Helper functions for Password Hashing ---
-// (Không cần 'bcrypt', dùng 'crypto' có sẵn của Node)
+// --- Helper functions for Password Hashing ---
 function hashPassword(password) {
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
@@ -73,10 +71,11 @@ function verifyPassword(inputPassword, storedHash, salt) {
 }
 
 
-// (MỚI) Hàm tự động tạo bảng (cập nhật)
+// (CẬP NHẬT) Hàm tự động tạo/cập nhật bảng
 (async () => {
     const client = await pool.connect();
     try {
+        // 1. Bảng Subscriptions (Không đổi)
         await client.query(`
             CREATE TABLE IF NOT EXISTS subscriptions (
                 id SERIAL PRIMARY KEY,
@@ -87,9 +86,9 @@ function verifyPassword(inputPassword, storedHash, salt) {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        console.log("Bảng 'subscriptions' (v2, có notes) đã sẵn sàng trên Supabase.");
+        console.log("Bảng 'subscriptions' đã sẵn sàng trên Supabase.");
 
-        // (MỚI) Tạo bảng user_notes
+        // 2. Bảng User Notes (Không đổi)
         await client.query(`
             CREATE TABLE IF NOT EXISTS user_notes (
                 id SERIAL PRIMARY KEY,
@@ -102,17 +101,69 @@ function verifyPassword(inputPassword, storedHash, salt) {
         `);
         console.log("Bảng 'user_notes' đã sẵn sàng trên Supabase.");
 
+        // 3. (MỚI - ADMIN) Cập nhật bảng user_notes để thêm cột 'is_admin'
+        try {
+            await client.query(`
+                ALTER TABLE user_notes
+                ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT false;
+            `);
+            console.log("Bảng 'user_notes' đã được cập nhật với cột 'is_admin'.");
+        } catch (alterErr) {
+            console.error("Lỗi khi thêm cột 'is_admin':", alterErr.message);
+        }
+
     } catch (err) {
-        console.error("Lỗi khi tạo bảng:", err);
+        console.error("Lỗi khi tạo/cập nhật bảng:", err);
     } finally {
         client.release();
     }
 })();
 
 
-// ----- CÁC ENDPOINT CỦA TIN TỨC -----
-// (Không thay đổi - Giữ nguyên Endpoint 1, 2, 3)
+// ----- (MỚI - ADMIN) HÀM MIDDLEWARE KIỂM TRA ADMIN -----
+const checkAdmin = async (req, res, next) => {
+    // Chúng ta lấy thông tin admin từ body của request
+    const { adminUser, adminPass } = req.body;
 
+    if (!adminUser || !adminPass) {
+        return res.status(401).json({ error: 'Thiếu thông tin xác thực Admin.' });
+    }
+
+    const client = await pool.connect();
+    try {
+        const userResult = await client.query("SELECT * FROM user_notes WHERE username = $1", [adminUser]);
+        
+        if (userResult.rows.length === 0) {
+            return res.status(401).json({ error: 'Admin không tồn tại.' });
+        }
+
+        const admin = userResult.rows[0];
+        
+        // 1. Kiểm tra mật khẩu
+        const isVerified = verifyPassword(adminPass, admin.password_hash, admin.salt);
+        if (!isVerified) {
+            return res.status(401).json({ error: 'Mật khẩu Admin không đúng.' });
+        }
+
+        // 2. Kiểm tra quyền Admin
+        if (admin.is_admin !== true) {
+            return res.status(403).json({ error: 'Tài khoản này không có quyền Admin.' });
+        }
+        
+        // Nếu mọi thứ OK, tiếp tục
+        next();
+
+    } catch (error) {
+        console.error("Lỗi khi checkAdmin:", error);
+        res.status(500).json({ error: 'Lỗi máy chủ khi xác thực Admin.' });
+    } finally {
+        client.release();
+    }
+};
+
+
+// ----- CÁC ENDPOINT CỦA TIN TỨC (Không thay đổi) -----
+// ... (Giữ nguyên Endpoint 1, 2, 3) ...
 // Endpoint 1: Lấy RSS feed (Không thay đổi)
 app.get('/get-rss', async (req, res) => {
     const rssUrl = req.query.url;
@@ -236,6 +287,7 @@ app.post('/chat', async (req, res) => {
     }
 });
 
+
 // ----- ENDPOINT CỦA LỊCH LÀM VIỆC (Không thay đổi) -----
 app.post('/api/calendar-ai-parse', async (req, res) => {
     const text = req.body.text || "";
@@ -267,8 +319,8 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
         Input: "Q 30/10 2/11 3/11"
         Output: [
             { "date": "${currentYear}-10-30", "note": "Q" },
-            { "date": "${currentYear}-11-02", "note": "Q" },
-            { "date": "${currentYear}-11-03", "note": "Q" }
+            { "date": "2024-11-02", "note": "Q" },
+            { "date": "2024-11-03", "note": "Q" }
         ]
         Văn bản của người dùng: "${text}"
         Chỉ trả về MỘT MẢNG JSON (JSON Array). Không thêm bất kỳ văn bản giải thích nào.
@@ -297,7 +349,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
 
 
 // ----- CÁC ENDPOINT CHO PUSH NOTIFICATION (Không thay đổi) -----
-
+// ... (Giữ nguyên Endpoint 1, 2, 3, 4) ...
 // Endpoint 1: Gửi VAPID Public Key (Không thay đổi)
 app.get('/vapid-public-key', (req, res) => {
     if (!VAPID_PUBLIC_KEY) {
@@ -376,8 +428,8 @@ app.post('/update-notes', async (req, res) => {
 });
 
 
-// ----- (MỚI) CÁC ENDPOINT CHO SYNC ONLINE -----
-
+// ----- CÁC ENDPOINT CHO SYNC ONLINE (Không thay đổi) -----
+// ... (Giữ nguyên Endpoint 5, 6) ...
 // Endpoint 5: Tải lên (Backup)
 app.post('/api/sync/up', async (req, res) => {
     const { username, password, noteData } = req.body;
@@ -451,8 +503,82 @@ app.post('/api/sync/down', async (req, res) => {
 });
 
 
-// ----- LOGIC GỬI THÔNG BÁO (Không thay đổi) -----
+// ----- (MỚI - ADMIN) CÁC ENDPOINT CHO ADMIN -----
 
+// Endpoint Admin 1: Lấy danh sách người dùng
+// Dùng checkAdmin làm middleware
+app.post('/api/admin/get-users', checkAdmin, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        // Lấy tất cả user, ngoại trừ admin (adminUser)
+        // Chỉ lấy username, created_at, và is_admin
+        const result = await client.query(
+            "SELECT username, created_at, is_admin FROM user_notes WHERE username != $1 ORDER BY created_at DESC",
+            [req.body.adminUser]
+        );
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error("Lỗi khi /api/admin/get-users:", error);
+        res.status(500).json({ error: 'Lỗi máy chủ.' });
+    } finally {
+        client.release();
+    }
+});
+
+// Endpoint Admin 2: Lấy ghi chú của người dùng cụ thể
+app.post('/api/admin/get-notes', checkAdmin, async (req, res) => {
+    const { targetUser } = req.body;
+    if (!targetUser) {
+        return res.status(400).json({ error: 'Thiếu targetUser.' });
+    }
+
+    const client = await pool.connect();
+    try {
+        const result = await client.query("SELECT notes FROM user_notes WHERE username = $1", [targetUser]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Người dùng mục tiêu không tồn tại.' });
+        }
+        res.status(200).json(result.rows[0].notes || {});
+    } catch (error) {
+        console.error("Lỗi khi /api/admin/get-notes:", error);
+        res.status(500).json({ error: 'Lỗi máy chủ.' });
+    } finally {
+        client.release();
+    }
+});
+
+// Endpoint Admin 3: Xóa người dùng
+app.post('/api/admin/delete-user', checkAdmin, async (req, res) => {
+    const { targetUser } = req.body;
+    if (!targetUser) {
+        return res.status(400).json({ error: 'Thiếu targetUser.' });
+    }
+    
+    // An toàn: Không cho admin tự xóa mình qua API này
+    if (targetUser === req.body.adminUser) {
+         return res.status(400).json({ error: 'Không thể tự xóa tài khoản Admin.' });
+    }
+
+    const client = await pool.connect();
+    try {
+        const result = await client.query("DELETE FROM user_notes WHERE username = $1 AND is_admin = false", [targetUser]);
+        
+        if (result.rowCount > 0) {
+            res.status(200).json({ success: true, message: `Đã xóa người dùng: ${targetUser}` });
+        } else {
+            res.status(404).json({ error: 'Người dùng không tồn tại hoặc là Admin khác.' });
+        }
+    } catch (error) {
+        console.error("Lỗi khi /api/admin/delete-user:", error);
+        res.status(500).json({ error: 'Lỗi máy chủ.' });
+    } finally {
+        client.release();
+    }
+});
+
+
+// ----- LOGIC GỬI THÔNG BÁO (Không thay đổi) -----
+// ... (Giữ nguyên toàn bộ logic) ...
 // Logic tính ca (Không thay đổi)
 const EPOCH_DAYS = dateToDays('2025-10-26');
 const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
