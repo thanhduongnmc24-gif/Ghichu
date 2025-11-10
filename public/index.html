@@ -233,19 +233,16 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
             display: flex;
             flex-direction: column;
-            
-            /* (ĐÃ SỬA) 100vh - ~4rem (header) - 1rem (main p-top) - 1rem (main p-bottom) */
-            /* CSS của body (padding-bottom: 80px) sẽ tự xử lý phần nav dưới */
-            height: calc(100vh - 6rem); 
-            
+            /* (SỬA LỖI) 100vh - 4rem(header) - 1rem(p-top) - 1rem(p-bottom) - 5rem(nav) = 11rem */
+            height: calc(100vh - 11rem);
             max-width: 1024px; /* max-w-5xl */
             margin-left: auto;
             margin-right: auto;
         }
         @media (min-width: 640px) { /* sm: */
             #chat-main-wrapper {
-                 /* (ĐÃ SỬA) 100vh - ~4rem (header) - 2rem (main p-top) - 2rem (main p-bottom) */
-                 height: calc(100vh - 8rem);
+                 /* (SỬA LỖI) 100vh - 4rem(header) - 2rem(p-top) - 2rem(p-bottom) = 8rem */
+                 height: calc(100vh - 8rem); 
             }
         }
         
@@ -1710,7 +1707,19 @@
                 // ==========================================================
                 // ===== (SỬA LỖI BỐ CỤC) Chỉ xóa padding cho trang CHAT =====
                 // ==========================================================
-               document.body.style.paddingBottom = '';
+               if (tabName === 'chat') {
+                    // Trang Chat luôn là 0 padding vì dùng 100vh
+                    document.body.style.paddingBottom = '0px';
+                } else {
+                    // Các trang khác (News, Calendar, Settings)
+                    if (window.innerWidth < 640) {
+                        // Nếu là mobile, ép 80px padding
+                        document.body.style.paddingBottom = '80px'; // 5rem
+                    } else {
+                        // Nếu là desktop, ép 0px padding
+                        document.body.style.paddingBottom = '0px';
+                    }
+                }
                 // ==========================================================
 
                 // 1. Ẩn tất cả các trang
