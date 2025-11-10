@@ -119,12 +119,7 @@ body {
     margin-left: auto;
     margin-right: auto;
 }
-@media (min-width: 640px) { /* sm: */
-    #chat-main-wrapper {
-         /* 100vh - header - padding */
-         height: calc(100vh - 10rem);
-    }
-}
+
 
 
 /* ----- NEWS (TIN TỨC) ----- */
