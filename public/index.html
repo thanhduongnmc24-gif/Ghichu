@@ -233,14 +233,19 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 12rem); /* 100vh - header - bottom_nav - padding */
+            
+            /* (ĐÃ SỬA) 100vh - ~4rem (header) - 1rem (main p-top) - 1rem (main p-bottom) */
+            /* CSS của body (padding-bottom: 80px) sẽ tự xử lý phần nav dưới */
+            height: calc(100vh - 6rem); 
+            
             max-width: 1024px; /* max-w-5xl */
             margin-left: auto;
             margin-right: auto;
         }
         @media (min-width: 640px) { /* sm: */
             #chat-main-wrapper {
-                 height: calc(100vh - 10rem); /* 100vh - header - padding */
+                 /* (ĐÃ SỬA) 100vh - ~4rem (header) - 2rem (main p-top) - 2rem (main p-bottom) */
+                 height: calc(100vh - 8rem);
             }
         }
         
@@ -345,7 +350,7 @@
                 </div>
             </div>
         </section>
-        <section id="monthly-note-summary" class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mt-6 sm:mb-0 mb-20">
+        <section id="monthly-note-summary" class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mt-6 sm:mb-0">
             <h2 class="text-xl font-bold text-white mb-4">Tổng kết Ghi chú Tháng</h2>
             <div id="monthly-note-list" class="space-y-3">
                 <p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>
@@ -1705,12 +1710,7 @@
                 // ==========================================================
                 // ===== (SỬA LỖI BỐ CỤC) Chỉ xóa padding cho trang CHAT =====
                 // ==========================================================
-                if (tabName === 'chat') {
-                    document.body.style.paddingBottom = '0';
-                } else {
-                    // Tất cả các trang khác (News, Calendar, Settings) dùng padding mặc định
-                    document.body.style.paddingBottom = ''; 
-                }
+               document.body.style.paddingBottom = '';
                 // ==========================================================
 
                 // 1. Ẩn tất cả các trang
