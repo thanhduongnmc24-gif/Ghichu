@@ -1,3 +1,210 @@
+/* =================================================================== */
+/* FILE: public/app.js                                                 */
+/* MỤC ĐÍCH: Logic JavaScript chính cho toàn bộ ứng dụng Ghichu App.     */
+/* =================================================================== */
+
+// ===================================================================
+// PHẦN 0: CÁC HÀM TIỆN ÍCH (LỊCH ÂM, NGÀY THÁNG, CA KÍP)
+// ===================================================================
+
+/**
+ * Dữ liệu Lịch Âm (từ 1900 đến 2050)
+ * Nguồn: Được chuyển đổi từ các thuật toán lịch vạn niên.
+ */
+const LUNAR_CAL_DATA = [
+    0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2,
+    0x04ae0, 0x0a5b6, 0x0a4d0, 0x0d250, 0x1d255, 0x0b540, 0x0d6a0, 0x0ada2, 0x095b0, 0x14977,
+    0x04970, 0x0a4b0, 0x0b4b5, 0x06a50, 0x06d40, 0x1ab54, 0x02b60, 0x09570, 0x052f2, 0x04970,
+    0x06566, 0x0d4a0, 0x0ea50, 0x06e95, 0x05ad0, 0x02b60, 0x186e3, 0x092e0, 0x1c8d7, 0x0c950,
+    0x0d4a0, 0x1d8a6, 0x0b550, 0x056a0, 0x1a5b4, 0x025d0, 0x092d0, 0x0d2b2, 0x0a950, 0x0b557,
+    0x06ca0, 0x0b550, 0x15355, 0x04da0, 0x0a5b0, 0x14573, 0x052b0, 0x0a9a8, 0x0e950, 0x06aa0,
+    0x0aea6, 0x0ab50, 0x04b60, 0x0aae4, 0x0a570, 0x05260, 0x0f263, 0x0d950, 0x05b57, 0x056a0,
+    0x096d0, 0x04dd5, 0x04ad0, 0x0a4d0, 0x0d4d4, 0x0d250, 0x0d558, 0x0b540, 0x0b6a0, 0x195a6,
+    0x095b0, 0x049b0, 0x0a974, 0x0a4b0, 0x0b27a, 0x06a50, 0x06d40, 0x0af46, 0x0ab60, 0x09570,
+    0x04af5, 0x04970, 0x064b0, 0x074a3, 0x0ea50, 0x06b58, 0x055c0, 0x0ab60, 0x096d5, 0x092e0,
+    0x0c960, 0x0d954, 0x0d4a0, 0x0da50, 0x07552, 0x056a0, 0x0abb7, 0x025d0, 0x092d0, 0x0cab5,
+    0x0a950, 0x0b4a0, 0x0baa4, 0x0ad50, 0x055d9, 0x04ba0, 0x0a5b0, 0x15176, 0x052b0, 0x0a930,
+    0x07954, 0x06aa0, 0x0ad50, 0x05b52, 0x04b60, 0x0a6e6, 0x0a4e0, 0x0d260, 0x0ea65, 0x0d530,
+    0x05aa0, 0x076a3, 0x096d0, 0x04bd7, 0x04ad0, 0x0a4d0, 0x1d0b6, 0x0d250, 0x0d520, 0x0dd45,
+    0x0b5a0, 0x056d0, 0x055b2, 0x049b0, 0x0a577, 0x0a4b0, 0x0aa50, 0x1b255, 0x06d20, 0x0ada0,
+    0x14b63
+];
+
+/**
+ * Lấy số ngày trong một tháng Âm lịch.
+ * @param {number} lunarYear - Năm Âm lịch.
+ * @param {number} lunarMonth - Tháng Âm lịch.
+ * @returns {number} 30 hoặc 29.
+ */
+function getLunarMonthDays(lunarYear, lunarMonth) {
+    if ((LUNAR_CAL_DATA[lunarYear - 1900] & (0x10000 >> lunarMonth)))
+        return 30;
+    else
+        return 29;
+}
+
+/**
+ * Lấy tháng nhuận trong năm Âm lịch.
+ * @param {number} lunarYear - Năm Âm lịch.
+ * @returns {number} Tháng nhuận (1-12), hoặc 0 nếu không có.
+ */
+function getLunarLeapMonth(lunarYear) {
+    return (LUNAR_CAL_DATA[lunarYear - 1900] & 0xf);
+}
+
+/**
+ * Lấy số ngày của tháng nhuận (nếu có).
+ * @param {number} lunarYear - Năm Âm lịch.
+ * @returns {number} 30 hoặc 29 (nếu có tháng nhuận), hoặc 0 (nếu không có).
+ */
+function getLunarLeapDays(lunarYear) {
+    if (getLunarLeapMonth(lunarYear) != 0) {
+        if ((LUNAR_CAL_DATA[lunarYear - 1900] & 0x10000))
+            return 30;
+        else
+            return 29;
+    } else
+        return 0;
+}
+
+/**
+ * Tính tổng số ngày trong một năm Âm lịch (bao gồm cả tháng nhuận).
+ * @param {number} lunarYear - Năm Âm lịch.
+ * @returns {number} Tổng số ngày (ví dụ: 354, 355, 383, 384).
+ */
+function getLunarYearDays(lunarYear) {
+    let i, sum = 348;
+    for (i = 0x8000; i > 0x8; i >>= 1) {
+        if ((LUNAR_CAL_DATA[lunarYear - 1900] & i))
+            sum += 1;
+    }
+    return (sum + getLunarLeapDays(lunarYear));
+}
+
+/**
+ * Chuyển đổi ngày Dương lịch (Solar) sang Âm lịch (Lunar).
+ * @param {number} dd - Ngày Dương lịch (1-31).
+ * @param {number} mm - Tháng Dương lịch (1-12).
+ * @param {number} yyyy - Năm Dương lịch.
+ * @returns {{day: number, month: number, year: number, isLeap: boolean}} Đối tượng Lịch Âm.
+ */
+function convertSolarToLunar(dd, mm, yyyy) {
+    let date = new Date(Date.UTC(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd)));
+    let i, leap = 0, temp = 0;
+    let baseDate = new Date(Date.UTC(1900, 0, 31));
+    let offset = (date - baseDate) / 86400000;
+
+    for (i = 1900; i < 2050 && offset > 0; i++) {
+        temp = getLunarYearDays(i);
+        offset -= temp;
+    }
+    if (offset < 0) {
+        offset += temp;
+        i--;
+    }
+
+    let year = i;
+    leap = getLunarLeapMonth(year);
+
+    let isLeap = false;
+    for (i = 1; i < 13 && offset > 0; i++) {
+        if (leap > 0 && i == (leap + 1) && !isLeap) {
+            --i;
+            isLeap = true;
+            temp = getLunarLeapDays(year);
+        } else {
+            temp = getLunarMonthDays(year, i);
+        }
+        if (isLeap && i == (leap + 1)) isLeap = false;
+        offset -= temp;
+    }
+
+    if (offset == 0 && leap > 0 && i == leap + 1) {
+        if (isLeap) {
+            isLeap = false;
+        } else {
+            isLeap = true;
+            --i;
+        }
+    }
+    if (offset < 0) {
+        offset += temp;
+        --i;
+    }
+
+    let month = i;
+    let day = Math.floor(offset + 1);
+    
+    return { day: day, month: month, year: year, isLeap: isLeap };
+}
+
+
+/**
+ * Chuyển đối tượng Date thành chuỗi "YYYY-MM-DD".
+ * @param {Date} date - Đối tượng Date.
+ * @returns {string} Chuỗi ngày tháng.
+ */
+function getLocalDateString(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+/**
+ * Chuyển chuỗi "YYYY-MM-DD" thành số ngày (kể từ 1970).
+ * @param {string} dateStr - Chuỗi "YYYY-MM-DD".
+ * @returns {number} Số ngày.
+ */
+function dateToDays(dateStr) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
+}
+
+// Khai báo hằng số cho việc tính ca
+const EPOCH_DAYS = dateToDays('2025-10-26');
+const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
+
+/**
+ * Tính ca làm việc (Ngày, Đêm, Giãn ca) cho một ngày cụ thể.
+ * @param {string} dateStr - Chuỗi "YYYY-MM-DD".
+ * @returns {string} Tên ca ("ngày", "đêm", hoặc "giãn ca").
+ */
+function getShiftForDate(dateStr) {
+    const currentDays = dateToDays(dateStr);
+    const diffDays = currentDays - EPOCH_DAYS;
+    const patternIndex = (diffDays % SHIFT_PATTERN.length + SHIFT_PATTERN.length) % SHIFT_PATTERN.length;
+    return SHIFT_PATTERN[patternIndex];
+}
+
+/**
+ * Chuyển đổi chuỗi VAPID Base64 (URL-safe) thành Uint8Array.
+ * Cần thiết cho việc đăng ký Push Notification.
+ * @param {string} base64String - Chuỗi VAPID public key.
+ * @returns {Uint8Array}
+ */
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+
+// ===================================================================
+// PHẦN CHÍNH: KHỞI ĐỘNG ỨNG DỤNG
+// ===================================================================
+
+/**
+ * Hàm khởi chạy chính, được gọi khi DOM đã tải xong.
+ */
 document.addEventListener('DOMContentLoaded', () => {
 
     let swRegistration = null; 
@@ -10,17 +217,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Main Service Worker Registered!', reg);
                 swRegistration = reg; 
                 
-                // Lấy VAPID key ngay sau khi đăng ký
                 await getVapidPublicKey();
                 
-                // Kiểm tra trạng thái thông báo
                 checkNotificationStatus();
             })
             .catch(err => console.error('Main Service Worker registration failed:', err));
     }
 
     // ===================================================================
-    // PHẦN 0: KHAI BÁO BIẾN (DOM ELEMENTS)
+    // (MỚI) PHẦN 0: KHAI BÁO BIẾN (DOM ELEMENTS)
     // ===================================================================
     
     // --- Biến Phần 1 (Tin Tức) ---
@@ -33,8 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const summaryTextElement = document.getElementById('summary-text');
     const feedNav = document.getElementById('feed-nav');
     const chatFab = document.getElementById('chat-fab');
-    const chatModal = document.getElementById('chat-modal');
-    const closeChatModal = document.getElementById('close-chat-modal');
+    const chatModal = document.getElementById('chat-modal'); // (Lưu ý: Biến này có thể không còn dùng)
+    const closeChatModal = document.getElementById('close-chat-modal'); // (Lưu ý: Biến này có thể không còn dùng)
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-input');
     const chatDisplay = document.getElementById('chat-display');
@@ -49,15 +254,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Biến Phần 2 (Lịch & Cài đặt) ---
     const calendarMain = document.getElementById('calendar-main');
-    const settingsMain = document.getElementById('settings-main'); 
+    const settingsMain = document.getElementById('settings-main');
     const cal_aiForm = document.getElementById('ai-form');
     const cal_aiInput = document.getElementById('ai-input');
     const calendarBody = document.getElementById('calendar-body');
     const currentMonthYearEl = document.getElementById('current-month-year');
     const prevMonthBtn = document.getElementById('prev-month-btn');
     const nextMonthBtn = document.getElementById('next-month-btn');
-    const settingsModal = document.getElementById('settings-modal'); 
-    const closeModalBtn = document.getElementById('close-modal');
+    const settingsModal = document.getElementById('settings-modal'); // (Lưu ý: Biến này có thể không còn dùng)
+    const closeModalBtn = document.getElementById('close-modal'); // (Lưu ý: Biến này có thể không còn dùng)
     const notifyButton = document.getElementById('notify-button');
     const notifyTimeNgay = document.getElementById('notify-time-ngay');
     const notifyTimeDem = document.getElementById('notify-time-dem');
@@ -71,18 +276,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const newNoteInput = document.getElementById('new-note-input');
 
     // --- Biến Phần 3 (Trò chuyện) ---
-    const chatMain = document.getElementById('chat-main'); 
+    const chatMain = document.getElementById('chat-main');
 
     // --- Biến Phần 4 (Điều khiển Tab) ---
     const newsTabBtn = document.getElementById('news-tab-btn');
-    const calendarTabBtn = document.getElementById('calendar-tab-btn');
-    const settingsBtn = document.getElementById('settings-btn'); 
+    const calendarTabBtn = document.getElementById('calendar-tab-btn'); // (Lưu ý: Biến này có thể không có trong HTML)
+    const settingsBtn = document.getElementById('settings-btn'); // (Lưu ý: Biến này có thể không có trong HTML)
     const mobileHeaderTitle = document.getElementById('mobile-header-title');
     const refreshFeedButton = document.getElementById('refresh-feed-button');
     const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
     const bottomTabNews = document.getElementById('bottom-tab-news');
     const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
-    const bottomTabChat = document.getElementById('bottom-tab-chat'); 
+    const bottomTabChat = document.getElementById('bottom-tab-chat');
     const bottomTabSettings = document.getElementById('bottom-tab-settings');
     const bottomNav = document.getElementById('bottom-nav'); 
 
@@ -106,78 +311,78 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminNoteViewerTitle = document.getElementById('admin-note-viewer-title');
     const adminNoteViewerContent = document.getElementById('admin-note-viewer-content');
     
-    // Biến tạm để lưu trữ thông tin đăng nhập Admin
-    let currentAdminCreds = null;
+    // --- Biến Trạng thái (State) ---
+    let currentAdminCreds = null; // Lưu trữ thông tin đăng nhập Admin
+    let currentEditingDateStr = null; // Ngày đang sửa trong modal
+    let currentViewDate = new Date(); // Tháng đang xem trên lịch
+    let chatHistory = []; // Lịch sử chat
+    let summaryEventSource = null; // Đối tượng stream tóm tắt
+    let completedSummary = { title: '', text: '' }; // Tóm tắt đã hoàn thành
+    let toastTimeoutId = null; // ID của setTimeout cho toast
+    const clientRssCache = new Map(); // Cache RSS phía client
+    
+    // Đọc dữ liệu từ LocalStorage khi khởi động
+    let noteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
+    let appSettings = JSON.parse(localStorage.getItem('myScheduleSettings')) || {
+        notifyTimeNgay: "06:00",
+        notifyTimeDem: "20:00",
+        notifyTimeOff: "08:00"
+    };
 
     // ===================================================================
-    // PHẦN 1: LOGIC TIN TỨC (HÀM VÀ BIẾN LOGIC)
+    // PHẦN 1: LOGIC TIN TỨC (RSS, TÓM TẮT, CHAT)
     // ===================================================================
     
-    // Các icon dùng cho thông báo toast
+    // --- Các hằng số cho icon toast ---
     const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
     const iconCheck = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
     const iconError = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
 
-    // Cache tin tức phía client (trình duyệt)
-    const clientRssCache = new Map();
-    // Lịch sử chat (lưu tạm thời)
-    let chatHistory = [];
-    // Biến giữ kết nối streaming tóm tắt
-    let summaryEventSource = null;
-    // Lưu trữ tóm tắt đã hoàn thành
-    let completedSummary = { title: '', text: '' };
-    // ID của timeout để ẩn toast
-    let toastTimeoutId = null;
-
     /**
-     * Gọi API Gemini ở chế độ streaming để tóm tắt văn bản.
-     * Sử dụng EventSource để nhận dữ liệu từng phần.
-     * Hiển thị thông báo (toast) khi bắt đầu và khi hoàn thành.
-     * @param {string} prompt - Câu lệnh (prompt) chứa nội dung cần tóm tắt.
-     * @param {string} title - Tiêu đề của bài viết (để hiển thị khi tóm tắt xong).
+     * Gọi API Gemini (streaming) để tóm tắt văn bản.
+     * Sử dụng EventSource (Server-Sent Events) để nhận dữ liệu từng phần.
+     * @param {string} prompt - Câu lệnh (prompt) gửi cho AI.
+     * @param {string} title - Tiêu đề bài báo (dùng để hiển thị).
      */
     function callGeminiAPIStreaming(prompt, title) {
-        // Đóng kết nối cũ nếu có
         if (summaryEventSource) {
-            summaryEventSource.close();
+            summaryEventSource.close(); // Đóng stream cũ nếu có
         }
-        
         let currentSummaryText = '';
         const encodedPrompt = encodeURIComponent(prompt);
         const streamUrl = `/summarize-stream?prompt=${encodedPrompt}`;
+        
         summaryEventSource = new EventSource(streamUrl);
-
+        
         summaryEventSource.onopen = () => console.log("Kết nối stream tóm tắt thành công!");
-
+        
         summaryEventSource.onerror = (error) => {
             console.error("Lỗi kết nối EventSource:", error);
             showToast("Lỗi tóm tắt", "Không thể kết nối server.", 'error', null, 5000); 
             if (summaryEventSource) summaryEventSource.close();
             summaryEventSource = null;
         };
-
+        
         summaryEventSource.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-                
                 if (data.text) {
-                    // Cộng dồn văn bản
+                    // Nhận được 1 phần tóm tắt
                     currentSummaryText += data.text;
                 } else if (data.error) {
-                    // Xử lý lỗi từ server
+                    // Nhận được thông báo lỗi từ stream
                     console.error("Lỗi từ stream:", data.error);
                     currentSummaryText += `\n\n[Lỗi: ${data.error}]`;
                     if (summaryEventSource) summaryEventSource.close();
                     summaryEventSource = null;
                     showToast("Lỗi tóm tắt", data.error, 'error', null, 5000);
                 } else if (data.done) {
-                    // Hoàn thành
+                    // Stream kết thúc
                     console.log("Stream tóm tắt hoàn thành.");
                     if (summaryEventSource) summaryEventSource.close();
                     summaryEventSource = null;
                     completedSummary = { title: title, text: currentSummaryText };
-                    // Hiển thị toast báo sẵn sàng
-                    showSummaryReadyNotification(title); 
+                    showSummaryReadyNotification(title); // Hiển thị toast "Sẵn sàng"
                 }
             } catch (e) {
                 console.error("Lỗi phân tích dữ liệu stream:", e, event.data);
@@ -189,11 +394,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Gửi lịch sử trò chuyện hiện tại đến API Chat (Gemini) và nhận phản hồi.
-     * Cập nhật giao diện trò chuyện với phản hồi của mô hình hoặc thông báo lỗi.
+     * Gọi API Chat (không streaming) để trò chuyện.
+     * Gửi toàn bộ lịch sử chat và nhận về 1 câu trả lời đầy đủ.
      */
     async function callChatAPI() {
-        // Hiển thị bong bóng "đang tải"
+        // Hiển thị bubble "đang tải"
         const loadingBubble = document.createElement('div');
         loadingBubble.className = 'model-bubble';
         loadingBubble.innerHTML = `<div class="spinner border-t-white" style="width: 20px; height: 20px;"></div>`;
@@ -206,24 +411,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ history: chatHistory })
             });
-            
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Lỗi server: ${errorText}`);
             }
-            
             const result = await response.json();
             const answer = result.answer;
-            // Thêm phản hồi của model vào lịch sử
+            
+            // Thêm câu trả lời của AI vào lịch sử
             chatHistory.push({ role: "model", parts: [{ text: answer }] });
-            // Xóa bong bóng tải
+            
+            // Xóa bubble tải và vẽ lại lịch sử
             chatDisplay.removeChild(loadingBubble);
-            // Vẽ lại toàn bộ lịch sử chat
             renderChatHistory();
         } catch (error) {
             console.error("Lỗi khi gọi API chat:", error);
             chatDisplay.removeChild(loadingBubble);
-            // Hiển thị bong bóng lỗi
+            // Hiển thị bubble lỗi
             const errorBubble = document.createElement('div');
             errorBubble.className = 'model-bubble';
             errorBubble.style.backgroundColor = '#991B1B';
@@ -235,13 +439,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Tải và hiển thị tin tức từ một nguồn RSS.
-     * Sử dụng cache phía client để tránh gọi lại API nếu không cần thiết.
-     * @param {string} rssUrl - URL của nguồn RSS.
-     * @param {string} sourceName - Tên của nguồn (ví dụ: 'VnExpress').
-     * @param {object} [options] - Các tùy chọn.
-     * @param {boolean} [options.display=true] - Có hiển thị kết quả lên grid hay không.
-     * @param {boolean} [options.force=false] - Có buộc tải lại (xóa cache) hay không.
+     * Tải và phân tích RSS feed từ server.
+     * Sử dụng cache phía client (clientRssCache) để tăng tốc độ.
+     * @param {string} rssUrl - URL của RSS feed.
+     * @param {string} sourceName - Tên nguồn (VnExpress, Tuổi Trẻ...).
+     * @param {object} [options] - Tùy chọn.
+     * @param {boolean} [options.display=true] - Có hiển thị kết quả ra DOM không.
+     * @param {boolean} [options.force=false] - Có buộc tải lại (xóa cache) không.
      */
     async function fetchRSS(rssUrl, sourceName, { display = true, force = false } = {}) {
         if (display) {
@@ -249,13 +453,12 @@ document.addEventListener('DOMContentLoaded', () => {
             newsGrid.innerHTML = '';
         }
         
-        // Xóa cache nếu bị buộc tải lại
         if (force) {
             clientRssCache.delete(rssUrl);
             console.log(`[CACHE] Đã xóa ${rssUrl} do yêu cầu Tải lại.`);
         }
         
-        // Sử dụng cache nếu có
+        // Kiểm tra cache
         if (clientRssCache.has(rssUrl)) {
             if (display) {
                 displayArticles(clientRssCache.get(rssUrl), sourceName);
@@ -264,8 +467,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
+        // Nếu không có cache, gọi API
         try {
-            // Gọi proxy RSS của server
             const response = await fetch(`/get-rss?url=${encodeURIComponent(rssUrl)}`);
             if (!response.ok) throw new Error('Lỗi server (RSS)');
             
@@ -275,11 +478,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (xmlDoc.getElementsByTagName("parsererror").length) throw new Error("Lỗi phân tích XML");
             
-            // Xử lý cả <item> (RSS) và <entry> (Atom)
             let items;
-            const itemNodes = xmlDoc.querySelectorAll("item");
+            const itemNodes = xmlDoc.querySelectorAll("item"); // Chuẩn RSS
             if (itemNodes.length === 0) {
-                const entryNodes = xmlDoc.querySelectorAll("entry");
+                const entryNodes = xmlDoc.querySelectorAll("entry"); // Chuẩn Atom (VTV)
                 if (entryNodes.length > 0) items = Array.from(entryNodes);
                 else throw new Error("Không tìm thấy bài viết");
             } else {
@@ -288,6 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Lưu vào cache
             clientRssCache.set(rssUrl, items);
+            
             if (display) displayArticles(items, sourceName);
         } catch (error) {
             console.error(`Lỗi tải RSS ${sourceName}:`, error);
@@ -298,36 +501,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Hiển thị danh sách các bài báo lên giao diện (newsGrid).
+     * Hiển thị các bài báo (từ RSS) lên giao diện (DOM).
      * @param {Element[]} items - Mảng các phần tử <item> hoặc <entry> từ XML.
-     * @param {string} sourceName - Tên của nguồn tin.
+     * @param {string} sourceName - Tên nguồn báo.
      */
     function displayArticles(items, sourceName) {
         newsGrid.innerHTML = '';
         items.forEach(item => {
+            // Trích xuất dữ liệu, hỗ trợ cả RSS (item) và Atom (entry)
             const title = item.querySelector("title")?.textContent || "Không có tiêu đề";
-            // Lấy mô tả (description, summary, content)
             let description = item.querySelector("description")?.textContent || item.querySelector("summary")?.textContent || item.querySelector("content")?.textContent || "";
-            // Lấy link
             let link = item.querySelector("link")?.textContent || "#";
             if (link === "#" && item.querySelector("link")?.hasAttribute("href")) {
-                link = item.querySelector("link")?.getAttribute("href") || "#";
+                link = item.querySelector("link")?.getAttribute("href") || "#"; // Dành cho Atom
             }
             const pubDate = item.querySelector("pubDate")?.textContent || item.querySelector("updated")?.textContent || "";
             
-            // Xử lý HTML trong mô tả để lấy ảnh và text
+            // Làm sạch description (loại bỏ HTML, lấy ảnh)
             const descParser = new DOMParser();
             const descDoc = descParser.parseFromString(`<!doctype html><body>${description}`, 'text/html');
             const img = descDoc.querySelector("img");
             const imgSrc = img ? img.src : "https://placehold.co/600x400/374151/9CA3AF?text=Tin+Tuc";
             let descriptionText = descDoc.body.textContent.trim() || "Không có mô tả.";
             
-            // Loại bỏ tiêu đề nếu nó bị lặp lại trong mô tả
+            // (Lỗi phổ biến) Loại bỏ tiêu đề bị lặp lại trong mô tả
             if (descriptionText.startsWith(title)) {
                 descriptionText = descriptionText.substring(title.length).trim();
             }
             
-            // Tạo card HTML
+            // Tạo thẻ Card
             const card = document.createElement('a');
             card.href = link;
             card.className = "bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-[1.03] hover:shadow-blue-500/20 block";
@@ -349,11 +551,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Ngăn thẻ <a> điều hướng khi bấm nút "Tóm tắt"
              card.addEventListener('click', (e) => {
                  if (e.target.closest('.summary-btn')) {
-                     return; // Không làm gì nếu bấm vào nút
+                     return; // Không làm gì cả
                  }
-                 // Nếu không phải nút, thẻ <a> sẽ hoạt động bình thường
+                 // Nếu không phải nút tóm tắt, thẻ <a> sẽ hoạt động bình thường
              });
-             
+            
             // Gắn sự kiện cho nút "Tóm tắt"
             const summaryButton = card.querySelector('.summary-btn');
             summaryButton.addEventListener('click', (e) => {
@@ -367,7 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Xử lý sự kiện khi bấm vào một nút chọn nguồn tin (feed).
+     * Xử lý sự kiện khi nhấn nút chọn Feed RSS (Desktop và Mobile).
      * @param {Event} e - Sự kiện click.
      */
     function handleFeedButtonClick(e) {
@@ -377,22 +579,22 @@ document.addEventListener('DOMContentLoaded', () => {
          const rssUrl = clickedButton.dataset.rss;
          const sourceName = clickedButton.dataset.source;
          
-         // Bỏ active tất cả các nút (cả mobile và desktop)
+         // Tắt active ở tất cả các nút
          document.querySelectorAll('#feed-nav .feed-button, #rss-mobile-menu .feed-button').forEach(btn => btn.classList.remove('active'));
-         // Active nút được bấm (cả mobile và desktop)
+         // Bật active ở các nút tương ứng (cả mobile và desktop)
          document.querySelectorAll(`.feed-button[data-rss="${rssUrl}"]`).forEach(btn => btn.classList.add('active'));
          
          window.scrollTo({ top: 0, behavior: 'smooth' });
          fetchRSS(rssUrl, sourceName);
          
-         // Ẩn menu mobile nếu đang mở
+         // Tự động đóng menu mobile
          rssMobileMenu.classList.add('hidden'); 
     }
 
     /**
-     * Xử lý sự kiện khi bấm nút "Tóm tắt".
+     * Xử lý sự kiện khi nhấn nút "Tóm tắt".
      * @param {string} title - Tiêu đề bài báo.
-     * @param {string} description - Mô tả/nội dung bài báo.
+     * @param {string} description - Nội dung mô tả (đã lọc HTML).
      */
     function handleSummaryClick(title, description) {
         if (!description || description === "Không có mô tả.") {
@@ -400,105 +602,105 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
+        // Tạo prompt cho AI
         const prompt = `Tóm tắt nội dung sau đây trong khoảng 200 từ:
         Tiêu đề: ${title}
         Nội dung: ${description}`;
         
-        // Bắt đầu streaming
         callGeminiAPIStreaming(prompt, title);
-        // Hiển thị toast "Đang tóm tắt"
+        
+        // Hiển thị toast "Đang tải"
         showToast("Đang tóm tắt...", title.substring(0, 50) + "...", 'loading', null, 5000);
     }
 
-     /**
-     * Hiển thị thông báo toast (thông báo nhỏ ở góc).
-     * @param {string} mainMessage - Thông báo chính (ví dụ: "Đang tóm tắt...").
-     * @param {string} detailMessage - Chi tiết (ví dụ: tiêu đề bài báo).
-     * @param {'ready'|'loading'|'error'} [state='ready'] - Trạng thái của toast (ảnh hưởng đến icon và màu sắc).
-     * @param {function|null} onClickAction - Hàm sẽ chạy khi bấm vào toast.
-     * @param {number|null} autoHideDelay - Tự động ẩn sau bao nhiêu ms (null = không tự ẩn).
+    /**
+     * Hiển thị một thông báo toast (cửa sổ nhỏ góc dưới).
+     * @param {string} mainMessage - Dòng thông báo chính (in đậm).
+     * @param {string} detailMessage - Dòng tiêu đề (phụ).
+     * @param {'ready' | 'loading' | 'error'} state - Trạng thái của toast (quyết định icon và màu sắc).
+     * @param {function | null} onClickAction - Hàm sẽ gọi khi nhấn vào toast (chỉ hoạt động khi state='ready').
+     * @param {number | null} autoHideDelay - Tự động ẩn sau (ms).
      */
      function showToast(mainMessage, detailMessage, state = 'ready', onClickAction, autoHideDelay = null) {
-         if (toastTimeoutId) clearTimeout(toastTimeoutId);
+         if (toastTimeoutId) clearTimeout(toastTimeoutId); // Xóa hẹn giờ ẩn cũ (nếu có)
          
          toastMainMessage.textContent = mainMessage;
          toastTitle.textContent = detailMessage;
+         
          summaryToast.classList.remove('toast-loading', 'bg-blue-600', 'bg-red-600');
+         summaryToast.onclick = null; // Xóa sự kiện click cũ
          
          if (state === 'loading') {
              toastIcon.innerHTML = iconSpinner;
              summaryToast.classList.add('toast-loading'); 
              summaryToast.style.cursor = 'default';
-             toastCta.style.display = 'none';
-             summaryToast.onclick = null;
+             toastCta.style.display = 'none'; // Ẩn "Nhấn để xem"
          } else if (state === 'ready') {
              toastIcon.innerHTML = iconCheck;
              summaryToast.classList.add('bg-blue-600'); 
              summaryToast.style.cursor = 'pointer';
-             toastCta.style.display = 'block';
-             summaryToast.onclick = onClickAction;
+             toastCta.style.display = 'block'; // Hiện "Nhấn để xem"
+             summaryToast.onclick = onClickAction; // Gán hành động click
          } else if (state === 'error') {
              toastIcon.innerHTML = iconError;
              summaryToast.classList.add('bg-red-600'); 
              summaryToast.style.cursor = 'default';
              toastCta.style.display = 'none';
-             summaryToast.onclick = null;
          }
          
+         // Hiển thị toast
          summaryToast.classList.remove('hidden');
-         // Dùng timeout nhỏ để kích hoạt transition
-         setTimeout(() => summaryToast.classList.add('show'), 50); 
+         setTimeout(() => summaryToast.classList.add('show'), 50); // Delay 50ms để CSS transition hoạt động
          
+         // Hẹn giờ tự động ẩn
          if (autoHideDelay) {
              toastTimeoutId = setTimeout(hideToast, autoHideDelay);
          }
      }
 
      /**
-     * Ẩn thông báo toast.
-     */
+      * Ẩn toast tóm tắt.
+      */
      function hideToast() {
           if (toastTimeoutId) clearTimeout(toastTimeoutId);
           toastTimeoutId = null;
+          
           summaryToast.classList.remove('show');
-          // Chờ transition hoàn tất rồi mới ẩn hẳn
           setTimeout(() => {
               summaryToast.classList.add('hidden');
               summaryToast.classList.remove('toast-loading', 'bg-blue-600', 'bg-red-600');
-          }, 300);
+          }, 300); // Chờ 300ms cho CSS transition
           summaryToast.onclick = null;
      }
-     
+
      /**
-     * Hiển thị toast đặc biệt báo "Tóm tắt đã sẵn sàng".
-     * Khi bấm vào sẽ mở modal chứa nội dung tóm tắt.
-     * @param {string} title - Tiêu đề bài báo đã tóm tắt.
-     */
+      * Hiển thị toast thông báo "Tóm tắt đã sẵn sàng".
+      * Gán sự kiện click để mở modal tóm tắt.
+      * @param {string} title - Tiêu đề bài báo.
+      */
      function showSummaryReadyNotification(title) {
           showToast(
               "Tóm tắt đã sẵn sàng!",
               title.substring(0, 50) + "...",
               'ready', 
               () => { 
-                  // Gán nội dung vào modal
+                  // Hành động khi click: Mở Modal
                   summaryTitleElement.textContent = completedSummary.title;
                   summaryTextElement.textContent = completedSummary.text;
-                  // Mở modal
                   summaryModal.classList.remove('hidden');
-                  // Ẩn toast
-                  hideToast();
+                  hideToast(); // Ẩn toast đi
               },
               null // Không tự động ẩn
           );
      }
 
     /**
-     * Vẽ lại toàn bộ lịch sử trò chuyện từ biến `chatHistory` lên giao diện.
+     * Vẽ lại toàn bộ lịch sử chat trong khung chat.
      */
     function renderChatHistory() {
         chatDisplay.innerHTML = '';
         if (chatHistory.length === 0) {
-             // Hiển thị tin nhắn chào mừng mặc định
+             // Hiển thị tin nhắn chào mừng
              chatDisplay.innerHTML = `<div class="model-bubble">Chào đại ca, Tèo xin trả lời bất kỳ câu hỏi nào của đại ca?</div>`;
              return;
         }
@@ -511,17 +713,16 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 bubble.classList.add('model-bubble');
             }
-            bubble.style.whiteSpace = "pre-wrap"; // Giữ nguyên định dạng xuống dòng
+            bubble.style.whiteSpace = "pre-wrap"; // Giữ các dấu xuống dòng
             bubble.textContent = message.parts[0].text;
             chatDisplay.appendChild(bubble);
         });
         
-        // Cuộn xuống dưới cùng
-        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+        chatDisplay.scrollTop = chatDisplay.scrollHeight; // Tự cuộn xuống dưới
     }
 
     /**
-     * Xử lý sự kiện khi gửi tin nhắn chat.
+     * Xử lý sự kiện gửi tin nhắn chat.
      * @param {Event} e - Sự kiện submit form.
      */
     async function handleSendChat(e) {
@@ -529,74 +730,45 @@ document.addEventListener('DOMContentLoaded', () => {
         const prompt = chatInput.value.trim();
         if (!prompt) return;
         
-        // Thêm tin nhắn của người dùng vào lịch sử
+        // Thêm tin nhắn của user vào lịch sử và vẽ lại
         chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-        renderChatHistory(); // Cập nhật UI ngay lập tức
+        renderChatHistory();
         chatInput.value = '';
         
-        // Gọi API để lấy phản hồi
+        // Gọi API
         await callChatAPI();
     }
 
-    // Ẩn/hiện thanh nav dưới khi mở/đóng bàn phím (trên mobile)
-    if (chatInput && bottomNav) {
-        chatInput.addEventListener('focus', () => {
-            bottomNav.style.display = 'none';
-        });
-        chatInput.addEventListener('blur', () => {
-            setTimeout(() => {
-                bottomNav.style.display = 'flex';
-            }, 100);
-        });
-    }
-
     /**
-     * Xóa toàn bộ lịch sử trò chuyện và reset về màn hình chào mừng.
+     * Xóa lịch sử chat và vẽ lại (hiển thị tin nhắn chào mừng).
      */
     function resetChat() {
         chatHistory = [];
         renderChatHistory();
     }
-    
+
     /**
-     * Tải trước (pre-warm) cache cho các nguồn tin RSS khác
-     * (chưa được chọn) để tăng tốc độ chuyển tab.
+     * Tải ngầm (pre-warm) các RSS feed khác vào cache.
+     * Được gọi sau khi feed đầu tiên đã tải xong.
      */
     function prewarmCache() {
         console.log("[Cache-Warmer] Bắt đầu tải nền các feed khác...");
+        // Lấy tất cả các nút feed CHƯA active
         const feedsToPrewarm = Array.from(feedNav.querySelectorAll('.feed-button:not(.active)'));
         feedsToPrewarm.forEach(feed => {
-            // Gọi fetchRSS nhưng không hiển thị
-            fetchRSS(feed.dataset.rss, feed.dataset.source, { display: false });
+            fetchRSS(feed.dataset.rss, feed.dataset.source, { display: false }); // Tải nhưng không hiển thị
         });
     }
-            
-            
+    
+    
     // ===================================================================
-    // PHẦN 2: LOGIC LỊCH (HÀM VÀ BIẾN LOGIC)
+    // PHẦN 2: LOGIC LỊCH (CALENDAR, NOTES, SETTINGS, PUSH, SYNC)
     // ===================================================================
-
-    // Biến lưu ngày đang được chỉnh sửa trong modal
-    let currentEditingDateStr = null;
-    // Tải dữ liệu ghi chú từ localStorage
-    let noteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
-    // Tải cài đặt từ localStorage
-    let appSettings = JSON.parse(localStorage.getItem('myScheduleSettings')) || {
-        notifyTimeNgay: "06:00",
-        notifyTimeDem: "20:00",
-        notifyTimeOff: "08:00"
-    };
-    // Ngày hiện tại đang xem trên lịch
-    let currentViewDate = new Date(); 
-
-    // Hằng số cho logic tính ca
-    const EPOCH_DAYS = dateToDays('2025-10-26');
-    const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
 
     /**
-     * Hiển thị thông báo trạng thái cho chức năng Đồng bộ Online.
+     * Hiển thị thông báo trạng thái đồng bộ (Sync).
      * @param {string} message - Nội dung thông báo.
-     * @param {boolean} [isError=false] - `true` nếu là lỗi (màu đỏ), `false` nếu thành công (màu xanh).
+     * @param {boolean} [isError=false] - Là lỗi (true) hay thành công (false).
      */
     function showSyncStatus(message, isError = false) {
         if (!syncStatusMsg) return;
@@ -608,222 +780,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Tự động ẩn sau 5 giây
         setTimeout(() => {
-            if (syncStatusMsg.textContent === message) { 
+            if (syncStatusMsg.textContent === message) { // Chỉ ẩn nếu thông báo còn đó
                 syncStatusMsg.classList.add('hidden');
             }
         }, 5000);
     }
 
-    // ======================================
-    // ===== CÁC HÀM QUẢN TRỊ (ADMIN) =====
-    // ======================================
-    
     /**
-     * (Admin) Tải và hiển thị bảng điều khiển quản trị (danh sách người dùng).
-     * Chỉ được gọi sau khi đăng nhập admin thành công.
-     */
-    async function loadAdminPanel() {
-        if (!currentAdminCreds) return;
-        
-        // Ẩn các cài đặt thông thường
-        document.querySelector('#settings-main fieldset:nth-of-type(1)').classList.add('hidden'); // Push
-        document.querySelector('#settings-main fieldset:nth-of-type(2)').classList.add('hidden'); // Sync
-        
-        // Hiện panel admin
-        adminPanel.classList.remove('hidden');
-        adminUserList.classList.add('hidden');
-        adminUserLoading.classList.remove('hidden');
-        
-        try {
-            // Gọi API lấy danh sách user
-            const response = await fetch('/api/admin/get-users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(currentAdminCreds) // Gửi { adminUser, adminPass }
-            });
-            
-            const users = await response.json();
-            if (!response.ok) throw new Error(users.error || 'Lỗi không xác định');
-
-            // Hiển thị danh sách
-            adminUserListBody.innerHTML = '';
-            users.forEach(user => {
-                const tr = document.createElement('tr');
-                tr.className = user.is_admin ? 'bg-gray-800' : '';
-                tr.innerHTML = `
-                    <td class="px-3 py-2 whitespace-nowrap text-sm">
-                        <span class="text-white">${user.username}</span>
-                        ${user.is_admin ? '<span class="ml-2 text-xs text-red-400 font-bold">[ADMIN]</span>' : ''}
-                    </td>
-                    <td class="px-3 py-2 whitespace-nowrap text-sm space-x-2">
-                        <button data-user="${user.username}" class="text-blue-400 hover:text-blue-300 text-xs font-medium admin-view-notes">Xem</button>
-                        <button data-user="${user.username}" class="text-red-400 hover:text-red-300 text-xs font-medium admin-delete-user">Xóa</button>
-                    </td>
-                `;
-                adminUserListBody.appendChild(tr);
-            });
-
-            adminUserLoading.classList.add('hidden');
-            adminUserList.classList.remove('hidden');
-
-        } catch (err) {
-            showSyncStatus(`Lỗi Admin: ${err.message}`, true);
-            adminLogout(); // Đăng xuất nếu có lỗi
-        }
-    }
-    
-    /**
-     * (Admin) Đăng xuất khỏi chế độ quản trị, quay về cài đặt thông thường.
-     */
-    function adminLogout() {
-        currentAdminCreds = null;
-        adminPanel.classList.add('hidden');
-        // Hiện lại các cài đặt thông thường
-        document.querySelector('#settings-main fieldset:nth-of-type(1)').classList.remove('hidden'); // Push
-        document.querySelector('#settings-main fieldset:nth-of-type(2)').classList.remove('hidden'); // Sync
-        syncPasswordInput.value = '';
-    }
-
-    /**
-     * (Admin) Xem nội dung ghi chú (notes) của một người dùng cụ thể.
-     * @param {string} targetUser - Tên người dùng muốn xem.
-     */
-    async function adminViewNotes(targetUser) {
-        if (!currentAdminCreds) return;
-        
-        // Chuẩn bị modal
-        adminNoteViewerTitle.textContent = `Ghi chú của: ${targetUser}`;
-        adminNoteViewerContent.innerHTML = `<p class="text-gray-400">Đang tải ghi chú...</p>`;
-        adminNoteViewerModal.classList.remove('hidden');
-        
-        try {
-            const payload = {
-                ...currentAdminCreds, // { adminUser, adminPass }
-                targetUser: targetUser
-            };
-            
-            // Gọi API lấy ghi chú
-            const response = await fetch('/api/admin/get-notes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            const notes = await response.json();
-            if (!response.ok) throw new Error(notes.error || 'Lỗi không xác định');
-
-            // Hiển thị Ghi chú (dạng JSON)
-            const formattedNotes = JSON.stringify(notes, null, 2);
-            adminNoteViewerContent.innerHTML = `<pre class="whitespace-pre-wrap text-white text-sm">${formattedNotes}</pre>`;
-
-        } catch (err) {
-             adminNoteViewerContent.innerHTML = `<p class="text-red-400">Lỗi: ${err.message}</p>`;
-        }
-    }
-    
-    /**
-     * (Admin) Xóa một người dùng (không phải admin) khỏi cơ sở dữ liệu.
-     * @param {string} targetUser - Tên người dùng muốn xóa.
-     */
-    async function adminDeleteUser(targetUser) {
-        if (!currentAdminCreds) return;
-
-        if (!confirm(`ĐẠI CA ADMIN!\n\nĐại ca có chắc chắn muốn XÓA VĨNH VIỄN người dùng "${targetUser}" không?\n\nHành động này không thể hoàn tác.`)) {
-            return;
-        }
-
-        try {
-            const payload = {
-                ...currentAdminCreds, // { adminUser, adminPass }
-                targetUser: targetUser
-            };
-            
-            // Gọi API xóa user
-            const response = await fetch('/api/admin/delete-user', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error || 'Lỗi không xác định');
-            
-            alert(result.message); // Thông báo thành công
-            loadAdminPanel(); // Tải lại danh sách
-            
-        } catch (err) {
-            alert(`Lỗi khi xóa: ${err.message}`);
-        }
-    }
-
-    // ======================================
-    // ===== CÁC HÀM LỊCH & GHI CHÚ =====
-    // ======================================
-
-    /**
-     * Chuyển đổi đối tượng Date thành chuỗi "YYYY-MM-DD".
-     * @param {Date} date - Đối tượng Date.
-     * @returns {string} Chuỗi ngày tháng.
-     */
-    function getLocalDateString(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    }
-    
-    /**
-     * Chuyển đổi chuỗi "YYYY-MM-DD" thành số ngày (epoch days).
-     * @param {string} dateStr - Chuỗi ngày tháng.
-     * @returns {number} Số ngày.
-     */
-    function dateToDays(dateStr) {
-        const [year, month, day] = dateStr.split('-').map(Number);
-        const date = new Date(year, month - 1, day);
-        return Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
-    }
-    
-    /**
-     * Lưu dữ liệu ghi chú (noteData) vào localStorage và đồng bộ lên server (nếu đã đăng ký push).
+     * Lưu dữ liệu ghi chú (noteData) vào LocalStorage.
+     * Đồng thời, lọc bỏ các ngày không có ghi chú (dọn rác).
+     * Cũng gọi hàm syncNotesToServer() để đồng bộ với máy chủ thông báo.
      */
     function saveNoteData() {
-        // Dọn dẹp các ngày không có ghi chú
         const cleanData = {};
+        // Lọc bỏ các ngày rỗng
         for (const date in noteData) {
             if (Array.isArray(noteData[date]) && noteData[date].length > 0) {
                 cleanData[date] = noteData[date];
             }
         }
-        // Lưu vào localStorage
         localStorage.setItem('myScheduleNotes', JSON.stringify(cleanData));
         
-        // Đồng bộ lên server (cho thông báo push)
+        // Đồng bộ lên server (nếu đã đăng ký push)
         syncNotesToServer().catch(err => console.error('Lỗi đồng bộ ghi chú:', err));
     }
-    
+
     /**
-     * Lưu cài đặt (appSettings) vào localStorage và cập nhật lên server (nếu đã đăng ký push).
+     * Lưu cài đặt (appSettings) vào LocalStorage.
+     * Đồng thời, gọi hàm updateSubscriptionSettings() để cập nhật server.
      */
     function saveSettings() {
         localStorage.setItem('myScheduleSettings', JSON.stringify(appSettings));
-        // Cập nhật giờ thông báo lên server
-        updateSubscriptionSettings();
+        updateSubscriptionSettings(); // Cập nhật giờ thông báo lên server
     }
-    
+
     /**
-     * Tính toán ca làm việc ("ngày", "đêm", "giãn ca") cho một ngày cụ thể.
-     * @param {string} dateStr - Chuỗi ngày "YYYY-MM-DD".
-     * @returns {string} Tên ca.
-     */
-    function getShiftForDate(dateStr) {
-        const currentDays = dateToDays(dateStr);
-        const diffDays = currentDays - EPOCH_DAYS;
-        const patternIndex = (diffDays % SHIFT_PATTERN.length + SHIFT_PATTERN.length) % SHIFT_PATTERN.length;
-        return SHIFT_PATTERN[patternIndex];
-    }
-    
-    /**
-     * Tải cài đặt (appSettings) và hiển thị lên các ô input time trong tab Cài đặt.
+     * Tải cài đặt từ biến appSettings lên giao diện (DOM).
      */
     function loadSettings() {
         notifyTimeNgay.value = appSettings.notifyTimeNgay;
@@ -831,201 +823,78 @@ document.addEventListener('DOMContentLoaded', () => {
         notifyTimeOff.value = appSettings.notifyTimeOff;
     }
 
-    // ======================================
-    // ===== CÁC HÀM TÍNH LỊCH ÂM =====
-    // ======================================
-    
-    // Dữ liệu Lịch Âm (từ 1900 đến 2050)
-    const LUNAR_CAL_DATA = [
-        0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2,
-        0x04ae0, 0x0a5b6, 0x0a4d0, 0x0d250, 0x1d255, 0x0b540, 0x0d6a0, 0x0ada2, 0x095b0, 0x14977,
-        0x04970, 0x0a4b0, 0x0b4b5, 0x06a50, 0x06d40, 0x1ab54, 0x02b60, 0x09570, 0x052f2, 0x04970,
-        0x06566, 0x0d4a0, 0x0ea50, 0x06e95, 0x05ad0, 0x02b60, 0x186e3, 0x092e0, 0x1c8d7, 0x0c950,
-        0x0d4a0, 0x1d8a6, 0x0b550, 0x056a0, 0x1a5b4, 0x025d0, 0x092d0, 0x0d2b2, 0x0a950, 0x0b557,
-        0x06ca0, 0x0b550, 0x15355, 0x04da0, 0x0a5b0, 0x14573, 0x052b0, 0x0a9a8, 0x0e950, 0x06aa0,
-        0x0aea6, 0x0ab50, 0x04b60, 0x0aae4, 0x0a570, 0x05260, 0x0f263, 0x0d950, 0x05b57, 0x056a0,
-        0x096d0, 0x04dd5, 0x04ad0, 0x0a4d0, 0x0d4d4, 0x0d250, 0x0d558, 0x0b540, 0x0b6a0, 0x195a6,
-        0x095b0, 0x049b0, 0x0a974, 0x0a4b0, 0x0b27a, 0x06a50, 0x06d40, 0x0af46, 0x0ab60, 0x09570,
-        0x04af5, 0x04970, 0x064b0, 0x074a3, 0x0ea50, 0x06b58, 0x055c0, 0x0ab60, 0x096d5, 0x092e0,
-        0x0c960, 0x0d954, 0x0d4a0, 0x0da50, 0x07552, 0x056a0, 0x0abb7, 0x025d0, 0x092d0, 0x0cab5,
-        0x0a950, 0x0b4a0, 0x0baa4, 0x0ad50, 0x055d9, 0x04ba0, 0x0a5b0, 0x15176, 0x052b0, 0x0a930,
-        0x07954, 0x06aa0, 0x0ad50, 0x05b52, 0x04b60, 0x0a6e6, 0x0a4e0, 0x0d260, 0x0ea65, 0x0d530,
-        0x05aa0, 0x076a3, 0x096d0, 0x04bd7, 0x04ad0, 0x0a4d0, 0x1d0b6, 0x0d250, 0x0d520, 0x0dd45,
-        0x0b5a0, 0x056d0, 0x055b2, 0x049b0, 0x0a577, 0x0a4b0, 0x0aa50, 0x1b255, 0x06d20, 0x0ada0,
-        0x14b63
-    ];
-
-    /** (Lịch Âm) Lấy số ngày trong tháng âm. */
-    function getLunarMonthDays(lunarYear, lunarMonth) {
-        if ((LUNAR_CAL_DATA[lunarYear - 1900] & (0x10000 >> lunarMonth)))
-            return 30;
-        else
-            return 29;
-    }
-
-    /** (Lịch Âm) Lấy tháng nhuận (0 nếu không có). */
-    function getLunarLeapMonth(lunarYear) {
-        return (LUNAR_CAL_DATA[lunarYear - 1900] & 0xf);
-    }
-
-    /** (Lịch Âm) Lấy số ngày của tháng nhuận. */
-    function getLunarLeapDays(lunarYear) {
-        if (getLunarLeapMonth(lunarYear) != 0) {
-            if ((LUNAR_CAL_DATA[lunarYear - 1900] & 0x10000))
-                return 30;
-            else
-                return 29;
-        } else
-            return 0;
-    }
-
-    /** (Lịch Âm) Lấy tổng số ngày trong năm âm. */
-    function getLunarYearDays(lunarYear) {
-        let i, sum = 348;
-        for (i = 0x8000; i > 0x8; i >>= 1) {
-            if ((LUNAR_CAL_DATA[lunarYear - 1900] & i))
-                sum += 1;
-        }
-        return (sum + getLunarLeapDays(lunarYear));
-    }
-
     /**
-     * Chuyển đổi ngày Dương lịch sang Âm lịch.
-     * @param {number} dd - Ngày (1-31).
-     * @param {number} mm - Tháng (1-12).
-     * @param {number} yyyy - Năm.
-     * @returns {object} { day, month, year, isLeap }
-     */
-    function convertSolarToLunar(dd, mm, yyyy) {
-        // Sử dụng Date.UTC để tránh lỗi múi giờ
-        let date = new Date(Date.UTC(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd)));
-        let i, leap = 0, temp = 0;
-        let baseDate = new Date(Date.UTC(1900, 0, 31)); 
-        // Tính số ngày chênh lệch (offset)
-        let offset = (date - baseDate) / 86400000;
-
-        // Tìm năm âm lịch
-        for (i = 1900; i < 2050 && offset > 0; i++) {
-            temp = getLunarYearDays(i);
-            offset -= temp;
-        }
-        if (offset < 0) {
-            offset += temp;
-            i--;
-        }
-
-        let year = i;
-        leap = getLunarLeapMonth(year); 
-        let isLeap = false;
-        
-        // Tìm tháng âm lịch
-        for (i = 1; i < 13 && offset > 0; i++) {
-            if (leap > 0 && i == (leap + 1) && !isLeap) {
-                --i;
-                isLeap = true;
-                temp = getLunarLeapDays(year); 
-            } else {
-                temp = getLunarMonthDays(year, i);
-            }
-            if (isLeap && i == (leap + 1)) isLeap = false;
-            offset -= temp;
-        }
-
-        if (offset == 0 && leap > 0 && i == leap + 1) {
-            if (isLeap) {
-                isLeap = false;
-            } else {
-                isLeap = true;
-                --i;
-            }
-        }
-        if (offset < 0) {
-            offset += temp;
-            --i;
-        }
-
-        let month = i;
-        // Ngày âm lịch
-        let day = Math.floor(offset + 1); 
-        
-        return { day: day, month: month, year: year, isLeap: isLeap };
-    }
-
-    // ======================================
-    // ===== CÁC HÀM VẼ GIAO DIỆN LỊCH =====
-    // ======================================
-
-    /**
-     * Vẽ toàn bộ lịch (các ô ngày) cho một tháng cụ thể.
-     * Bao gồm: ngày dương, ngày âm, ca, và ghi chú.
+     * Vẽ toàn bộ lịch (các ô ngày) cho tháng được chọn.
      * @param {Date} date - Một ngày bất kỳ trong tháng cần vẽ.
      */
     function renderCalendar(date) {
         calendarBody.innerHTML = '';
         const year = date.getFullYear();
-        const month = date.getMonth(); 
+        const month = date.getMonth(); // 0-11
 
         // Cập nhật tiêu đề (ví dụ: "Tháng 11 2025")
         currentMonthYearEl.textContent = `Tháng ${month + 1} ${year}`;
-        const firstDayOfMonth = new Date(year, month, 1);
         
-        // Lấy thứ của ngày đầu tiên trong tháng (1=T2, 7=CN)
-        let firstDayOfWeek = firstDayOfMonth.getDay();
-        if (firstDayOfWeek === 0) firstDayOfWeek = 7; 
+        // Tìm ngày bắt đầu vẽ (có thể thuộc tháng trước)
+        const firstDayOfMonth = new Date(year, month, 1);
+        let firstDayOfWeek = firstDayOfMonth.getDay(); // 0=CN, 1=T2, ...
+        if (firstDayOfWeek === 0) firstDayOfWeek = 7; // Chuyển 0(CN) -> 7
 
-        // Tính ngày bắt đầu vẽ (có thể thuộc tháng trước)
         const startDate = new Date(firstDayOfMonth);
-        startDate.setDate(firstDayOfMonth.getDate() - (firstDayOfWeek - 1));
+        startDate.setDate(firstDayOfMonth.getDate() - (firstDayOfWeek - 1)); // Lùi về T2
 
         const todayStr = getLocalDateString(new Date());
 
-        // Vẽ 42 ô (6 hàng x 7 cột)
+        // Vẽ 42 ô (6 tuần)
         for (let i = 0; i < 42; i++) {
             const dayCell = document.createElement('div');
             dayCell.className = "bg-white rounded-lg p-1 sm:p-2 min-h-[80px] sm:min-h-[100px] flex flex-col justify-start relative cursor-pointer hover:bg-gray-50 transition-colors border border-gray-200";
             
             const currentDate = new Date(startDate);
             currentDate.setDate(startDate.getDate() + i);
-            const dateStr = getLocalDateString(currentDate);
+            const dateStr = getLocalDateString(currentDate); // "YYYY-MM-DD"
             const day = currentDate.getDate();
             
-            // --- Thêm ngày Dương và Âm ---
+            // --- Hiển thị Ngày Dương & Âm ---
             const dayWrapper = document.createElement('div');
             dayWrapper.className = "flex justify-between items-baseline flex-nowrap gap-1"; 
             
-            const dayNumberEl = document.createElement('span'); // Ngày dương
+            const dayNumberEl = document.createElement('span'); // Ngày Dương
             dayNumberEl.className = 'day-number font-semibold text-sm sm:text-lg text-gray-800'; 
             dayNumberEl.textContent = day;
             dayWrapper.appendChild(dayNumberEl); 
 
+            // Tính và thêm ngày âm
             const lunarDate = convertSolarToLunar(day, currentDate.getMonth() + 1, currentDate.getFullYear());
-            const lunarDayEl = document.createElement('span'); // Ngày âm
+            const lunarDayEl = document.createElement('span'); // Ngày Âm
             lunarDayEl.className = "text-xs text-gray-500 flex-shrink-0"; 
             
             let lunarText;
-            if (lunarDate.day === 1) {
-                lunarText = `${lunarDate.day}/${lunarDate.month}`; // Hiển thị "1/10"
+            if (lunarDate.day === 1) { // Mùng 1
+                lunarText = `${lunarDate.day}/${lunarDate.month}`; // Hiển thị cả tháng
                 lunarDayEl.classList.add("font-bold", "text-red-600"); 
             } else {
-                lunarText = lunarDate.day; // Chỉ hiển thị ngày "2", "3"...
+                lunarText = lunarDate.day;
             }
-            if (lunarDate.isLeap) lunarText += "N"; // Thêm "N" nếu nhuận
-            
+            if (lunarDate.isLeap) {
+                lunarText += "N"; // Thêm "N" (Nhuận)
+            }
             lunarDayEl.textContent = lunarText;
             dayWrapper.appendChild(lunarDayEl); 
             dayCell.appendChild(dayWrapper); 
             
             dayCell.dataset.date = dateStr; 
 
-            // --- Xử lý cho các ngày không thuộc tháng hiện tại ---
+            // --- Xử lý logic cho ô ---
             if (currentDate.getMonth() !== month) {
+                // Ô thuộc tháng khác (làm mờ đi)
                 dayCell.classList.add('other-month', 'bg-gray-50', 'opacity-70', 'cursor-default'); 
                 dayCell.classList.remove('hover:bg-gray-50', 'cursor-pointer');
                 dayNumberEl.classList.add('text-gray-400'); 
                 dayNumberEl.classList.remove('text-gray-800');
                 lunarDayEl.className = "text-xs text-gray-400 flex-shrink-0";
             } else {
-                // --- Xử lý cho các ngày thuộc tháng hiện tại ---
+                // Ô thuộc tháng hiện tại
                 const shift = getShiftForDate(dateStr);
                 const notes = noteData[dateStr] || []; 
 
@@ -1033,8 +902,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (shift === 'giãn ca') {
                     dayCell.classList.add('bg-yellow-100'); 
                     dayCell.classList.remove('bg-white');
-                } else if (shift === 'off') {
-                    // (Hiện không có ca 'off' trong pattern, nhưng để dự phòng)
+                } else if (shift === 'off') { // "off" là ca nghỉ (logic cũ, không nằm trong pattern)
                     dayCell.classList.add('bg-gray-100'); 
                     dayCell.classList.remove('bg-white');
                 } else {
@@ -1044,7 +912,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     dayCell.appendChild(shiftEl);
                 }
                 
-                // Hiển thị ghi chú
+                // Hiển thị ghi chú (nếu có)
                 if (notes.length > 0) {
                     const noteListEl = document.createElement('ul');
                     noteListEl.className = 'day-note-list';
@@ -1068,7 +936,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     lunarDayEl.classList.remove("text-red-600");
                 }
 
-                // Gắn sự kiện mở modal
+                // Gắn sự kiện click để mở modal
                 dayCell.addEventListener('click', () => {
                     openNoteModal(dateStr);
                 });
@@ -1076,12 +944,12 @@ document.addEventListener('DOMContentLoaded', () => {
             calendarBody.appendChild(dayCell);
         }
         
-        // Vẽ lại bảng tổng kết ghi chú của tháng
+        // Sau khi vẽ xong lịch, cập nhật bảng tổng kết
         renderMonthlyNoteSummary(date); 
     }
 
     /**
-     * Vẽ lại bảng "Tổng kết Ghi chú Tháng" ở cuối trang Lịch.
+     * Vẽ bảng "Tổng kết Ghi chú Tháng" ở cuối trang Lịch.
      * @param {Date} date - Một ngày bất kỳ trong tháng cần tổng kết.
      */
     function renderMonthlyNoteSummary(date) {
@@ -1104,6 +972,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const notes = noteData[dateStr] || []; 
 
             if (notes.length > 0) {
+                // Nếu có ghi chú, thêm vào mảng
                 const dayName = daysOfWeek[currentDate.getDay()]; 
                 const dateDisplay = `${currentDate.getDate()}/${currentDate.getMonth() + 1}`; 
                 const shift = getShiftForDate(dateStr); 
@@ -1121,16 +990,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Hiển thị kết quả
         if (daysWithNotes.length === 0) {
-            monthlyNoteList.style.display = 'block';
+            monthlyNoteList.style.display = 'block'; // Đổi về block
             monthlyNoteList.className = ''; 
             monthlyNoteList.style.gridTemplateColumns = '';
             monthlyNoteList.innerHTML = `<p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>`;
         
         } else {
-            // Dùng CSS Grid để căn chỉnh đẹp
-            monthlyNoteList.style.display = 'grid';
+            monthlyNoteList.style.display = 'grid'; // Dùng grid để căn cột
             monthlyNoteList.className = 'grid gap-2'; 
-            monthlyNoteList.style.gridTemplateColumns = 'auto 1fr';
+            monthlyNoteList.style.gridTemplateColumns = 'auto 1fr'; // Cột 1 (ngày) tự động, Cột 2 (ghi chú) lấp đầy
 
             daysWithNotes.forEach(dayData => {
                 const prefixWrapper = document.createElement('div');
@@ -1154,27 +1022,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Mở modal (cửa sổ nổi) để thêm/sửa/xóa ghi chú cho một ngày.
-     * @param {string} dateStr - Chuỗi ngày "YYYY-MM-DD".
+     * Mở Modal (cửa sổ) để thêm/sửa/xóa ghi chú cho một ngày.
+     * @param {string} dateStr - Chuỗi "YYYY-MM-DD" của ngày được chọn.
      */
     function openNoteModal(dateStr) {
-        const date = new Date(dateStr + 'T12:00:00'); // Thêm giờ để tránh lỗi múi giờ
-        noteModal.style.display = 'flex';
+        const date = new Date(dateStr + 'T12:00:00'); // Thêm giờ để tránh lỗi timezone
+        noteModal.style.display = 'flex'; // Hiển thị modal
         noteModalTitle.textContent = `Cập nhật (${date.toLocaleDateString('vi-VN')})`;
-        currentEditingDateStr = dateStr; // Lưu lại ngày đang sửa
+        currentEditingDateStr = dateStr; // Lưu ngày đang sửa
         
-        // Hiển thị thông tin ca
+        // Hiển thị ca
         const shift = getShiftForDate(dateStr);
         modalShiftInfo.innerHTML = `Ca tự động: <strong>${shift.toUpperCase()}</strong>`;
         
         renderNoteList(dateStr); // Vẽ danh sách ghi chú hiện có
         newNoteInput.value = ''; 
-        newNoteInput.focus();
+        newNoteInput.focus(); // Tự động focus vào ô nhập
     }
-    
+
     /**
-     * Vẽ danh sách ghi chú bên trong modal.
-     * @param {string} dateStr - Chuỗi ngày "YYYY-MM-DD".
+     * Vẽ danh sách ghi chú bên trong Modal.
+     * @param {string} dateStr - Chuỗi "YYYY-MM-DD" của ngày đang sửa.
      */
     function renderNoteList(dateStr) {
         noteList.innerHTML = ''; 
@@ -1199,30 +1067,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ===============================================
-    // ===== CÁC HÀM PUSH NOTIFICATION (THÔNG BÁO) =====
-    // ===============================================
-
-    /**
-     * Chuyển đổi chuỗi VAPID public key (Base64) thành Uint8Array.
-     * @param {string} base64String - Chuỗi VAPID key.
-     * @returns {Uint8Array}
-     */
-    function urlBase64ToUint8Array(base64String) {
-        const padding = '='.repeat((4 - base64String.length % 4) % 4);
-        const base64 = (base64String + padding)
-            .replace(/-/g, '+')
-            .replace(/_/g, '/');
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-        }
-        return outputArray;
-    }
-
     /**
      * Lấy VAPID public key từ server.
+     * Cần cho việc đăng ký Push.
      */
     async function getVapidPublicKey() {
         try {
@@ -1235,26 +1082,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Kiểm tra trạng thái đăng ký thông báo hiện tại (đã bật hay chưa)
-     * và cập nhật giao diện nút "Bật Thông Báo".
+     * Kiểm tra trạng thái đăng ký Push (đã bật hay tắt) và cập nhật nút.
      */
     async function checkNotificationStatus() {
         if (!swRegistration) return;
         const subscription = await swRegistration.pushManager.getSubscription();
+        
         if (subscription) {
             console.log("Người dùng đã đăng ký.");
             notifyButton.textContent = "Tắt Thông Báo";
-            notifyButton.classList.add('subscribed'); // Thêm class màu đỏ
+            notifyButton.classList.add('subscribed'); // Thêm class 'subscribed' (màu đỏ)
         } else {
             console.log("Người dùng chưa đăng ký.");
             notifyButton.textContent = "Bật Thông Báo";
-            notifyButton.classList.remove('subscribed');
+            notifyButton.classList.remove('subscribed'); // Xóa class 'subscribed'
         }
     }
 
     /**
-     * Xử lý sự kiện khi bấm nút "Bật/Tắt Thông Báo".
-     * Bao gồm việc đăng ký hoặc hủy đăng ký PushManager.
+     * Xử lý sự kiện khi nhấn nút "Bật/Tắt Thông Báo".
+     * Bao gồm logic Đăng ký (Subscribe) và Hủy đăng ký (Unsubscribe).
      */
     async function handleSubscribeClick() {
         if (!swRegistration || !vapidPublicKey) {
@@ -1263,15 +1110,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const existingSubscription = await swRegistration.pushManager.getSubscription();
+        notifyButton.disabled = true; // Vô hiệu hóa nút
 
         if (existingSubscription) {
             // --- HỦY ĐĂNG KÝ ---
             console.log("Đang hủy đăng ký...");
-            notifyButton.disabled = true;
             try {
                 const unsubscribed = await existingSubscription.unsubscribe();
                 if (unsubscribed) {
-                    // Gửi yêu cầu hủy lên server
+                    // Gửi yêu cầu xóa subscription khỏi DB
                     await fetch('/unsubscribe', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1287,7 +1134,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             // --- ĐĂNG KÝ MỚI ---
             console.log("Đang đăng ký mới...");
-            notifyButton.disabled = true;
             
             // Xin quyền
             const permission = await Notification.requestPermission();
@@ -1298,21 +1144,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                // Đăng ký với PushManager
+                // Đăng ký với Push Manager
                 const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
                 const subscription = await swRegistration.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: applicationServerKey
                 });
                 
-                // Lấy cài đặt giờ
+                // Lấy cài đặt giờ hiện tại
                 const settings = {
                     notifyTimeNgay: notifyTimeNgay.value,
                     notifyTimeDem: notifyTimeDem.value,
                     notifyTimeOff: notifyTimeOff.value
                 };
                 
-                // Lấy dữ liệu ghi chú
+                // Lấy ghi chú hiện tại
                 const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
                 const noteData = JSON.parse(noteDataStr);
                 
@@ -1336,13 +1182,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        notifyButton.disabled = false;
-        checkNotificationStatus(); // Cập nhật lại giao diện nút
+        notifyButton.disabled = false; // Mở lại nút
+        checkNotificationStatus(); // Cập nhật lại trạng thái nút
     }
 
     /**
-     * Cập nhật cài đặt (giờ thông báo) lên server.
-     * Được gọi mỗi khi thay đổi giờ trong tab Cài đặt.
+     * Cập nhật Cài đặt (giờ, ghi chú) lên server BẤT CỨ KHI NÀO CÓ THAY ĐỔI.
+     * Chỉ hoạt động nếu người dùng đã đăng ký push.
      */
     async function updateSubscriptionSettings() {
         if (!swRegistration) return;
@@ -1360,10 +1206,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 notifyTimeDem: notifyTimeDem.value,
                 notifyTimeOff: notifyTimeOff.value
             };
+
             const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
             const noteData = JSON.parse(noteDataStr);
             
-            // Dùng endpoint /subscribe (ON CONFLICT DO UPDATE)
+            // Gửi lại yêu cầu 'subscribe' (API server sẽ tự xử lý ON CONFLICT)
             await fetch('/subscribe', { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' },
@@ -1380,8 +1227,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Đồng bộ (chỉ ghi chú) lên server.
-     * Được gọi khi lưu ghi chú (saveNoteData) hoặc khi mở tab Cài đặt.
+     * Đồng bộ GHI CHÚ lên server (cho máy chủ Push Notification).
+     * Được gọi khi lưu ghi chú, hoặc khi mở tab Cài đặt.
+     * Chỉ hoạt động nếu đã đăng ký push.
      */
     async function syncNotesToServer() {
         if (!swRegistration) return;
@@ -1396,7 +1244,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
             const noteData = JSON.parse(noteDataStr);
             
-            // Gọi API /update-notes
+            // Chỉ gửi ghi chú (nhanh hơn)
             await fetch('/update-notes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1405,40 +1253,177 @@ document.addEventListener('DOMContentLoaded', () => {
                     noteData: noteData
                 })
             });
-            console.log("Đồng bộ ghi chú thành công.");
+            console.log("Đồng bộ ghi chú (cho Push) thành công.");
         } catch (err) {
-            console.error("Lỗi khi đồng bộ ghi chú:", err);
+            console.error("Lỗi khi đồng bộ ghi chú (cho Push):", err);
         }
     }
 
 
     // ===================================================================
-    // PHẦN 3: LOGIC CHUNG (ĐIỀU KHIỂN TAB VÀ KHỞI ĐỘNG)
+    // PHẦN 3: LOGIC ADMIN (ĐĂNG NHẬP, XEM, XÓA)
     // ===================================================================
     
-    // Biến theo dõi tab hiện tại
-    let currentTab = 'news'; 
+    /**
+     * Tải bảng điều khiển Admin (lấy danh sách user) sau khi đăng nhập thành công.
+     */
+    async function loadAdminPanel() {
+        if (!currentAdminCreds) return;
+        
+        // Ẩn các fieldset cũ
+        document.querySelector('#settings-main fieldset:nth-of-type(1)').classList.add('hidden'); // Push
+        document.querySelector('#settings-main fieldset:nth-of-type(2)').classList.add('hidden'); // Sync
+        
+        // Hiện panel admin
+        adminPanel.classList.remove('hidden');
+        adminUserList.classList.add('hidden');
+        adminUserLoading.classList.remove('hidden');
+        
+        try {
+            // Gọi API lấy danh sách user
+            const response = await fetch('/api/admin/get-users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(currentAdminCreds) // Gửi { adminUser, adminPass }
+            });
+            
+            const users = await response.json();
+            if (!response.ok) throw new Error(users.error || 'Lỗi không xác định');
+
+            // Hiển thị danh sách
+            adminUserListBody.innerHTML = '';
+            users.forEach(user => {
+                const tr = document.createElement('tr');
+                tr.className = user.is_admin ? 'bg-gray-800' : ''; // Tô đậm Admin khác
+                tr.innerHTML = `
+                    <td class="px-3 py-2 whitespace-nowrap text-sm">
+                        <span class="text-white">${user.username}</span>
+                        ${user.is_admin ? '<span class="ml-2 text-xs text-red-400 font-bold">[ADMIN]</span>' : ''}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-sm space-x-2">
+                        <button data-user="${user.username}" class="text-blue-400 hover:text-blue-300 text-xs font-medium admin-view-notes">Xem</button>
+                        <button data-user="${user.username}" class="text-red-400 hover:text-red-300 text-xs font-medium admin-delete-user">Xóa</button>
+                    </td>
+                `;
+                adminUserListBody.appendChild(tr);
+            });
+
+            adminUserLoading.classList.add('hidden');
+            adminUserList.classList.remove('hidden');
+
+        } catch (err) {
+            showSyncStatus(`Lỗi Admin: ${err.message}`, true);
+            adminLogout(); // Đăng xuất nếu có lỗi
+        }
+    }
     
     /**
-     * Hàm chính điều khiển việc chuyển đổi qua lại giữa các tab (Tin tức, Lịch, Chat, Cài đặt).
-     * @param {'news'|'calendar'|'chat'|'settings'} tabName - Tên của tab muốn chuyển đến.
+     * Đăng xuất khỏi chế độ Admin.
+     */
+    function adminLogout() {
+        currentAdminCreds = null;
+        // Ẩn panel admin
+        adminPanel.classList.add('hidden');
+        // Hiện lại các fieldset cũ
+        document.querySelector('#settings-main fieldset:nth-of-type(1)').classList.remove('hidden'); // Push
+        document.querySelector('#settings-main fieldset:nth-of-type(2)').classList.remove('hidden'); // Sync
+        // Xóa mật khẩu
+        syncPasswordInput.value = '';
+    }
+
+    /**
+     * (Admin) Xem ghi chú của một người dùng cụ thể.
+     * @param {string} targetUser - Tên người dùng cần xem.
+     */
+    async function adminViewNotes(targetUser) {
+        if (!currentAdminCreds) return;
+        
+        adminNoteViewerTitle.textContent = `Ghi chú của: ${targetUser}`;
+        adminNoteViewerContent.innerHTML = `<p class="text-gray-400">Đang tải ghi chú...</p>`;
+        adminNoteViewerModal.classList.remove('hidden');
+        
+        try {
+            const payload = {
+                ...currentAdminCreds, // { adminUser, adminPass }
+                targetUser: targetUser
+            };
+            
+            const response = await fetch('/api/admin/get-notes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const notes = await response.json();
+            if (!response.ok) throw new Error(notes.error || 'Lỗi không xác định');
+
+            // Hiển thị Ghi chú (dạng JSON)
+            const formattedNotes = JSON.stringify(notes, null, 2); // Định dạng JSON cho dễ đọc
+            adminNoteViewerContent.innerHTML = `<pre class="whitespace-pre-wrap text-white text-sm">${formattedNotes}</pre>`;
+
+        } catch (err) {
+             adminNoteViewerContent.innerHTML = `<p class="text-red-400">Lỗi: ${err.message}</p>`;
+        }
+    }
+    
+    /**
+     * (Admin) Xóa một người dùng.
+     * @param {string} targetUser - Tên người dùng cần xóa.
+     */
+    async function adminDeleteUser(targetUser) {
+        if (!currentAdminCreds) return;
+
+        if (!confirm(`ĐẠI CA ADMIN!\n\nĐại ca có chắc chắn muốn XÓA VĨNH VIỄN người dùng "${targetUser}" không?\n\nHành động này không thể hoàn tác.`)) {
+            return;
+        }
+
+        try {
+            const payload = {
+                ...currentAdminCreds, // { adminUser, adminPass }
+                targetUser: targetUser
+            };
+            
+            const response = await fetch('/api/admin/delete-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Lỗi không xác định');
+            
+            alert(result.message); // Thông báo thành công
+            loadAdminPanel(); // Tải lại danh sách
+            
+        } catch (err) {
+            alert(`Lỗi khi xóa: ${err.message}`);
+        }
+    }
+
+    // ===================================================================
+    // PHẦN 4: LOGIC ĐIỀU HƯỚNG (TAB)
+    // ===================================================================
+    
+    let currentTab = 'news'; // Theo dõi tab hiện tại
+    
+    /**
+     * Chuyển đổi giữa các tab (Trang) của ứng dụng.
+     * @param {'news' | 'calendar' | 'chat' | 'settings'} tabName - Tên tab cần chuyển đến.
      */
     function showTab(tabName) {
         if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
         
-        // Reset chat nếu rời khỏi tab chat
+        // --- Dọn dẹp tab cũ ---
         if (currentTab === 'chat') {
-            resetChat();
+            resetChat(); // Reset chat nếu rời khỏi tab chat
         }
-        
-        // Reset admin panel nếu rời tab settings
         if (currentTab === 'settings' && currentAdminCreds) {
-            adminLogout();
+            adminLogout(); // Tự động logout admin nếu rời tab settings
         }
         
         currentTab = tabName;
         
-        // Sửa lỗi bố cục: Chỉ xóa padding-bottom cho trang CHAT
+        // Sửa lỗi bố cục bàn phím (chỉ trang Chat mới không có padding)
         if (tabName === 'chat') {
             document.body.style.paddingBottom = '0';
         } else {
@@ -1451,7 +1436,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatMain.classList.add('hidden');
         settingsMain.classList.add('hidden');
         
-        // 2. Tắt active tất cả các nút (desktop và mobile)
+        // 2. Tắt active tất cả các nút (Desktop & Mobile)
         if (newsTabBtn) newsTabBtn.classList.remove('active');
         if (calendarTabBtn) calendarTabBtn.classList.remove('active');
         if (settingsBtn) settingsBtn.classList.remove('active');
@@ -1460,42 +1445,44 @@ document.addEventListener('DOMContentLoaded', () => {
         bottomTabChat.classList.remove('active');
         bottomTabSettings.classList.remove('active');
         
-        // 3. Ẩn các nút header mobile (mặc định)
+        // 3. Ẩn các nút header mobile
         if (rssMenuBtn) rssMenuBtn.classList.add('hidden');
         if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.add('hidden');
         
-        // 4. Ẩn nút Chat FAB
-        chatFab.classList.add('hidden');
+        // 4. Ẩn nút Chat FAB (desktop)
+        chatFab.classList.add('hidden'); // (Biến này có thể không có trong HTML)
 
-        // 5. Xử lý hiển thị tab được chọn
+        // 5. Xử lý hiển thị tab
         switch (tabName) {
             case 'news':
                 newsMain.classList.remove('hidden');
-                if (newsTabBtn) newsTabBtn.classList.add('active'); // Desktop
-                bottomTabNews.classList.add('active'); // Mobile
+                if (newsTabBtn) newsTabBtn.classList.add('active');
+                bottomTabNews.classList.add('active');
                 if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Tin Tức";
                 // Hiện lại các nút của tab Tin tức
                 if (rssMenuBtn) rssMenuBtn.classList.remove('hidden');
                 if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.remove('hidden');
                 break;
+                
             case 'calendar':
                 calendarMain.classList.remove('hidden');
-                if (calendarTabBtn) calendarTabBtn.classList.add('active'); // Desktop
-                bottomTabCalendar.classList.add('active'); // Mobile
+                if (calendarTabBtn) calendarTabBtn.classList.add('active');
+                bottomTabCalendar.classList.add('active');
                 if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Lịch Làm Việc";
                 break;
+                
             case 'chat':
                 chatMain.classList.remove('hidden');
-                bottomTabChat.classList.add('active'); // Mobile
+                bottomTabChat.classList.add('active');
                 if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Trò chuyện";
                 break;
+                
             case 'settings':
                 settingsMain.classList.remove('hidden');
-                // Ép đồng bộ ghi chú khi mở tab Cài đặt
-                syncNotesToServer();
+                syncNotesToServer(); // Ép đồng bộ khi mở tab Cài đặt
                 
-                if (settingsBtn) settingsBtn.classList.add('active'); // Desktop
-                bottomTabSettings.classList.add('active'); // Mobile
+                if (settingsBtn) settingsBtn.classList.add('active');
+                bottomTabSettings.classList.add('active');
                 if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Cài đặt";
                 break;
         }
@@ -1504,25 +1491,30 @@ document.addEventListener('DOMContentLoaded', () => {
         rssMobileMenu.classList.add('hidden');
     }
 
-    // --- Gắn sự kiện cho các nút chuyển TAB ---
+
+    // ===================================================================
+    // PHẦN 5: GẮN SỰ KIỆN (EVENT LISTENERS) & KHỞI ĐỘNG
+    // ===================================================================
     
-    // Desktop (Thanh nav trên)
+    // ----- KHỐI SỰ KIỆN 1: TAB VÀ ĐIỀU HƯỚNG -----
+    
+    // Desktop (Header)
     if (newsTabBtn) newsTabBtn.addEventListener('click', () => showTab('news'));
     if (calendarTabBtn) calendarTabBtn.addEventListener('click', () => showTab('calendar'));
     if (settingsBtn) settingsBtn.addEventListener('click', () => showTab('settings'));
-    chatFab.addEventListener('click', () => showTab('chat')); 
+    if (chatFab) chatFab.addEventListener('click', () => showTab('chat')); 
     
-    // Mobile (Thanh nav dưới)
+    // Mobile (Bottom Nav)
     bottomTabNews.addEventListener('click', () => showTab('news'));
     bottomTabCalendar.addEventListener('click', () => showTab('calendar'));
-    bottomTabChat.addEventListener('click', () => showTab('chat')); 
+    bottomTabChat.addEventListener('click', () => showTab('chat'));
     bottomTabSettings.addEventListener('click', () => showTab('settings'));
     
-    // Mobile (Menu RSS)
+    // Mobile (Top Header)
     if (rssMenuBtn) rssMenuBtn.addEventListener('click', () => rssMobileMenu.classList.toggle('hidden'));
 
     /**
-     * Xử lý sự kiện khi bấm nút Tải lại tin tức (Refresh).
+     * Xử lý sự kiện nhấn nút Tải lại (Refresh) tin tức.
      */
     function handleRefreshClick() {
         console.log("Đang yêu cầu tải lại...");
@@ -1530,31 +1522,30 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activeButton) {
             const rssUrl = activeButton.dataset.rss;
             const sourceName = activeButton.dataset.source;
-            // Gọi fetchRSS với cờ `force = true`
-            fetchRSS(rssUrl, sourceName, { display: true, force: true });
+            fetchRSS(rssUrl, sourceName, { display: true, force: true }); // force = true
         }
         rssMobileMenu.classList.add('hidden'); 
     }
     
-    // --- KHỐI KHỞI ĐỘNG (IIFE - Immediately Invoked Function Expression) ---
-    
-    // --- KHỞI ĐỘNG (TIN TỨC) ---
+    // ----- KHỐI SỰ KIỆN 2: TIN TỨC & CHAT (KHỞI ĐỘNG) -----
     (async () => {
-        // Gắn sự kiện cho các nút chọn feed và tải lại
+        // Feed (Desktop & Mobile)
         feedNav.addEventListener('click', handleFeedButtonClick);
         rssMobileMenu.addEventListener('click', handleFeedButtonClick); 
+        
+        // Nút Tải lại (Desktop & Mobile)
         refreshFeedButton.addEventListener('click', handleRefreshClick);
         refreshFeedButtonMobile.addEventListener('click', handleRefreshClick); 
 
-        // Tải feed mặc định (VnExpress)
+        // Tải feed mặc định
         const defaultFeed = feedNav.querySelector('.feed-button.active');
         if (defaultFeed) {
             await fetchRSS(defaultFeed.dataset.rss, defaultFeed.dataset.source);
         }
-        // Tải nền các feed khác
+        // Tải ngầm các feed khác
         setTimeout(prewarmCache, 0);
 
-        // Gắn sự kiện đóng modal tóm tắt
+        // Nút đóng Modal Tóm tắt
         closeSummaryModalButton.addEventListener('click', () => {
              summaryModal.classList.add('hidden');
              if (summaryEventSource) { // Dừng stream nếu đang chạy
@@ -1562,8 +1553,9 @@ document.addEventListener('DOMContentLoaded', () => {
                  summaryEventSource = null;
              }
         });
+        // Click bên ngoài Modal Tóm tắt
          summaryModal.addEventListener('click', (e) => {
-             if (e.target === summaryModal) { // Đóng khi bấm ra ngoài
+             if (e.target === summaryModal) {
                   summaryModal.classList.add('hidden');
                   if (summaryEventSource) {
                       summaryEventSource.close();
@@ -1572,23 +1564,36 @@ document.addEventListener('DOMContentLoaded', () => {
              }
          });
          
-         // Gắn sự kiện đóng toast
+         // Nút đóng Toast
          toastCloseButton.addEventListener('click', (e) => {
              e.stopPropagation(); // Ngăn sự kiện click của toast
              hideToast();
          });
          
-         // Gắn sự kiện gửi chat
+        // Gửi Chat
         chatForm.addEventListener('submit', handleSendChat);
+
+        // Ẩn/hiện nav khi gõ phím trên mobile
+        if (chatInput && bottomNav) {
+            chatInput.addEventListener('focus', () => {
+                bottomNav.style.display = 'none'; // Ẩn nav
+            });
+            chatInput.addEventListener('blur', () => {
+                setTimeout(() => {
+                    bottomNav.style.display = 'flex'; // Hiện lại
+                }, 100);
+            });
+        }
     })();
     
-    // --- KHỞI ĐỘNG (LỊCH & CÀI ĐẶT) ---
+    // ----- KHỐI SỰ KIỆN 3: LỊCH, CÀI ĐẶT, SYNC, ADMIN (KHỞI ĐỘNG) -----
     (async () => {
-        // Vẽ lịch và tải cài đặt
+        // Khởi động Lịch
         renderCalendar(currentViewDate);
         loadSettings();
         
-        // Gắn sự kiện lưu cài đặt khi thay đổi giờ
+        // --- Cài đặt ---
+        // Thay đổi giờ
         notifyTimeNgay.addEventListener('change', (e) => {
             appSettings.notifyTimeNgay = e.target.value;
             saveSettings(); 
@@ -1601,11 +1606,10 @@ document.addEventListener('DOMContentLoaded', () => {
             appSettings.notifyTimeOff = e.target.value;
             saveSettings();
         });
-        
-        // Gắn sự kiện cho nút Bật/Tắt Thông báo
+        // Bật/tắt thông báo
         notifyButton.addEventListener('click', handleSubscribeClick);
 
-        // Gắn sự kiện cho nút chuyển tháng
+        // --- Lịch (Tháng) ---
         prevMonthBtn.addEventListener('click', () => {
             currentViewDate.setMonth(currentViewDate.getMonth() - 1);
             renderCalendar(currentViewDate);
@@ -1615,19 +1619,20 @@ document.addEventListener('DOMContentLoaded', () => {
             renderCalendar(currentViewDate);
         });
         
-        // Gắn sự kiện đóng modal ghi chú
+        // --- Lịch (Modal Ghi chú) ---
+        // Đóng modal
         closeNoteModalBtn.addEventListener('click', () => {
             noteModal.style.display = 'none';
             currentEditingDateStr = null; 
         });
         noteModal.addEventListener('click', (e) => {
-            if (e.target === noteModal) { // Đóng khi bấm ra ngoài
+            if (e.target === noteModal) {
                 noteModal.style.display = 'none';
                 currentEditingDateStr = null;
             }
         });
         
-        // Gắn sự kiện Thêm ghi chú mới
+        // Thêm ghi chú mới
         addNoteForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const noteText = newNoteInput.value.trim();
@@ -1638,13 +1643,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             noteData[currentEditingDateStr].push(noteText);
             
-            saveNoteData(); // Lưu và đồng bộ
-            renderNoteList(currentEditingDateStr); // Cập nhật modal
-            renderCalendar(currentViewDate); // Cập nhật lịch
+            saveNoteData(); // Lưu
+            renderNoteList(currentEditingDateStr); // Vẽ lại list trong modal
+            renderCalendar(currentViewDate); // Vẽ lại lịch (hiển thị chấm)
             newNoteInput.value = ''; 
         });
         
-        // Gắn sự kiện Sửa/Xóa ghi chú (dùng event delegation)
+        // Sửa/Xóa ghi chú (dùng Event Delegation)
         noteList.addEventListener('click', (e) => {
             const target = e.target;
             const index = target.dataset.index;
@@ -1652,10 +1657,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const notes = noteData[currentEditingDateStr] || [];
             
-            // Nút Sửa
             if (target.classList.contains('edit-note')) {
+                // SỬA
                 const oldText = notes[index];
-                const newText = prompt("Sửa ghi chú:", oldText);
+                const newText = prompt("Sửa ghi chú:", oldText); // Dùng prompt cho nhanh
                 if (newText !== null && newText.trim() !== "") {
                     noteData[currentEditingDateStr][index] = newText.trim();
                     saveNoteData(); 
@@ -1663,9 +1668,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderCalendar(currentViewDate);
                 }
             }
-            
-            // Nút Xóa
             if (target.classList.contains('delete-note')) {
+                // XÓA
                 if (confirm(`Bạn có chắc muốn xóa ghi chú: "${notes[index]}"?`)) {
                     noteData[currentEditingDateStr].splice(index, 1);
                     saveNoteData(); 
@@ -1675,7 +1679,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Gắn sự kiện cho Form AI (Thêm nhanh lịch)
+        // --- Lịch (AI) ---
         cal_aiForm.addEventListener('submit', async (e) => {
             e.preventDefault(); 
             const text = cal_aiInput.value.trim();
@@ -1687,15 +1691,14 @@ document.addEventListener('DOMContentLoaded', () => {
             cal_aiForm.querySelector('button').textContent = "Đang xử lý...";
             
             try {
-                // Gọi API phân tích
+                // Gọi API AI
                 const response = await fetch('/api/calendar-ai-parse', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: text })
                 });
-                const updates = await response.json(); 
+                const updates = await response.json(); // Mong đợi 1 mảng
                 
-                // Cập nhật dữ liệu từ AI
                 if (Array.isArray(updates)) {
                     updates.forEach(update => {
                         const dateStr = update.date;
@@ -1707,7 +1710,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             noteData[dateStr].push(noteText); 
                         }
                     });
-                    saveNoteData(); 
+                    saveNoteData(); // Lưu 1 lần sau khi thêm hết
                     renderCalendar(currentViewDate); 
                     cal_aiInput.value = ''; 
                 } else {
@@ -1718,15 +1721,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Không thể phân tích. Vui lòng kiểm tra lại prompt và API key.');
             }
             
-            // Kích hoạt lại form
+            // Mở lại form
             cal_aiInput.disabled = false;
             cal_aiForm.querySelector('button').disabled = false;
             cal_aiForm.querySelector('button').textContent = "Phân tích";
         });
 
-        // --- Gắn sự kiện cho ĐỒNG BỘ ONLINE ---
-        
-        // Nút Tải lên (Sync Up)
+        // --- Đồng bộ Online (Sync) ---
         if (syncUpBtn) {
             syncUpBtn.addEventListener('click', async () => {
                 const username = syncUsernameInput.value.trim();
@@ -1766,7 +1767,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Nút Tải về (Sync Down)
         if (syncDownBtn) {
             syncDownBtn.addEventListener('click', async () => {
                 const username = syncUsernameInput.value.trim();
@@ -1802,9 +1802,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const downloadedNotes = await response.json();
                     
-                    noteData = downloadedNotes || {}; // Ghi đè dữ liệu hiện tại
-                    saveNoteData(); // Lưu vào local
-                    renderCalendar(currentViewDate); // Vẽ lại lịch
+                    // 1. Cập nhật dữ liệu
+                    noteData = downloadedNotes || {};
+                    // 2. Lưu vào local
+                    saveNoteData(); // Hàm này đã bao gồm cả lưu localStorage
+                    // 3. Vẽ lại lịch
+                    renderCalendar(currentViewDate); 
                     
                     showSyncStatus('Tải về và đồng bộ thành công!', false);
                     
@@ -1818,9 +1821,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // --- Gắn sự kiện cho ADMIN ---
-
-        // Nút Đăng nhập Admin
+        // --- Admin ---
         if (adminLoginBtn) {
             adminLoginBtn.addEventListener('click', async () => {
                 const username = syncUsernameInput.value.trim();
@@ -1838,7 +1839,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const creds = { adminUser: username, adminPass: password };
 
                 try {
-                    // Dùng API 'get-users' để kiểm tra đăng nhập
+                    // Chúng ta dùng API 'get-users' để kiểm tra đăng nhập
                     const response = await fetch('/api/admin/get-users', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1864,12 +1865,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // Nút Đăng xuất Admin
         if (adminLogoutBtn) {
             adminLogoutBtn.addEventListener('click', adminLogout);
         }
 
-        // Gắn listener cho các nút Xem/Xóa trong danh sách (dùng event delegation)
+        // Gắn listener cho các nút trong danh sách (event delegation)
         if (adminUserListBody) {
             adminUserListBody.addEventListener('click', (e) => {
                 const target = e.target;
@@ -1892,7 +1892,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (adminNoteViewerModal) {
              adminNoteViewerModal.addEventListener('click', (e) => {
-                 if (e.target === adminNoteViewerModal) { // Đóng khi bấm ra ngoài
+                 if (e.target === adminNoteViewerModal) {
                     adminNoteViewerModal.classList.add('hidden');
                  }
              });
@@ -1900,12 +1900,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     })();
     
-    // --- KHỞI ĐỘNG (TAB) ---
-    // Kiểm tra hash (#) trên URL để mở đúng tab khi tải lại
+    // ----- KHỐI SỰ KIỆN 4: KHỞI ĐỘNG TAB BAN ĐẦU -----
+    
+    // Kiểm tra URL hash (ví dụ: /#calendar) để mở đúng tab khi tải lại trang
     if (window.location.hash === '#calendar') {
         showTab('calendar');
     } else {
         showTab('news'); // Mặc định là tab Tin tức
     }
 
-});
+}); // --- KẾT THÚC DOMCONTENTLOADED ---
