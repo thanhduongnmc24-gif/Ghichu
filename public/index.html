@@ -228,27 +228,33 @@
         }
         
        #chat-main-wrapper {
-            background-color: #1F2937; /* bg-gray-800 */
-            border-radius: 0.5rem; /* rounded-lg */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
-            display: flex;
-            flex-direction: column;
-            
-            /* (ĐÃ SỬA) 100vh - 4rem(header) - 1rem(p-top) - 1rem(p-bottom) - 5rem(nav) = 11rem */
-            height: calc(100vh - 11rem);
-            
-            max-width: 1024px; /* max-w-5xl */
-            margin-left: auto;
-            margin-right: auto;
-        }
-        @media (min-width: 640px) { /* sm: */
-            #chat-main-wrapper {
-                 /* (ĐÃ SỬA) 100vh - 4rem(header) - 2rem(p-top) - 2rem(p-bottom) = 8rem */
-                 /* (Desktop không có nav dưới) */
-                 height: calc(100vh - 8rem);
+            background-color: #1F2937; /* bg-gray-800 */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            display: flex;
+            flex-direction: column;
+            
+            /* (SỬA LỖI) 100vh - 4rem(header) - 2rem(p-top/bottom) = 6rem */
+            /* (Phần 80px của body (dòng 20) sẽ tự đẩy cái này lên) */
+            height: calc(100vh - 6rem);
+            
+            max-width: 1024px; /* max-w-5xl */
+            margin-left: auto;
+            margin-right: auto;
+        }
+        @media (min-width: 640px) { /* sm: */
+            #chat-main-wrapper {
+                 /* (Desktop) 100vh - 4rem(header) - 4rem(p-top/bottom) = 8rem */
+                 height: calc(100vh - 8rem);
+            }
+        }
+        /* (MỚI) Sửa lỗi navbar che tab Lịch/Cài đặt (nội dung ngắn) */
+        @media (max-width: 639px) { /* Chỉ áp dụng cho mobile */
+            #calendar-main, #settings-main {
+                /* 100vh trừ đi chiều cao header (~64px) */
+                min-height: calc(100vh - 64px);
             }
         }
-        
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
