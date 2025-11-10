@@ -1251,9 +1251,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Sửa lỗi bố cục bàn phím (chỉ trang Chat mới không có padding)
         if (tabName === 'chat') {
-            document.body.style.paddingBottom = '0';
+            // Tab Chat có layout đặc biệt, không cần padding
+            document.body.style.paddingBottom = '0px';
         } else {
-            document.body.style.paddingBottom = ''; // Dùng CSS mặc định
+            // Các tab khác (News, Calendar, Settings) PHẢI có 80px đệm
+            // để chừa chỗ cho thanh Navibar (khi nó luôn hiển thị trên web).
+            document.body.style.paddingBottom = '80px'; 
         }
 
         // 1. Ẩn tất cả các trang
