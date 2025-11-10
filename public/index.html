@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ghichu App</title> <script src="https://cdn.tailwindcss.com"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/solarlunar@2.0.7/lib/solarlunar.min.js"></script>
-
+    <script src="https://unpkg.com/van-su-kien@1.0.1/js/solarlunar.min.js"></script>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1F2937">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -132,7 +130,7 @@
               color: white;
           }
           
-        /* ===== (CẬP NHẬT) Co nhỏ Lịch ===== */
+        /* ===== (CẬP NHẬT 1/3) Co nhỏ Lịch ===== */
         .day-note-list {
             margin-top: 2px;
             padding-left: 8px; /* (Co lại) */
@@ -159,7 +157,7 @@
                 margin-left: 0;
             }
         }
-        /* ===== Hết Cập nhật ===== */
+        /* ===== Hết Cập nhật 1/3 ===== */
 
         .time-setting-label {
             display: flex;
@@ -313,7 +311,7 @@
     </main>
     
     <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
-        <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6">
+      <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6">
             <h2 class="text-xl font-bold text-white mb-4">Thêm Nhanh (AI)</h2>
             
             <form id="ai-form" class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
@@ -1186,7 +1184,7 @@
                 notifyTimeOff.value = appSettings.notifyTimeOff;
             }
 
-            // ===== (CẬP NHẬT LỊCH ÂM) Thay thế toàn bộ hàm renderCalendar =====
+            // ===== (CẬP NHẬT 3/3) Co nhỏ Lịch =====
             function renderCalendar(date) {
                 calendarBody.innerHTML = '';
                 const year = date.getFullYear();
@@ -1211,52 +1209,12 @@
                     currentDate.setDate(startDate.getDate() + i);
                     const dateStr = getLocalDateString(currentDate);
                     const day = currentDate.getDate();
-
-                    // (MỚI) Lấy thông tin ngày/tháng/năm để tính Lịch Âm
-                    const currentMonth = currentDate.getMonth(); // tháng 0-11
-                    const currentYear = currentDate.getFullYear();
-                    
-                    // ==========================================================
-                    // ===== (MỚI) BẮT ĐẦU LOGIC LỊCH ÂM (VỚI THƯ VIỆN MỚI) =====
-                    // ==========================================================
-                    try {
-                        // Kiểm tra xem thư viện 'solarlunar' đã tải xong chưa
-                        if (typeof solarLunar !== 'undefined') {
-                            
-                            // 1. Gọi thư viện mới: solarLunar.solar2lunar()
-                            const lunarData = solarLunar.solar2lunar(currentYear, currentMonth + 1, day);
-                            
-                            // 2. Lấy dữ liệu từ đối tượng (thay vì mảng)
-                            const lunarDay = lunarData.lDay;
-                            const lunarMonth = lunarData.lMonth;
-                            const isLeap = lunarData.isLeap;
-
-                            const lunarDayEl = document.createElement('span');
-                            // Style: absolute, top-right, extra-small, màu đỏ, hơi mờ
-                            lunarDayEl.className = 'absolute top-1 right-2 text-xs font-medium text-red-600 opacity-80';
-                            
-                            let lunarText = lunarDay; // Mặc định chỉ hiện ngày âm
-                            if (lunarDay === 1) {
-                                // Nếu là mùng 1, hiển thị cả tháng (ví dụ: 1/10N)
-                                lunarText = `${lunarDay}/${lunarMonth}${isLeap ? 'N' : ''}`;
-                            }
-                            
-                            lunarDayEl.textContent = lunarText;
-                            dayCell.appendChild(lunarDayEl); // Thêm lịch âm vào ô
-                        }
-                    } catch (err) {
-                        // Bỏ qua lỗi nếu thư viện lịch âm không tải được
-                        console.error("Lỗi tải lịch âm, đã bỏ qua:", err.message);
-                    }
-                    // ==========================================================
-                    // ===== (MỚI) KẾT THÚC LOGIC LỊCH ÂM =====
-                    // ==========================================================
                     
                     const dayNumberEl = document.createElement('span');
                     // (Sửa) Đổi text-lg -> text-sm sm:text-lg
                     dayNumberEl.className = 'day-number font-semibold text-sm sm:text-lg text-gray-800'; 
                     dayNumberEl.textContent = day;
-                    dayCell.appendChild(dayNumberEl); // Thêm lịch dương
+                    dayCell.appendChild(dayNumberEl);
                     
                     dayCell.dataset.date = dateStr; 
 
@@ -1310,7 +1268,7 @@
                 
                 renderMonthlyNoteSummary(date); 
             }
-            // ===== Hết Cập nhật Lịch Âm =====
+            // ===== Hết Cập nhật 3/3 =====
 
             function renderMonthlyNoteSummary(date) {
                 const monthlyNoteList = document.getElementById('monthly-note-list');
@@ -1585,7 +1543,7 @@
             
             let currentTab = 'news'; // (MỚI) Theo dõi tab hiện tại
             
-            // ===== (CẬP NHẬT) Toàn bộ hàm showTab đã được sửa lỗi bố cục Cài đặt =====
+            // ===== (CẬP NHẬT 4/4) Toàn bộ hàm showTab đã được cập nhật =====
             function showTab(tabName) {
                 if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
                 
