@@ -749,10 +749,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Đánh dấu ngày hôm nay
                 if (dateStr === todayStr) {
-                    dayCell.classList.add('today', 'border-2', 'border-blue-500'); 
-                    dayNumberEl.classList.add('text-blue-600'); 
-                    dayNumberEl.classList.remove('text-gray-800');
-                } else if (lunarDate.day === 1) {
+    // Bước 1: Xóa tất cả các màu nền cũ (quan trọng, để ghi đè lên màu 'giãn ca')
+    dayCell.classList.remove('bg-white', 'bg-yellow-100', 'bg-gray-100');
+    
+    // Bước 2: Thêm màu nền và viền cho "hôm nay"
+    dayCell.classList.add('today', 'bg-blue-100', 'border-2', 'border-blue-500'); // <-- NỀN XANH NHẠT
+    
+    // Bước 3: Đổi màu chữ cho dễ đọc
+    dayNumberEl.classList.add('text-blue-700', 'font-bold'); // <-- CHỮ XANH ĐẬM
+    dayNumberEl.classList.remove('text-gray-800'); // Xóa màu chữ xám
+} else if (lunarDate.day === 1) {
                     // Đánh dấu mùng 1 (nếu không phải hôm nay)
                     lunarDayEl.classList.add("text-red-500");
                     lunarDayEl.classList.remove("text-red-600");
