@@ -832,11 +832,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             daysWithNotes.forEach(dayData => {
                 const prefixWrapper = document.createElement('div');
-                prefixWrapper.className = 'bg-gray-600 rounded-md text-gray-200 text-sm p-2 whitespace-nowrap';
+                prefixWrapper.className = 'bg-slate-700 rounded-md text-gray-200 text-sm p-2 whitespace-nowrap';
                 prefixWrapper.textContent = dayData.datePrefix;
                 
                 const contentWrapper = document.createElement('div');
-                contentWrapper.className = 'bg-gray-600 rounded-md text-sm text-gray-200 divide-y divide-gray-700';
+               contentWrapper.className = 'bg-slate-700 rounded-md text-sm text-gray-200 divide-y divide-slate-600';
                 
                 dayData.notes.forEach(noteText => {
                     const noteEl = document.createElement('p');
