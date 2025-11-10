@@ -1255,15 +1255,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         currentTab = tabName;
         
-        // Sửa lỗi bố cục bàn phím (chỉ trang Chat mới không có padding)
-        if (tabName === 'chat') {
-            // Tab Chat có layout đặc biệt, không cần padding
-            document.body.style.paddingBottom = '0px';
-        } else {
-            // Các tab khác (News, Calendar, Settings) PHẢI có 80px đệm
-            // để chừa chỗ cho thanh Navibar (khi nó luôn hiển thị trên web).
-            document.body.style.paddingBottom = '80px'; 
-        }
+        // ===== (SỬA LỖI BỐ CỤC) Xử lý padding cho thanh Navibar dưới =====
+        // =================================================================
+        // TẤT CẢ các tab bây giờ đều cần 80px đệm ở dưới
+        // để chừa chỗ cho thanh Navibar.
+        document.body.style.paddingBottom = '80px';
 
         // 1. Ẩn tất cả các trang
         newsMain.classList.add('hidden');
@@ -1408,17 +1404,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Gửi Chat
         chatForm.addEventListener('submit', handleSendChat);
 
-        // Ẩn/hiện nav khi gõ phím trên mobile
-        if (chatInput && bottomNav) {
-            chatInput.addEventListener('focus', () => {
-                bottomNav.style.display = 'none'; // Ẩn nav
-            });
-            chatInput.addEventListener('blur', () => {
-                setTimeout(() => {
-                    bottomNav.style.display = 'flex'; // Hiện lại
-                }, 100);
-            });
-        }
+        
     })();
     
     // ----- KHỐI SỰ KIỆN 3: LỊCH, CÀI ĐẶT, SYNC, ADMIN (KHỞI ĐỘNG) -----
