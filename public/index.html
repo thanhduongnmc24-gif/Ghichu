@@ -1237,9 +1237,11 @@
             }
 
             function convertSolarToLunar(dd, mm, yyyy) {
-                let date = new Date(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd));
+                // (CẬP NHẬT) Chuyển sang Date.UTC để tránh lỗi làm tròn múi giờ
+                let date = new Date(Date.UTC(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd)));
                 let i, leap = 0, temp = 0;
-                let baseDate = new Date(1900, 0, 31);
+                // (CẬP NHẬT) Chuyển sang Date.UTC để tránh lỗi làm tròn múi giờ
+                let baseDate = new Date(Date.UTC(1900, 0, 31)); 
                 let offset = (date - baseDate) / 86400000;
 
                 for (i = 1900; i < 2050 && offset > 0; i++) {
@@ -1281,7 +1283,8 @@
                 }
 
                 let month = i;
-                let day = Math.floor(offset + 1);
+                // (GHI CHÚ) Phép tính này bây giờ đã an toàn vì offset là số nguyên
+                let day = Math.floor(offset + 1); 
                 
                 return { day: day, month: month, year: year, isLeap: isLeap };
             }
