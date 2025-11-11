@@ -50,65 +50,94 @@ self.addEventListener('activate', event => {
     );
 });
 
-// 4. (CẬP NHẬT CHO IOS) Lắng nghe Push Notification từ Server
+// 4. (CẬP NHẬT) Lắng nghe Push Notification từ Server
 self.addEventListener('push', event => {
     let data;
+    let urlToOpen = '/'; // (MỚI) URL mặc định khi nhấn vào
+    let title = 'Ghichu App';
+    let body = 'Bạn có thông báo mới.';
+    
     try {
+        // Thử phân tích JSON (VAPID chuẩn)
         data = event.data.json();
+        
+        // Kiểm tra xem đây là payload APNs (Apple) hay VAPID (Chuẩn)
+        if (data.aps && data.aps.alert) {
+            // --- Định dạng của Apple ---
+            // { "aps": { "alert": { "title": "...", "body": "..." } }, "data": { "url": "..." } }
+            title = data.aps.alert.title || title;
+            body = data.aps.alert.body || body;
+            // (MỚI) Lấy URL từ data (nếu Apple hỗ trợ)
+            if (data.data && data.data.url) {
+                urlToOpen = data.data.url;
+            }
+
+        } else {
+            // --- Định dạng chuẩn VAPID (Android, Desktop) ---
+            // { "title": "...", "body": "...", "data": { "url": "..." } }
+            title = data.title || title;
+            body = data.body || body;
+            // (MỚI) Lấy URL từ data
+            if (data.data && data.data.url) {
+                urlToOpen = data.data.url;
+            }
+        }
+
     } catch (e) {
-        data = { title: 'Thông báo', body: event.data.text() };
+        // Nếu không phải JSON (có thể là tin nhắn văn bản đơn giản hoặc APNs cũ)
+        body = event.data.text();
+        title = 'Thông báo'; // Tiêu đề mặc định nếu là text
     }
 
-    // (MỚI) Biến logic để lưu tiêu đề và nội dung
-    let title;
-    let body;
-
-    // Kiểm tra xem đây là payload APNs (Apple) hay VAPID (Chuẩn)
-    if (data.aps && data.aps.alert) {
-        // Đây là định dạng của Apple: { "aps": { "alert": { "title": "...", "body": "..." } } }
-        title = data.aps.alert.title;
-        body = data.aps.alert.body;
-    } else {
-        // Đây là định dạng chuẩn: { "title": "...", "body": "..." }
-        title = data.title;
-        body = data.body;
-    }
-
-    // (CẬP NHẬT) Dùng các biến mới, với dự phòng
-    const finalTitle = title || 'Ghichu App';
     const options = {
-        body: body || 'Bạn có thông báo mới.',
+        body: body,
         icon: '/icons/icon-192x192.png',
-        badge: '/icons/icon-192x192.png', // Dành cho Android
+        badge: '/icons/icon-192x192.png',
         vibrate: [100, 50, 100],
+        // (MỚI) Lưu URL vào data của thông báo
         data: {
-            url: self.registration.scope // URL để mở khi nhấn vào
+            url: urlToOpen 
         }
     };
 
     event.waitUntil(
-        self.registration.showNotification(finalTitle, options)
+        self.registration.showNotification(title, options)
     );
 });
 
-// 5. (MỚI) Xử lý khi người dùng nhấn vào thông báo
+// 5. (CẬP NHẬT) Xử lý khi người dùng nhấn vào thông báo
 self.addEventListener('notificationclick', event => {
     event.notification.close(); // Đóng thông báo
     
-    // Mở trang Lịch (hoặc trang chủ)
+    // (MỚI) Lấy URL từ data của thông báo
+    const urlToOpen = event.notification.data.url || '/';
+
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true })
             .then(windowClients => {
-                // Kiểm tra xem có tab nào đang mở không
+                
+                // (MỚI) Kiểm tra xem URL là link bên ngoài hay link của ứng dụng
+                if (urlToOpen.startsWith('http://') || urlToOpen.startsWith('https://')) {
+                    // Nếu là link ngoài (ví dụ: Google, VnExpress), mở tab mới
+                    return clients.openWindow(urlToOpen);
+                }
+
+                // Nếu là link nội bộ (ví dụ: '/#calendar' hoặc '/')
+                const targetUrl = new URL(urlToOpen, self.location.origin).href;
+
+                // Tìm tab đang mở ứng dụng
                 const focusedClient = windowClients.find(client => client.focused);
                 if (focusedClient) {
-                    return focusedClient.navigate('/#calendar').then(client => client.focus());
+                    // Nếu có tab đang focus, điều hướng tab đó và focus
+                    return focusedClient.navigate(targetUrl).then(client => client.focus());
                 }
                 if (windowClients.length > 0) {
-                    return windowClients[0].navigate('/#calendar').then(client => client.focus());
+                    // Nếu có tab (nhưng không focus), điều hướng tab đầu tiên và focus
+                    return windowClients[0].navigate(targetUrl).then(client => client.focus());
                 }
+                
                 // Nếu không có tab nào mở, mở tab mới
-                return clients.openWindow('/#calendar');
+                return clients.openWindow(targetUrl);
             })
     );
 });
