@@ -23,16 +23,15 @@ const __dirname = path.dirname(__filename);
 // --- Middleware ---
 app.use(cors());
 app.use(express.json());
-// (SỬA) Đảm bảo trỏ đúng thư mục 'public'
-app.use(express.static(path.join(__dirname, '..', 'public')));
+// (SỬA LỖI ĐƯỜNG DẪN 1/2) Dùng đường dẫn gốc (giả định public và server.js ở cùng 1 cấp)
+app.use(express.static(path.join(__dirname, 'public')));
 
 // --- CÀI ĐẶT GOOGLE AI ---
 const API_KEY = process.env.GEMINI_API_KEY;
 let genAI;
-let aiModel; // (MỚI) Dùng chung model
+let aiModel;
 if (API_KEY) {
     genAI = new GoogleGenerativeAI(API_KEY);
-    // (MỚI) Cấu hình an toàn (cho phép AI trả lời nhạy cảm hơn một chút)
     const safetySettings = [
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
         { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
@@ -49,10 +48,10 @@ if (API_KEY) {
 }
 
 // ----- CÀI ĐẶT WEB PUSH -----
+// ... (Giữ nguyên)
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT;
-
 if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_SUBJECT) {
     console.error("Thiếu VAPID keys! Thông báo PUSH sẽ không hoạt động.");
 } else {
@@ -73,61 +72,40 @@ const pool = new pg.Pool({
 });
 
 // --- Helper functions for Password Hashing ---
+// ... (Giữ nguyên)
 function hashPassword(password) {
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
     return { salt, hash };
 }
-
 function verifyPassword(inputPassword, storedHash, salt) {
     const hashToCompare = crypto.pbkdf2Sync(inputPassword, salt, 1000, 64, 'sha512').toString('hex');
     return storedHash === hashToCompare;
 }
 
-/**
- * (MỚI - GĐ 3.1) Lấy thời gian và ngày hiện tại ở Hà Nội.
- * @returns {{timeStr: string, dateStr: string, isoStr: string}}
- */
+// --- (Các hàm tiện ích) ---
 function getHanoiTime() {
+    // ... (Giữ nguyên hàm getHanoiTime)
     const now = new Date();
-    // (FIX) Đảm bảo múi giờ +07:00
     const hanoiNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
-    
-    // Lấy HH:mm (Format 24h)
     const timeStr = hanoiNow.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    
-    // Lấy YYYY-MM-DD (Format ISO)
     const dateStr = hanoiNow.toLocaleDateString('en-CA');
-    
-    // Lấy ISO String (cho AI)
     const isoStr = new Date(hanoiNow.getTime() - (hanoiNow.getTimezoneOffset() * 60000)).toISOString().replace('Z', '+07:00');
-
     return { timeStr, dateStr, isoStr };
 }
 
-/**
- * (MỚI - GĐ 3.2) Lưu một hẹn giờ AI vào database.
- * @param {string} endpoint - Endpoint của thiết bị
- * @param {string} topic - Chủ đề cần báo cáo
- * @param {string} alertTimeISO - Thời gian báo (ISO 8601)
- */
 async function saveAlertToDb(endpoint, topic, alertTimeISO) {
+    // ... (Giữ nguyên hàm saveAlertToDb)
     if (!endpoint) {
         console.warn("Thất bại: set_alert được gọi nhưng không có endpoint.");
         return { success: false, message: "Lỗi: Không tìm thấy danh tính người dùng. Hãy yêu cầu họ bật thông báo đẩy trước khi hẹn giờ." };
     }
-    
     const alertTime = new Date(alertTimeISO);
     if (isNaN(alertTime.getTime())) {
         console.warn("Thất bại: set_alert được gọi với thời gian không hợp lệ:", alertTimeISO);
         return { success: false, message: `Lỗi: Thời gian không hợp lệ: ${alertTimeISO}` };
     }
-    
-    const query = `
-        INSERT INTO ai_alerts (endpoint, topic, alert_time)
-        VALUES ($1, $2, $3)
-    `;
-    
+    const query = `INSERT INTO ai_alerts (endpoint, topic, alert_time) VALUES ($1, $2, $3)`;
     try {
         await pool.query(query, [endpoint, topic, alertTime]);
         console.log("Đã lưu ai_alert:", { endpoint, topic, alertTimeISO });
@@ -139,7 +117,7 @@ async function saveAlertToDb(endpoint, topic, alertTimeISO) {
 }
 
 
-// (CẬP NHẬT - GĐ 1) Hàm tự động tạo/cập nhật bảng
+// (SỬA LỖI RACE CONDITION) Hàm tự động tạo/cập nhật bảng VÀ KHỞI ĐỘNG SERVER
 (async () => {
     const client = await pool.connect();
     try {
@@ -173,7 +151,7 @@ async function saveAlertToDb(endpoint, topic, alertTimeISO) {
         } catch (alterErr) { /* Bỏ qua nếu cột đã tồn tại */ }
         console.log("Bảng 'user_notes' đã sẵn sàng.");
 
-        // (MỚI - GĐ 1) 3. Bảng Hẹn giờ AI
+        // 3. Bảng Hẹn giờ AI
         try {
             await client.query(`
                 CREATE TABLE IF NOT EXISTS ai_alerts (
@@ -188,16 +166,52 @@ async function saveAlertToDb(endpoint, topic, alertTimeISO) {
         } catch (alterErr) {
             console.error("Lỗi khi tạo bảng 'ai_alerts':", alterErr);
         }
+        
+        // ==========================================================
+        // (SỬA LỖI RACE CONDITION) DI CHUYỂN app.listen VÀO ĐÂY
+        // ==========================================================
+        // Server CHỈ khởi động SAU KHI đã tạo bảng xong
+        
+        app.listen(PORT, () => {
+            console.log(`Server đang chạy tại http://localhost:${PORT}`);
+            
+            console.log("Khởi động bộ đếm thời gian (kiểm tra mỗi 60 giây)...");
+            
+            // Chạy ngay lần đầu
+            (async () => {
+                console.log("Khởi động: Chạy kiểm tra lần đầu...");
+                try {
+                    await checkAndSendShiftNotifications();
+                    await checkAndSendAiAlerts();
+                } catch (err) {
+                    console.error("Lỗi khi chạy kiểm tra lần đầu:", err);
+                }
+            })();
+
+            // Chạy định kỳ mỗi phút
+            setInterval(async () => {
+                try {
+                    await checkAndSendShiftNotifications();
+                    await checkAndSendAiAlerts();
+                } catch (err) {
+                    console.error("Lỗi trong quá trình kiểm tra tự động:", err);
+                }
+            }, 60 * 1000); // 60 giây
+        });
+        // ==========================================================
+        // KẾT THÚC DI CHUYỂN
+        // ==========================================================
 
     } catch (err) {
-        console.error("Lỗi khi tạo/cập nhật bảng:", err);
+        console.error("LỖI NGHIÊM TRỌNG KHI KHỞI TẠO DB:", err);
+        // Nếu lỗi ở đây, server sẽ không khởi động (do app.listen nằm bên trong)
     } finally {
         client.release();
     }
-})();
+})(); // <--- Hàm này tự chạy
 
 
-// ----- (MỚI - ADMIN) HÀM MIDDLEWARE KIỂM TRA ADMIN -----
+// ----- (HÀM MIDDLEWARE KIỂM TRA ADMIN) -----
 const checkAdmin = async (req, res, next) => {
     // ... (Giữ nguyên hàm checkAdmin)
     const { adminUser, adminPass } = req.body;
@@ -220,7 +234,7 @@ const checkAdmin = async (req, res, next) => {
 };
 
 
-// ----- CÁC ENDPOINT CỦA TIN TỨC (Không thay đổi) -----
+// ----- CÁC ENDPOINT CỦA TIN TỨC -----
 app.get('/get-rss', async (req, res) => {
     // ... (Giữ nguyên hàm get-rss)
     const rssUrl = req.query.url;
@@ -256,7 +270,7 @@ app.get('/summarize-stream', async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders(); 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // (Sửa) Dùng 1.5-flash
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         const result = await model.generateContentStream(prompt);
         for await (const chunk of result.stream) {
             try {
@@ -279,135 +293,70 @@ app.get('/summarize-stream', async (req, res) => {
 });
 
 
-// ----- (MỚI - GĐ 3.3) ENDPOINT CHAT ĐÃ NÂNG CẤP -----
+// ----- ENDPOINT CHAT ĐÃ NÂNG CẤP -----
 app.post('/chat', async (req, res) => {
-    // 1. Lấy dữ liệu (bao gồm cả endpoint từ GĐ 2)
+    // ... (Giữ nguyên hàm /chat đã nâng cấp)
     const { history, endpoint } = req.body;
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-    
-    if (!history || history.length === 0) {
-        return res.status(400).send('Thiếu history');
-    }
+    if (!history || history.length === 0) return res.status(400).send('Thiếu history');
     if (!API_KEY) return res.status(500).send('API Key chưa được cấu hình');
-
-    // 2. Lấy thời gian hiện tại cho AI
     const { isoStr } = getHanoiTime();
-    
-    // 3. Khai báo các công cụ (tools)
     const tools = [
-        {
-            "functionDeclarations": [
-                {
-                    "name": "set_alert",
-                    "description": "Đặt một thông báo/hẹn giờ/nhắc nhở cho người dùng vào một thời điểm cụ thể trong tương lai.",
-                    "parameters": {
-                        "type": "OBJECT",
-                        "properties": {
-                            "topic": {
-                                "type": "STRING",
-                                "description": "Chủ đề hoặc nội dung cần thông báo. Ví dụ: 'tin tức iPhone 17', 'thời tiết Quảng Ngãi ngày mai', 'kết quả trận M.U.'"
-                            },
-                            "alert_time": {
-                                "type": "STRING",
-                                "description": "Thời gian chính xác để gửi thông báo, phải ở định dạng ISO 8601 (ví dụ: '2025-11-13T07:00:00+07:00')."
-                            }
-                        },
-                        "required": ["topic", "alert_time"]
-                    }
-                }
-            ]
-        },
-        // Cho phép AI tự tìm kiếm Google
+        { "functionDeclarations": [
+            { "name": "set_alert",
+              "description": "Đặt một thông báo/hẹn giờ/nhắc nhở cho người dùng vào một thời điểm cụ thể trong tương lai.",
+              "parameters": {
+                "type": "OBJECT",
+                "properties": {
+                  "topic": { "type": "STRING", "description": "Chủ đề hoặc nội dung cần thông báo. Ví dụ: 'tin tức iPhone 17', 'thời tiết Quảng Ngãi ngày mai', 'kết quả trận M.U.'" },
+                  "alert_time": { "type": "STRING", "description": "Thời gian chính xác để gửi thông báo, phải ở định dạng ISO 8601 (ví dụ: '2025-11-13T07:00:00+07:00')." }
+                },
+                "required": ["topic", "alert_time"]
+              }
+            }
+        ]},
         { "googleSearch": {} }
     ];
-
-    // 4. Cập nhật "Bộ não" (System Instruction)
     const systemInstruction = {
         parts: [{ text: `
 Bạn là Tèo, một trợ lý AI hữu ích, thân thiện và lém lỉnh. Luôn xưng là Tèo, gọi người dùng là Đại ca.
 Múi giờ của Đại ca là Hà Nội (GMT+7). Địa chỉ mặc định: Bình Sơn, Quảng Ngãi.
 HÔM NAY LÀ: ${isoStr}. Hãy dùng mốc thời gian này để tính toán mọi thời gian tương đối (ví dụ: 'ngày mai', '7h tối').
-
 Bạn có 2 công cụ:
 1.  googleSearch: Tự động tìm kiếm thông tin mới.
 2.  set_alert(topic, alert_time): Hẹn giờ để Tèo chủ động gửi thông báo cho Đại ca.
     -   Khi Đại ca yêu cầu hẹn giờ, hãy luôn chuyển đổi thời gian (ví dụ: '7h sáng mai') sang định dạng ISO 8601 đầy đủ (ví dụ: '${isoStr.substring(0, 11)}07:00:00+07:00') dựa vào mốc 'HÔM NAY LÀ'.
     -   Luôn xác nhận chủ đề (topic) rõ ràng.
-
 KHÔNG sử dụng nhiều dấu * trong câu trả lời.
         `.trim() }]
     };
-
-    // 5. Bắt đầu vòng lặp Gọi Tool
     try {
-        let contents = [...history]; // Tạo bản sao để thêm bớt
-        let payload = {
-            contents: contents,
-            systemInstruction: systemInstruction,
-            tools: tools
-        };
-
-        // ----- VÒNG 1: GỌI AI -----
-        let geminiResponse = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
+        let contents = [...history];
+        let payload = { contents: contents, systemInstruction: systemInstruction, tools: tools };
+        let geminiResponse = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!geminiResponse.ok) {
             const errorBody = await geminiResponse.json();
             console.error("Lỗi vòng 1 Gemini:", errorBody);
             throw new Error(`Lỗi từ Gemini: ${geminiResponse.status}`);
         }
-
         let result = await geminiResponse.json();
-
-        // Kiểm tra xem AI có muốn gọi tool không
         const call = result.candidates?.[0]?.content?.parts?.[0]?.functionCall;
-
         if (call) {
-            // ----- AI MUỐN GỌI TOOL 'set_alert' -----
             if (call.name === 'set_alert') {
                 const { topic, alert_time } = call.args;
-                
-                // Gọi hàm lưu vào DB (GĐ 3.2)
                 const dbResult = await saveAlertToDb(endpoint, topic, alert_time);
-                
-                // Thêm 2 tin nhắn mới vào 'contents'
-                contents.push(result.candidates[0].content); // 1. Lệnh gọi tool của AI
-                contents.push({ // 2. Kết quả thực thi tool của chúng ta
-                    "role": "function",
-                    "parts": [{
-                        "functionResponse": {
-                            "name": "set_alert",
-                            "response": dbResult // Gửi kết quả {success, message}
-                        }
-                    }]
-                });
-
-                // ----- VÒNG 2: GỌI LẠI AI -----
-                // Gửi lại toàn bộ 'contents' (đã có kết quả tool) để Tèo trả lời
+                contents.push(result.candidates[0].content); 
+                contents.push({ "role": "function", "parts": [{ "functionResponse": { "name": "set_alert", "response": dbResult }}] });
                 payload.contents = contents; 
-
-                geminiResponse = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
+                geminiResponse = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 if (!geminiResponse.ok) {
                     const errorBody = await geminiResponse.json();
                     console.error("Lỗi vòng 2 Gemini:", errorBody);
                     throw new Error(`Lỗi từ Gemini (vòng 2): ${geminiResponse.status}`);
                 }
-                
                 result = await geminiResponse.json();
             }
-            // (Nếu có tool khác thì 'else if' ở đây)
         }
-
-        // ----- TRẢ KẾT QUẢ CUỐI CÙNG -----
-        // (Hoặc là kết quả từ vòng 1 (nếu ko gọi tool), hoặc là từ vòng 2 (sau khi gọi tool))
         if (result.candidates && result.candidates[0]?.content?.parts?.[0]?.text) {
             const answerText = result.candidates[0].content.parts[0].text;
             res.json({ answer: answerText });
@@ -415,7 +364,6 @@ KHÔNG sử dụng nhiều dấu * trong câu trả lời.
             console.warn("Gemini không trả về text:", result);
             throw new Error("Không nhận được nội dung hợp lệ từ API Gemini.");
         }
-        
     } catch (error) {
         console.error("Lỗi khi gọi Gemini (chat):", error);
         res.status(500).send('Lỗi khi chat: ' + error.message);
@@ -423,8 +371,7 @@ KHÔNG sử dụng nhiều dấu * trong câu trả lời.
 });
 
 
-
-// ----- ENDPOINT CỦA LỊCH LÀM VIỆC (Không thay đổi) -----
+// ----- ENDPOINT CỦA LỊCH LÀM VIỆC -----
 app.post('/api/calendar-ai-parse', async (req, res) => {
     // ... (Giữ nguyên hàm calendar-ai-parse)
     const text = req.body.text || "";
@@ -468,7 +415,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
 });
 
 
-// ----- CÁC ENDPOINT CHO PUSH NOTIFICATION (Không thay đổi) -----
+// ----- CÁC ENDPOINT CHO PUSH NOTIFICATION -----
 app.get('/vapid-public-key', (req, res) => {
     // ... (Giữ nguyên)
     if (!VAPID_PUBLIC_KEY) return res.status(500).send("VAPID Public Key chưa được cấu hình.");
@@ -491,7 +438,7 @@ app.post('/subscribe', async (req, res) => {
     `;
     try {
         await pool.query(query, [endpoint, keys, settings, notesToStore]);
-        console.log("Đã lưu/cập nhật subscription:", endpoint);
+        console.log("Đã lưu/cập nhật subscription:", endpoint.slice(-10));
         res.status(201).json({ success: true });
     } catch (error) {
         console.error("Lỗi khi lưu subscription vào DB:", error);
@@ -506,8 +453,8 @@ app.post('/unsubscribe', async (req, res) => {
     const query = "DELETE FROM subscriptions WHERE endpoint = $1";
     try {
         const result = await pool.query(query, [endpoint]);
-        if (result.rowCount > 0) console.log("Đã xóa subscription:", endpoint);
-        else console.log("Không tìm thấy subscription để xóa:", endpoint);
+        if (result.rowCount > 0) console.log("Đã xóa subscription:", endpoint.slice(-10));
+        else console.log("Không tìm thấy subscription để xóa:", endpoint.slice(-10));
         res.status(200).json({ success: true });
     } catch (error) {
         console.error("Lỗi khi hủy đăng ký subscription:", error);
@@ -522,7 +469,7 @@ app.post('/update-notes', async (req, res) => {
     const query = "UPDATE subscriptions SET notes = $1 WHERE endpoint = $2";
     try {
         await pool.query(query, [noteData, endpoint]);
-        console.log("Đã đồng bộ ghi chú cho:", endpoint);
+        console.log("Đã đồng bộ ghi chú cho:", endpoint.slice(-10));
         res.status(200).json({ success: true });
     } catch (error) {
         console.error("Lỗi khi cập nhật ghi chú:", error);
@@ -531,7 +478,7 @@ app.post('/update-notes', async (req, res) => {
 });
 
 
-// ----- CÁC ENDPOINT CHO SYNC ONLINE (Không thay đổi) -----
+// ----- CÁC ENDPOINT CHO SYNC ONLINE -----
 app.post('/api/sync/up', async (req, res) => {
     // ... (Giữ nguyên)
     const { username, password, noteData } = req.body;
@@ -575,7 +522,7 @@ app.post('/api/sync/down', async (req, res) => {
 });
 
 
-// ----- (MỚI - ADMIN) CÁC ENDPOINT CHO ADMIN (Không thay đổi) -----
+// ----- CÁC ENDPOINT CHO ADMIN -----
 app.post('/api/admin/get-users', checkAdmin, async (req, res) => {
     // ... (Giữ nguyên)
     const client = await pool.connect();
@@ -637,10 +584,9 @@ function getShiftForDate(dateStr) {
     return SHIFT_PATTERN[patternIndex];
 }
 async function deleteSubscription(endpoint) {
-    console.log("Đang xóa sub hết hạn:", endpoint);
+    console.log("Đang xóa sub hết hạn:", endpoint.slice(-10));
     try {
         await pool.query("DELETE FROM subscriptions WHERE endpoint = $1", [endpoint]);
-        // (MỚI - GĐ 4) Cũng xóa các hẹn giờ của sub này
         await pool.query("DELETE FROM ai_alerts WHERE endpoint = $1", [endpoint]);
     } catch (err) {
         console.error("Lỗi khi xóa sub hết hạn:", err);
@@ -649,19 +595,14 @@ async function deleteSubscription(endpoint) {
 
 /**
  * Gửi thông báo đẩy (đã tùy chỉnh cho iOS).
- * @param {object} subscription - Đối tượng subscription (endpoint, keys)
- * @param {string} title - Tiêu đề thông báo
- * @param {string} body - Nội dung thông báo
  */
 async function sendNotification(subscription, title, body) {
     let notificationPayload;
     if (subscription.endpoint.startsWith('https://web.push.apple.com')) {
-        // Định dạng APNs (Apple)
         notificationPayload = JSON.stringify({
             aps: { alert: { title: title, body: body } }
         });
     } else {
-        // Định dạng VAPID chuẩn (Android, Desktop)
         notificationPayload = JSON.stringify({ title: title, body: body });
     }
     
@@ -677,19 +618,12 @@ async function sendNotification(subscription, title, body) {
 }
 
 
-// (CẬP NHẬT)
 let lastNotificationCheckTime = null;
 async function checkAndSendShiftNotifications() {
-    // (CẬP NHẬT - GĐ 3.1) Dùng hàm toàn cục
     const { timeStr, dateStr } = getHanoiTime();
-
-    if (timeStr === lastNotificationCheckTime) {
-        return; // Đã kiểm tra trong phút này
-    }
+    if (timeStr === lastNotificationCheckTime) return;
     lastNotificationCheckTime = timeStr;
-    
     const todayShift = getShiftForDate(dateStr);
-    
     let subscriptions;
     try {
         const result = await pool.query("SELECT endpoint, keys, settings, notes FROM subscriptions");
@@ -698,36 +632,27 @@ async function checkAndSendShiftNotifications() {
         console.error("Không thể đọc subscriptions từ DB:", error);
         return;
     }
-
     if (subscriptions.length === 0) return;
-    
     console.log(`[Notify Check] ${timeStr} | Ca hôm nay: ${todayShift} | Subs: ${subscriptions.length}`);
-
     const sendPromises = subscriptions.map(sub => {
         const { endpoint, keys, settings, notes } = sub;
-        
         let timeToAlert = null;
         if (todayShift === 'ngày') timeToAlert = settings.notifyTimeNgay;
         else if (todayShift === 'đêm') timeToAlert = settings.notifyTimeDem;
         else if (todayShift === 'giãn ca') timeToAlert = settings.notifyTimeOff;
-
         if (timeToAlert && timeStr === timeToAlert) {
             console.log(`Đang gửi thông báo ${todayShift} đến:`, endpoint.slice(-10));
-            
             const notesForToday = (notes && notes[dateStr]) ? notes[dateStr] : [];
             let bodyContent = "";
             if (notesForToday.length > 0) bodyContent = "Ghi chú:\n" + notesForToday.join('\n');
             else bodyContent = `Không có ghi chú cho hôm nay (${dateStr}).`;
             if (bodyContent.length > 150) bodyContent = bodyContent.substring(0, 150) + "...";
-
             const title = `Lịch Luân Phiên - Ca ${todayShift.toUpperCase()}`;
-            
             const pushSubscription = { endpoint: endpoint, keys: keys };
             return sendNotification(pushSubscription, title, bodyContent);
         }
         return Promise.resolve();
     });
-    
     await Promise.all(sendPromises);
 }
 
@@ -742,18 +667,15 @@ async function checkAndSendAiAlerts() {
         alerts = result.rows;
     } catch (error) {
         console.error("Không thể đọc ai_alerts từ DB:", error);
-        return;
+        return; // Lỗi 42P01 sẽ xảy ra ở đây
     }
 
     if (alerts.length === 0) return; // Không có hẹn giờ nào
 
     console.log(`[AI Alert Check] Tìm thấy ${alerts.length} hẹn giờ AI cần gửi.`);
 
-    // Xử lý từng hẹn giờ
     const sendPromises = alerts.map(async (alert) => {
         const { id, endpoint, topic } = alert;
-
-        // 1. Lấy thông tin subscription (cần 'keys')
         let subscription;
         try {
             const subResult = await pool.query("SELECT keys FROM subscriptions WHERE endpoint = $1", [endpoint]);
@@ -768,35 +690,30 @@ async function checkAndSendAiAlerts() {
             return;
         }
 
-        // 2. Tạo prompt cho AI để tìm tin
-        const prompt = `Bạn là Tèo. Hãy tìm thông tin mới nhất và tóm tắt về chủ đề sau trong khoảng 50 từ: "${topic}"`;
-        
-        let summary = `Không thể tìm thấy thông tin về: "${topic}"`; // Mặc định
+        // Tạo prompt cho AI để tìm tin
+        const prompt = `Bạn là Tèo. Hãy tìm thông tin mới nhất và tóm tắt về chủ đề sau trong khoảng 50 từ, viết bằng tiếng Việt: "${topic}"`;
+        let summary = `Không thể tìm thấy thông tin về: "${topic}"`;
         try {
             const chatSession = aiModel.startChat({
                 tools: [{ "googleSearch": {} }]
             });
             const result = await chatSession.sendMessage(prompt);
             summary = result.response.text();
-            
         } catch (aiError) {
             console.error("Lỗi khi AI tìm tin (AI Alert):", aiError);
             summary = `Tèo bị lỗi khi tìm tin về: "${topic}".`;
         }
         
-        // 3. Gửi thông báo
         console.log(`Đang gửi AI Alert về '${topic}' đến:`, endpoint.slice(-10));
         const title = `Tèo Báo Tin: ${topic}`;
         await sendNotification(subscription, title, summary);
         
-        // 4. Xóa hẹn giờ khỏi DB
         try {
             await pool.query("DELETE FROM ai_alerts WHERE id = $1", [id]);
         } catch (deleteErr) {
             console.error("Lỗi khi xóa ai_alert (id: ${id}):", deleteErr);
         }
     });
-    
     await Promise.all(sendPromises);
 }
 
@@ -811,8 +728,8 @@ app.get('/trigger-notifications', (req, res) => {
     }
     try {
         console.log("Cron Job triggered MANUALLY: Đang chạy kiểm tra...");
-        checkAndSendShiftNotifications(); // (Sửa)
-        checkAndSendAiAlerts(); // (MỚI - GĐ 4)
+        checkAndSendShiftNotifications();
+        checkAndSendAiAlerts();
         res.status(200).send('Notification check OK.');
     } catch (err) {
         console.error("Lỗi khi chạy Cron Job:", err);
@@ -823,41 +740,14 @@ app.get('/trigger-notifications', (req, res) => {
 
 // ----- CÁC ROUTE TRANG -----
 app.get('*', (req, res) => {
-    // (SỬA) Đảm bảo trỏ đúng file
-    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+    // (SỬA LỖI ĐƯỜNG DẪN 2/2)
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 
 // ==========================================================
-// ===== (CẬP NHẬT - GĐ 4) KHỞI ĐỘNG SERVER =====
+// ===== (SỬA LỖI RACE CONDITION) KHỞI ĐỘNG SERVER =====
 // ==========================================================
-app.listen(PORT, () => {
-    console.log(`Server đang chạy tại http://localhost:${PORT}`);
-    
-    console.log("Khởi động bộ đếm thời gian (kiểm tra mỗi 60 giây)...");
-    
-    // Chạy ngay lần đầu
-    (async () => {
-        console.log("Khởi động: Chạy kiểm tra lần đầu...");
-        try {
-            await checkAndSendShiftNotifications();
-            await checkAndSendAiAlerts();
-        } catch (err) {
-            console.error("Lỗi khi chạy kiểm tra lần đầu:", err);
-        }
-    })();
-
-    // Chạy định kỳ mỗi phút
-    setInterval(async () => {
-        try {
-            // 1. Kiểm tra ca kíp
-            await checkAndSendShiftNotifications();
-            
-            // 2. (MỚI - GĐ 4) Kiểm tra hẹn giờ AI
-            await checkAndSendAiAlerts();
-
-        } catch (err) {
-            console.error("Lỗi trong quá trình kiểm tra tự động:", err);
-        }
-    }, 60 * 1000); // 60 giây
-});
+// TOÀN BỘ LOGIC app.listen ĐÃ ĐƯỢC DI CHUYỂN LÊN TRÊN, VÀO BÊN TRONG HÀM TẠO BẢNG
+// (async () => { ... })();
+// Mục này bây giờ để trống.
