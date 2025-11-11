@@ -39,7 +39,7 @@ if (API_KEY) {
         { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
     ];
     aiModel = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash", 
+        model: "gemini-2.5-flash-preview-09-2025", 
         safetySettings
     });
 
