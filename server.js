@@ -297,7 +297,7 @@ app.get('/summarize-stream', async (req, res) => {
 app.post('/chat', async (req, res) => {
     // ... (Giữ nguyên hàm /chat đã nâng cấp)
     const { history, endpoint } = req.body;
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
     if (!history || history.length === 0) return res.status(400).send('Thiếu history');
     if (!API_KEY) return res.status(500).send('API Key chưa được cấu hình');
     const { isoStr } = getHanoiTime();
