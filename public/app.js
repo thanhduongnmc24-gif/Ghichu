@@ -214,28 +214,54 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    
     /**
      * Gọi API Chat (không streaming) để trò chuyện.
-     * Gửi toàn bộ lịch sử chat và nhận về 1 câu trả lời đầy đủ.
+     * Gửi toàn bộ lịch sử chat VÀ endpoint (danh tính) lên server.
      */
     async function callChatAPI() {
         // Hiển thị bubble "đang tải"
         const loadingBubble = document.createElement('div');
         loadingBubble.className = 'model-bubble';
-        loadingBubble.innerHTML = `<div class="spinner border-t-white" style="width: 20px; height: 20px;"></div>`;
+        loadingBubble.innerHTML = `<div class"spinner border-t-white" style="width: 20px; height: 20px;"></div>`;
         chatDisplay.appendChild(loadingBubble);
         chatDisplay.scrollTop = chatDisplay.scrollHeight;
         
+        // ==========================================================
+        // ===== (MỚI - GĐ 2) LẤY ENDPOINT ĐỂ GỬI CHO TÈO =====
+        // ==========================================================
+        let endpoint = null;
+        if (swRegistration) {
+            try {
+                // Lấy thông tin đăng ký push hiện tại
+                const subscription = await swRegistration.pushManager.getSubscription();
+                if (subscription) {
+                    // Lấy endpoint (danh tính duy nhất của thiết bị)
+                    endpoint = subscription.endpoint;
+                }
+            } catch (err) {
+                console.warn("Không thể lấy subscription endpoint:", err);
+            }
+        }
+        // ==========================================================
+
         try {
+            // Gửi request lên server
             const response = await fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ history: chatHistory })
+                // Gửi cả lịch sử chat VÀ endpoint
+                body: JSON.stringify({ 
+                    history: chatHistory, 
+                    endpoint: endpoint // (MỚI)
+                })
             });
+            
             if (!response.ok) {
                 const errorText = await response.text();
                 throw new Error(`Lỗi server: ${errorText}`);
             }
+            
             const result = await response.json();
             const answer = result.answer;
             
@@ -245,6 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Xóa bubble tải và vẽ lại lịch sử
             chatDisplay.removeChild(loadingBubble);
             renderChatHistory();
+            
         } catch (error) {
             console.error("Lỗi khi gọi API chat:", error);
             chatDisplay.removeChild(loadingBubble);
