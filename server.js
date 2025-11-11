@@ -400,7 +400,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
     `;
     try {
          const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash",
+            model: "gemini-2.5-flash-preview-09-2025",
             generationConfig: { responseMimeType: "application/json" }
         });
         const result = await model.generateContent(prompt);
@@ -691,7 +691,7 @@ async function checkAndSendAiAlerts() {
         }
 
         // Tạo prompt cho AI để tìm tin
-        const prompt = `Bạn là Tèo. Hãy tìm thông tin mới nhất và tóm tắt về chủ đề sau trong khoảng 50 từ, viết bằng tiếng Việt: "${topic}"`;
+        const prompt = `Bạn là Tèo. Hãy tìm thông tin mới nhất và tóm tắt về chủ đề sau trong khoảng 200 từ, viết bằng tiếng Việt: "${topic}"`;
         let summary = `Không thể tìm thấy thông tin về: "${topic}"`;
         try {
             const chatSession = aiModel.startChat({
