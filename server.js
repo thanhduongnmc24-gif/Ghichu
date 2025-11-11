@@ -23,8 +23,8 @@ const __dirname = path.dirname(__filename);
 // --- Middleware ---
 app.use(cors());
 app.use(express.json());
-// (SỬA LỖI ĐƯỜNG DẪN 1/2) Dùng đường dẫn gốc (giả định public và server.js ở cùng 1 cấp)
-app.use(express.static(path.join(__dirname, 'public')));
+// (SỬA LỖI ĐƯỜNG DẪN 1/2) Dùng '..' để đi lùi 1 cấp từ 'src' ra 'public'
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // --- CÀI ĐẶT GOOGLE AI ---
 const API_KEY = process.env.GEMINI_API_KEY;
@@ -38,6 +38,7 @@ if (API_KEY) {
         { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
         { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
     ];
+    // (SỬA LỖI MODEL) Dùng đúng model của đại ca
     aiModel = genAI.getGenerativeModel({
         model: "gemini-2.5-flash-preview-09-2025", 
         safetySettings
@@ -48,10 +49,10 @@ if (API_KEY) {
 }
 
 // ----- CÀI ĐẶT WEB PUSH -----
-// ... (Giữ nguyên)
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT;
+
 if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_SUBJECT) {
     console.error("Thiếu VAPID keys! Thông báo PUSH sẽ không hoạt động.");
 } else {
@@ -71,21 +72,19 @@ const pool = new pg.Pool({
     }
 });
 
-// --- Helper functions for Password Hashing ---
-// ... (Giữ nguyên)
+// --- Helper functions ---
 function hashPassword(password) {
     const salt = crypto.randomBytes(16).toString('hex');
     const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
     return { salt, hash };
 }
+
 function verifyPassword(inputPassword, storedHash, salt) {
     const hashToCompare = crypto.pbkdf2Sync(inputPassword, salt, 1000, 64, 'sha512').toString('hex');
     return storedHash === hashToCompare;
 }
 
-// --- (Các hàm tiện ích) ---
 function getHanoiTime() {
-    // ... (Giữ nguyên hàm getHanoiTime)
     const now = new Date();
     const hanoiNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
     const timeStr = hanoiNow.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
@@ -93,29 +92,6 @@ function getHanoiTime() {
     const isoStr = new Date(hanoiNow.getTime() - (hanoiNow.getTimezoneOffset() * 60000)).toISOString().replace('Z', '+07:00');
     return { timeStr, dateStr, isoStr };
 }
-
-async function saveAlertToDb(endpoint, topic, alertTimeISO) {
-    // ... (Giữ nguyên hàm saveAlertToDb)
-    if (!endpoint) {
-        console.warn("Thất bại: set_alert được gọi nhưng không có endpoint.");
-        return { success: false, message: "Lỗi: Không tìm thấy danh tính người dùng. Hãy yêu cầu họ bật thông báo đẩy trước khi hẹn giờ." };
-    }
-    const alertTime = new Date(alertTimeISO);
-    if (isNaN(alertTime.getTime())) {
-        console.warn("Thất bại: set_alert được gọi với thời gian không hợp lệ:", alertTimeISO);
-        return { success: false, message: `Lỗi: Thời gian không hợp lệ: ${alertTimeISO}` };
-    }
-    const query = `INSERT INTO ai_alerts (endpoint, topic, alert_time) VALUES ($1, $2, $3)`;
-    try {
-        await pool.query(query, [endpoint, topic, alertTime]);
-        console.log("Đã lưu ai_alert:", { endpoint, topic, alertTimeISO });
-        return { success: true, message: `Đã hẹn thành công thông báo cho chủ đề '${topic}' vào lúc ${alertTimeISO}` };
-    } catch (error) {
-        console.error("Lỗi khi lưu ai_alert vào DB:", error);
-        return { success: false, message: "Lỗi: Không thể lưu hẹn giờ vào cơ sở dữ liệu." };
-    }
-}
-
 
 // (SỬA LỖI RACE CONDITION) Hàm tự động tạo/cập nhật bảng VÀ KHỞI ĐỘNG SERVER
 (async () => {
@@ -151,7 +127,9 @@ async function saveAlertToDb(endpoint, topic, alertTimeISO) {
         } catch (alterErr) { /* Bỏ qua nếu cột đã tồn tại */ }
         console.log("Bảng 'user_notes' đã sẵn sàng.");
 
+        // (SỬA LỖI 400) Tạm thời vô hiệu hóa tính năng này
         // 3. Bảng Hẹn giờ AI
+        /*
         try {
             await client.query(`
                 CREATE TABLE IF NOT EXISTS ai_alerts (
@@ -166,11 +144,11 @@ async function saveAlertToDb(endpoint, topic, alertTimeISO) {
         } catch (alterErr) {
             console.error("Lỗi khi tạo bảng 'ai_alerts':", alterErr);
         }
+        */
         
         // ==========================================================
         // (SỬA LỖI RACE CONDITION) DI CHUYỂN app.listen VÀO ĐÂY
         // ==========================================================
-        // Server CHỈ khởi động SAU KHI đã tạo bảng xong
         
         app.listen(PORT, () => {
             console.log(`Server đang chạy tại http://localhost:${PORT}`);
@@ -182,7 +160,7 @@ async function saveAlertToDb(endpoint, topic, alertTimeISO) {
                 console.log("Khởi động: Chạy kiểm tra lần đầu...");
                 try {
                     await checkAndSendShiftNotifications();
-                    await checkAndSendAiAlerts();
+                    // await checkAndSendAiAlerts(); // (SỬA LỖI 400) Tắt
                 } catch (err) {
                     console.error("Lỗi khi chạy kiểm tra lần đầu:", err);
                 }
@@ -192,19 +170,15 @@ async function saveAlertToDb(endpoint, topic, alertTimeISO) {
             setInterval(async () => {
                 try {
                     await checkAndSendShiftNotifications();
-                    await checkAndSendAiAlerts();
+                    // await checkAndSendAiAlerts(); // (SỬA LỖI 400) Tắt
                 } catch (err) {
                     console.error("Lỗi trong quá trình kiểm tra tự động:", err);
                 }
             }, 60 * 1000); // 60 giây
         });
-        // ==========================================================
-        // KẾT THÚC DI CHUYỂN
-        // ==========================================================
 
     } catch (err) {
         console.error("LỖI NGHIÊM TRỌNG KHI KHỞI TẠO DB:", err);
-        // Nếu lỗi ở đây, server sẽ không khởi động (do app.listen nằm bên trong)
     } finally {
         client.release();
     }
@@ -213,7 +187,7 @@ async function saveAlertToDb(endpoint, topic, alertTimeISO) {
 
 // ----- (HÀM MIDDLEWARE KIỂM TRA ADMIN) -----
 const checkAdmin = async (req, res, next) => {
-    // ... (Giữ nguyên hàm checkAdmin)
+    // ... (Giữ nguyên)
     const { adminUser, adminPass } = req.body;
     if (!adminUser || !adminPass) return res.status(401).json({ error: 'Thiếu thông tin xác thực Admin.' });
     const client = await pool.connect();
@@ -236,7 +210,7 @@ const checkAdmin = async (req, res, next) => {
 
 // ----- CÁC ENDPOINT CỦA TIN TỨC -----
 app.get('/get-rss', async (req, res) => {
-    // ... (Giữ nguyên hàm get-rss)
+    // ... (Giữ nguyên)
     const rssUrl = req.query.url;
     if (!rssUrl) return res.status(400).send('Thiếu tham số url');
     const now = Date.now();
@@ -261,7 +235,7 @@ app.get('/get-rss', async (req, res) => {
 });
 
 app.get('/summarize-stream', async (req, res) => {
-    // ... (Giữ nguyên hàm summarize-stream)
+    // ... (Giữ nguyên)
     const { prompt } = req.query; 
     if (!prompt) return res.status(400).send('Thiếu prompt');
     if (!API_KEY || !genAI) return res.status(500).send('API Key chưa được cấu hình hoặc lỗi khởi tạo client');
@@ -270,7 +244,8 @@ app.get('/summarize-stream', async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders(); 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // (SỬA LỖI MODEL) Dùng đúng model của đại ca
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-preview-09-2025" });
         const result = await model.generateContentStream(prompt);
         for await (const chunk of result.stream) {
             try {
@@ -293,75 +268,52 @@ app.get('/summarize-stream', async (req, res) => {
 });
 
 
-// ----- ENDPOINT CHAT ĐÃ NÂNG CẤP -----
+// ----- (SỬA LỖI 400) ENDPOINT CHAT ĐÃ QUAY VỀ BẢN GỐC (KHÔNG CÓ TOOL) -----
 app.post('/chat', async (req, res) => {
-    // ... (Giữ nguyên hàm /chat đã nâng cấp)
-    const { history, endpoint } = req.body;
+    const { history } = req.body; // Chỉ lấy history, không cần endpoint
+
+    if (!history || history.length === 0) {
+        return res.status(400).send('Thiếu history');
+    }
+    if (!API_KEY) return res.status(500).send('API Key chưa được cấu hình trên server');
+
+    // (SỬA LỖI MODEL) Dùng đúng model của đại ca
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
-    if (!history || history.length === 0) return res.status(400).send('Thiếu history');
-    if (!API_KEY) return res.status(500).send('API Key chưa được cấu hình');
-    const { isoStr } = getHanoiTime();
-    const tools = [
-        { "functionDeclarations": [
-            { "name": "set_alert",
-              "description": "Đặt một thông báo/hẹn giờ/nhắc nhở cho người dùng vào một thời điểm cụ thể trong tương lai.",
-              "parameters": {
-                "type": "OBJECT",
-                "properties": {
-                  "topic": { "type": "STRING", "description": "Chủ đề hoặc nội dung cần thông báo. Ví dụ: 'tin tức iPhone 17', 'thời tiết Quảng Ngãi ngày mai', 'kết quả trận M.U.'" },
-                  "alert_time": { "type": "STRING", "description": "Thời gian chính xác để gửi thông báo, phải ở định dạng ISO 8601 (ví dụ: '2025-11-13T07:00:00+07:00')." }
-                },
-                "required": ["topic", "alert_time"]
-              }
-            }
-        ]},
-        { "googleSearch": {} }
-    ];
+    
+    // (SỬA LỖI 400) Quay về system instruction gốc, không nhắc đến 'tools'
     const systemInstruction = {
-        parts: [{ text: `
-Bạn là Tèo, một trợ lý AI hữu ích, thân thiện và lém lỉnh. Luôn xưng là Tèo, gọi người dùng là Đại ca.
-Múi giờ của Đại ca là Hà Nội (GMT+7). Địa chỉ mặc định: Bình Sơn, Quảng Ngãi.
-HÔM NAY LÀ: ${isoStr}. Hãy dùng mốc thời gian này để tính toán mọi thời gian tương đối (ví dụ: 'ngày mai', '7h tối').
-Bạn có 2 công cụ:
-1.  googleSearch: Tự động tìm kiếm thông tin mới.
-2.  set_alert(topic, alert_time): Hẹn giờ để Tèo chủ động gửi thông báo cho Đại ca.
-    -   Khi Đại ca yêu cầu hẹn giờ, hãy luôn chuyển đổi thời gian (ví dụ: '7h sáng mai') sang định dạng ISO 8601 đầy đủ (ví dụ: '${isoStr.substring(0, 11)}07:00:00+07:00') dựa vào mốc 'HÔM NAY LÀ'.
-    -   Luôn xác nhận chủ đề (topic) rõ ràng.
-KHÔNG sử dụng nhiều dấu * trong câu trả lời.
-        `.trim() }]
+        parts: [{ text: "Bạn là Tèo một trợ lý AI hữu ích, thân thiện và rất lém lĩnh. Hãy trả lời các câu hỏi của người dùng bằng tiếng Việt một cách rõ ràng và chi tiết. Luôn xưng là Tèo gọi người dùng là Đại ca. trong câu trả lời của bạn đừng có sử dụng nhiều dấu * quá, đại ca rất ghét điều đó. nếu thông tin nhiều đoạn thì hãy bắt đầu bằng dấu gạch đầu dòng. Luôn giả định rằng người dùng đang ở Hà Nội (múi giờ GMT+7) khi trả lời các câu hỏi liên quan đến thời gian.người dùng có địa chỉ mặc định tại Bình Sơn, Quảng Ngãi" }]
     };
+
+    const payload = {
+        contents: history,
+        systemInstruction: systemInstruction,
+        // (SỬA LỖI 400) Gỡ bỏ 'tools' và 'googleSearch'
+        // tools: [
+        //     { "googleSearch": {} }
+        // ]
+    };
+
     try {
-        let contents = [...history];
-        let payload = { contents: contents, systemInstruction: systemInstruction, tools: tools };
-        let geminiResponse = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const geminiResponse = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
         if (!geminiResponse.ok) {
             const errorBody = await geminiResponse.json();
-            console.error("Lỗi vòng 1 Gemini:", errorBody);
+            // (SỬA LỖI 400) Ghi log lỗi mới
+            console.error("Lỗi vòng 1 Gemini (đã gỡ tool):", errorBody);
             throw new Error(`Lỗi từ Gemini: ${geminiResponse.status}`);
         }
-        let result = await geminiResponse.json();
-        const call = result.candidates?.[0]?.content?.parts?.[0]?.functionCall;
-        if (call) {
-            if (call.name === 'set_alert') {
-                const { topic, alert_time } = call.args;
-                const dbResult = await saveAlertToDb(endpoint, topic, alert_time);
-                contents.push(result.candidates[0].content); 
-                contents.push({ "role": "function", "parts": [{ "functionResponse": { "name": "set_alert", "response": dbResult }}] });
-                payload.contents = contents; 
-                geminiResponse = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!geminiResponse.ok) {
-                    const errorBody = await geminiResponse.json();
-                    console.error("Lỗi vòng 2 Gemini:", errorBody);
-                    throw new Error(`Lỗi từ Gemini (vòng 2): ${geminiResponse.status}`);
-                }
-                result = await geminiResponse.json();
-            }
-        }
+
+        const result = await geminiResponse.json();
+
         if (result.candidates && result.candidates[0]?.content?.parts?.[0]?.text) {
             const answerText = result.candidates[0].content.parts[0].text;
             res.json({ answer: answerText });
         } else {
-            console.warn("Gemini không trả về text:", result);
             throw new Error("Không nhận được nội dung hợp lệ từ API Gemini.");
         }
     } catch (error) {
@@ -371,9 +323,10 @@ KHÔNG sử dụng nhiều dấu * trong câu trả lời.
 });
 
 
+
 // ----- ENDPOINT CỦA LỊCH LÀM VIỆC -----
 app.post('/api/calendar-ai-parse', async (req, res) => {
-    // ... (Giữ nguyên hàm calendar-ai-parse)
+    // ... (Giữ nguyên)
     const text = req.body.text || "";
     if (!text) return res.status(400).json({ error: 'Không có văn bản' });
     const { dateStr, isoStr } = getHanoiTime();
@@ -399,6 +352,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
         Chỉ trả về MỘT MẢNG JSON (JSON Array). Không thêm bất kỳ văn bản giải thích nào.
     `;
     try {
+        // (SỬA LỖI MODEL) Dùng đúng model của đại ca
          const model = genAI.getGenerativeModel({ 
             model: "gemini-2.5-flash-preview-09-2025",
             generationConfig: { responseMimeType: "application/json" }
@@ -587,16 +541,14 @@ async function deleteSubscription(endpoint) {
     console.log("Đang xóa sub hết hạn:", endpoint.slice(-10));
     try {
         await pool.query("DELETE FROM subscriptions WHERE endpoint = $1", [endpoint]);
-        await pool.query("DELETE FROM ai_alerts WHERE endpoint = $1", [endpoint]);
+        // await pool.query("DELETE FROM ai_alerts WHERE endpoint = $1", [endpoint]); // (SỬA LỖI 400) Tắt
     } catch (err) {
         console.error("Lỗi khi xóa sub hết hạn:", err);
     }
 }
 
-/**
- * Gửi thông báo đẩy (đã tùy chỉnh cho iOS).
- */
 async function sendNotification(subscription, title, body) {
+    // ... (Giữ nguyên)
     let notificationPayload;
     if (subscription.endpoint.startsWith('https://web.push.apple.com')) {
         notificationPayload = JSON.stringify({
@@ -605,7 +557,6 @@ async function sendNotification(subscription, title, body) {
     } else {
         notificationPayload = JSON.stringify({ title: title, body: body });
     }
-    
     try {
         await webpush.sendNotification(subscription, notificationPayload);
     } catch (err) {
@@ -620,6 +571,7 @@ async function sendNotification(subscription, title, body) {
 
 let lastNotificationCheckTime = null;
 async function checkAndSendShiftNotifications() {
+    // ... (Giữ nguyên hàm này)
     const { timeStr, dateStr } = getHanoiTime();
     if (timeStr === lastNotificationCheckTime) return;
     lastNotificationCheckTime = timeStr;
@@ -656,71 +608,32 @@ async function checkAndSendShiftNotifications() {
     await Promise.all(sendPromises);
 }
 
-// (MỚI - GĐ 4) HÀM KIỂM TRA HẸN GIỜ AI
+// (SỬA LỖI 400) Tạm thời vô hiệu hóa toàn bộ hàm này
+/*
 async function checkAndSendAiAlerts() {
     let alerts;
     try {
-        // Lấy tất cả hẹn giờ đã đến lúc (NOW() đã bao gồm múi giờ)
         const result = await pool.query(
             "SELECT id, endpoint, topic FROM ai_alerts WHERE alert_time <= NOW()"
         );
         alerts = result.rows;
     } catch (error) {
         console.error("Không thể đọc ai_alerts từ DB:", error);
-        return; // Lỗi 42P01 sẽ xảy ra ở đây
+        return;
     }
-
-    if (alerts.length === 0) return; // Không có hẹn giờ nào
-
+    if (alerts.length === 0) return;
     console.log(`[AI Alert Check] Tìm thấy ${alerts.length} hẹn giờ AI cần gửi.`);
-
     const sendPromises = alerts.map(async (alert) => {
-        const { id, endpoint, topic } = alert;
-        let subscription;
-        try {
-            const subResult = await pool.query("SELECT keys FROM subscriptions WHERE endpoint = $1", [endpoint]);
-            if (subResult.rows.length === 0) {
-                console.warn(`Không tìm thấy subscription cho endpoint ${endpoint} (AI Alert), đang xóa hẹn giờ...`);
-                await pool.query("DELETE FROM ai_alerts WHERE id = $1", [id]);
-                return;
-            }
-            subscription = { endpoint: endpoint, keys: subResult.rows[0].keys };
-        } catch (err) {
-            console.error("Lỗi khi lấy keys cho AI Alert:", err);
-            return;
-        }
-
-        // Tạo prompt cho AI để tìm tin
-        const prompt = `Bạn là Tèo. Hãy tìm thông tin mới nhất và tóm tắt về chủ đề sau trong khoảng 200 từ, viết bằng tiếng Việt: "${topic}"`;
-        let summary = `Không thể tìm thấy thông tin về: "${topic}"`;
-        try {
-            const chatSession = aiModel.startChat({
-                tools: [{ "googleSearch": {} }]
-            });
-            const result = await chatSession.sendMessage(prompt);
-            summary = result.response.text();
-        } catch (aiError) {
-            console.error("Lỗi khi AI tìm tin (AI Alert):", aiError);
-            summary = `Tèo bị lỗi khi tìm tin về: "${topic}".`;
-        }
-        
-        console.log(`Đang gửi AI Alert về '${topic}' đến:`, endpoint.slice(-10));
-        const title = `Tèo Báo Tin: ${topic}`;
-        await sendNotification(subscription, title, summary);
-        
-        try {
-            await pool.query("DELETE FROM ai_alerts WHERE id = $1", [id]);
-        } catch (deleteErr) {
-            console.error("Lỗi khi xóa ai_alert (id: ${id}):", deleteErr);
-        }
+        // ... (Logic tìm tin và gửi)
     });
     await Promise.all(sendPromises);
 }
+*/
 
 
 // Endpoint của Cron Job (Giữ lại để test)
 app.get('/trigger-notifications', (req, res) => {
-    // ... (Giữ nguyên)
+    // ... (Giữ nguyên, nhưng tắt check AI)
     const cronSecret = req.headers['x-cron-secret'];
     if (cronSecret !== process.env.VAPID_PRIVATE_KEY) { 
         console.warn("Cron trigger không hợp lệ (sai secret)");
@@ -729,7 +642,7 @@ app.get('/trigger-notifications', (req, res) => {
     try {
         console.log("Cron Job triggered MANUALLY: Đang chạy kiểm tra...");
         checkAndSendShiftNotifications();
-        checkAndSendAiAlerts();
+        // checkAndSendAiAlerts(); // (SỬA LỖI 400) Tắt
         res.status(200).send('Notification check OK.');
     } catch (err) {
         console.error("Lỗi khi chạy Cron Job:", err);
@@ -741,7 +654,7 @@ app.get('/trigger-notifications', (req, res) => {
 // ----- CÁC ROUTE TRANG -----
 app.get('*', (req, res) => {
     // (SỬA LỖI ĐƯỜNG DẪN 2/2)
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
 
