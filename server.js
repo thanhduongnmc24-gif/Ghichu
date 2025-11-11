@@ -112,6 +112,21 @@ function verifyPassword(inputPassword, storedHash, salt) {
         } catch (alterErr) {
             // Lỗi này có thể xảy ra nếu cột đã tồn tại (race condition), bỏ qua
         }
+        // (MỚI) 4. Bảng Hẹn giờ AI
+        try {
+            await client.query(`
+                CREATE TABLE IF NOT EXISTS ai_alerts (
+                    id SERIAL PRIMARY KEY,
+                    endpoint TEXT NOT NULL,
+                    topic TEXT NOT NULL,
+                    alert_time TIMESTAMPTZ NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            `);
+            console.log("Bảng 'ai_alerts' đã sẵn sàng trên Supabase.");
+        } catch (alterErr) {
+            console.error("Lỗi khi tạo bảng 'ai_alerts':", alterErr);
+        }
 
     } catch (err) {
         console.error("Lỗi khi tạo/cập nhật bảng:", err);
