@@ -191,7 +191,7 @@ body {
 /* (MỚI) Cỡ chữ Lịch Âm - Mobile */
 .day-lunar-date {
     /* (SỬA) Tăng cỡ chữ Lịch Âm (gốc là 0.75rem) */
-    font-size: 0.4rem; /* ~13px */
+    font-size: 0.5em; /* ~13px */
     line-height: 1;
 }
 
