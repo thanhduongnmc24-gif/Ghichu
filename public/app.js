@@ -715,7 +715,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // (ĐÃ CẬP NHẬT) Sử dụng hàm import
             const lunarDate = convertSolarToLunar(day, currentDate.getMonth() + 1, currentDate.getFullYear());
             const lunarDayEl = document.createElement('span'); // Ngày Âm
-            lunarDayEl.className = "day-lunar-date text-xs text-gray-500 flex-shrink-0";
+            lunarDayEl.className = "day-lunar-date text-gray-500 flex-shrink-0";
             
             let lunarText;
             if (lunarDate.day === 1) { // Mùng 1
@@ -740,7 +740,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dayCell.classList.remove('hover:bg-gray-50', 'cursor-pointer');
                 dayNumberEl.classList.add('text-gray-400'); 
                 dayNumberEl.classList.remove('text-gray-800');
-                lunarDayEl.className = "day-lunar-date text-xs text-gray-400 flex-shrink-0";
+                lunarDayEl.className = "day-lunar-date text-gray-400 flex-shrink-0";
             } else {
                 // Ô thuộc tháng hiện tại
                 // (ĐÃ CẬP NHẬT) Sử dụng hàm import
