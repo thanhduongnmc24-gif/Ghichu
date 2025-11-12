@@ -107,20 +107,22 @@ body {
 }
 
 
-/* (MỚI) CSS cho trang Chat toàn màn hình */
+/* (MỚI - ĐÃ SỬA LỖI) CSS cho trang Chat toàn màn hình */
 #chat-main {
-    /* Vì header 'sticky', chúng ta cần đẩy nội dung xuống.
-      Ước tính chiều cao header là 60px.
-    */
+    /* 100% chiều cao màn hình */
+    height: 100vh; 
+
+    /* Đệm 60px cho header (sticky) ở trên */
     padding-top: 60px; 
 
-    /* Chiếm 100% chiều cao màn hình.
-      (app.js đã tự thêm padding-bottom cho body 
-      nên nó sẽ tự co lại 80px ở dưới) 
-    */
-    height: 100vh;
-}
+    /* Đệm 80px (5rem) cho nav (fixed) ở dưới */
+    padding-bottom: 80px;
 
+    /* Quan trọng: Báo trình duyệt tính padding vào chiều cao 100vh
+       để #chat-main không bị cao hơn 100vh
+    */
+    box-sizing: border-box; 
+}
 
 /* ----- NEWS (TIN TỨC) ----- */
 .line-clamp-3 { 
