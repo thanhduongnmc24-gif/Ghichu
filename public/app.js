@@ -95,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const noteList = document.getElementById('note-list');
     const addNoteForm = document.getElementById('add-note-form');
     const newNoteInput = document.getElementById('new-note-input');
+    const toggleSummaryViewBtn = document.getElementById('toggle-summary-view-btn');
 
     // --- Biến Phần 3 (Trò chuyện) ---
     const chatMain = document.getElementById('chat-main');
@@ -133,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminNoteViewerContent = document.getElementById('admin-note-viewer-content');
     
     // --- Biến Trạng thái (State) ---
+    let summaryViewMode = 'byDate'; // 'byDate' hoặc 'byNote'
     let currentAdminCreds = null; // Lưu trữ thông tin đăng nhập Admin
     let currentEditingDateStr = null; // Ngày đang sửa trong modal
     let currentViewDate = new Date(); // Tháng đang xem trên lịch
@@ -807,7 +809,24 @@ document.addEventListener('DOMContentLoaded', () => {
      * Vẽ bảng "Tổng kết Ghi chú Tháng" ở cuối trang Lịch.
      * @param {Date} date - Một ngày bất kỳ trong tháng cần tổng kết.
      */
+    /**
+     * (MỚI - Hàm điều khiển)
+     * Quyết định vẽ bảng tổng kết theo Ngày hay theo Ghi chú.
+     */
     function renderMonthlyNoteSummary(date) {
+        if (summaryViewMode === 'byNote') {
+            renderSummaryByNote(date);
+        } else {
+            // Mặc định là 'byDate'
+            renderSummaryByDate(date);
+        }
+    }
+
+    /**
+     * (MỚI - Tách ra từ hàm cũ)
+     * Vẽ bảng tổng kết GHI CHÚ THEO NGÀY.
+     */
+    function renderSummaryByDate(date) {
         const monthlyNoteList = document.getElementById('monthly-note-list');
         if (!monthlyNoteList) return; 
 
@@ -820,18 +839,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const daysWithNotes = []; 
         
-        // Lặp qua các ngày trong tháng để tìm ghi chú
         for (let day = 1; day <= daysInMonth; day++) {
             const currentDate = new Date(year, month, day);
-            // (ĐÃ CẬP NHẬT) Sử dụng hàm import
             const dateStr = getLocalDateString(currentDate); 
             const notes = noteData[dateStr] || []; 
 
             if (notes.length > 0) {
-                // Nếu có ghi chú, thêm vào mảng
                 const dayName = daysOfWeek[currentDate.getDay()]; 
                 const dateDisplay = `${currentDate.getDate()}/${currentDate.getMonth() + 1}`; 
-                // (ĐÃ CẬP NHẬT) Sử dụng hàm import
                 const shift = getShiftForDate(dateStr); 
                 let shiftDisplay = shift; 
                 if (shift === 'ngày' || shift === 'đêm') {
@@ -845,17 +860,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Hiển thị kết quả
         if (daysWithNotes.length === 0) {
-            monthlyNoteList.style.display = 'block'; // Đổi về block
+            monthlyNoteList.style.display = 'block';
             monthlyNoteList.className = ''; 
             monthlyNoteList.style.gridTemplateColumns = '';
             monthlyNoteList.innerHTML = `<p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>`;
-        
         } else {
-            monthlyNoteList.style.display = 'grid'; // Dùng grid để căn cột
+            monthlyNoteList.style.display = 'grid'; 
             monthlyNoteList.className = 'grid gap-2'; 
-            monthlyNoteList.style.gridTemplateColumns = 'auto 1fr'; // Cột 1 (ngày) tự động, Cột 2 (ghi chú) lấp đầy
+            monthlyNoteList.style.gridTemplateColumns = 'auto 1fr'; 
 
             daysWithNotes.forEach(dayData => {
                 const prefixWrapper = document.createElement('div');
@@ -871,6 +884,74 @@ document.addEventListener('DOMContentLoaded', () => {
                     noteEl.textContent = noteText;
                     contentWrapper.appendChild(noteEl);
                 });
+
+                monthlyNoteList.appendChild(prefixWrapper);
+                monthlyNoteList.appendChild(contentWrapper);
+            });
+        }
+    }
+
+    /**
+     * (MỚI)
+     * Vẽ bảng tổng kết GHI CHÚ THEO NỘI DUNG.
+     */
+    function renderSummaryByNote(date) {
+        const monthlyNoteList = document.getElementById('monthly-note-list');
+        if (!monthlyNoteList) return; 
+
+        monthlyNoteList.innerHTML = ''; 
+        
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        // 1. Tổng hợp dữ liệu: Map<"Nội dung ghi chú", [mảng các ngày]>
+        // Ví dụ: "Quang" -> [3, 10, 25]
+        const noteAggregation = new Map();
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = getLocalDateString(new Date(year, month, day)); 
+            const notes = noteData[dateStr] || []; 
+
+            notes.forEach(noteText => {
+                // Chuẩn hóa tên (viết hoa, viết thường như nhau)
+                const normalizedNote = noteText.trim();
+                
+                if (!noteAggregation.has(normalizedNote)) {
+                    noteAggregation.set(normalizedNote, []); // Tạo mảng mới
+                }
+                // Thêm ngày (chỉ số ngày) vào mảng
+                noteAggregation.get(normalizedNote).push(day);
+            });
+        }
+
+        // 2. Sắp xếp theo vần (A-Z)
+        const sortedEntries = Array.from(noteAggregation.entries()).sort((a, b) => 
+            a[0].localeCompare(b[0], 'vi', { sensitivity: 'base' })
+        );
+
+        // 3. Hiển thị
+        if (sortedEntries.length === 0) {
+            monthlyNoteList.style.display = 'block';
+            monthlyNoteList.className = ''; 
+            monthlyNoteList.style.gridTemplateColumns = '';
+            monthlyNoteList.innerHTML = `<p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>`;
+        } else {
+            monthlyNoteList.style.display = 'grid'; 
+            monthlyNoteList.className = 'grid gap-2'; 
+            monthlyNoteList.style.gridTemplateColumns = 'auto 1fr'; 
+
+            sortedEntries.forEach(([noteText, dayList]) => {
+                // Cột 1: Tên ghi chú
+                const prefixWrapper = document.createElement('div');
+                prefixWrapper.className = 'bg-slate-700 rounded-md text-gray-200 text-sm p-2 whitespace-nowrap';
+                prefixWrapper.textContent = `${noteText}:`; // "Quang:"
+                
+                // Cột 2: Danh sách ngày (chỉ số ngày)
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'bg-slate-700 rounded-md text-sm text-gray-200 p-2';
+                // Nối các ngày lại: [3, 10, 25] -> "3, 10, 25"
+                contentWrapper.textContent = dayList.join(', ');
 
                 monthlyNoteList.appendChild(prefixWrapper);
                 monthlyNoteList.appendChild(contentWrapper);
@@ -1466,7 +1547,19 @@ document.addEventListener('DOMContentLoaded', () => {
             currentViewDate.setMonth(currentViewDate.getMonth() + 1);
             renderCalendar(currentViewDate);
         });
-        
+        // (MỚI) Chuyển đổi chế độ xem tổng kết
+        toggleSummaryViewBtn.addEventListener('click', () => {
+    // Đảo trạng thái
+       if (summaryViewMode === 'byDate') {
+        summaryViewMode = 'byNote';
+        toggleSummaryViewBtn.textContent = 'Xem theo: Ngày';
+       } else {
+        summaryViewMode = 'byDate';
+        toggleSummaryViewBtn.textContent = 'Xem theo: Ghi chú';
+    }
+    // Vẽ lại bảng tổng kết với trạng thái mới
+    renderMonthlyNoteSummary(currentViewDate);
+         });
         // --- Lịch (Modal Ghi chú) ---
         // Đóng modal
         closeNoteModalBtn.addEventListener('click', () => {
