@@ -107,21 +107,25 @@ body {
 }
 
 
-/* (MỚI - ĐÃ SỬA LỖI) CSS cho trang Chat toàn màn hình */
+/* (SỬA LỖI) CSS cho trang Chat toàn màn hình */
 #chat-main {
-    /* 100% chiều cao màn hình */
-    height: 100vh; 
+    position: fixed; /* Ghim chặt vào màn hình */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 
-    /* Đệm 60px cho header (sticky) ở trên */
+    /* Ước tính 60px cho header (sticky) ở trên */
     padding-top: 60px; 
 
-    /* Đệm 80px (5rem) cho nav (fixed) ở dưới */
+    /* 80px (5rem) cho nav (fixed) ở dưới */
     padding-bottom: 80px;
 
-    /* Quan trọng: Báo trình duyệt tính padding vào chiều cao 100vh
-       để #chat-main không bị cao hơn 100vh
-    */
+    /* Đảm bảo padding không làm tràn chiều cao */
     box-sizing: border-box; 
+
+    /* Ngăn chính #chat-main cuộn */
+    overflow-y: hidden; 
 }
 
 /* ----- NEWS (TIN TỨC) ----- */
