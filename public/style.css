@@ -186,6 +186,14 @@ body {
       color: white;
   }
 
+/* (MỚI) Cỡ chữ Lịch Âm */
+.day-lunar-date {
+    /* Đây là cỡ chữ mặc định (text-xs)
+      Đại ca đổi thành cỡ mình muốn.
+      Ví dụ: 0.875rem (14px) hoặc 0.8em
+    */
+    font-size: 0.75rem; /* 12px */
+}
 /* ----- CALENDAR (LỊCH) ----- */
 /* Ghi chú trong ô lịch (đã co nhỏ) */
 .day-note-list {
