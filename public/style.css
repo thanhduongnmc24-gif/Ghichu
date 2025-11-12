@@ -107,7 +107,7 @@ body {
 }
 
 
-/* (SỬA LỖI) CSS cho trang Chat toàn màn hình */
+/* (SỬA LỖI IPAD) CSS cho trang Chat (Mobile-first, ghim) */
 #chat-main {
     position: fixed; /* Ghim chặt vào màn hình */
     top: 0;
@@ -115,10 +115,10 @@ body {
     right: 0;
     bottom: 0;
 
-    /* Ước tính 60px cho header (sticky) ở trên */
+    /* 60px cho header (sticky) ở trên - MOBILE */
     padding-top: 60px; 
 
-    /* 80px (5rem) cho nav (fixed) ở dưới */
+    /* 80px (5rem) cho nav (fixed) ở dưới - MOBILE */
     padding-bottom: 80px;
 
     /* Đảm bảo padding không làm tràn chiều cao */
@@ -126,6 +126,14 @@ body {
 
     /* Ngăn chính #chat-main cuộn */
     overflow-y: hidden; 
+}
+
+/* (SỬA LỖI IPAD) Điều chỉnh padding cho Desktop/iPad */
+@media (min-width: 640px) { /* 640px là breakpoint 'sm' của Tailwind */
+    #chat-main {
+        /* Header desktop cao hơn (khoảng 68px) */
+        padding-top: 68px; 
+    }
 }
 
 /* ----- NEWS (TIN TỨC) ----- */
