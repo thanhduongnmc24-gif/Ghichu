@@ -186,15 +186,15 @@ body {
       color: white;
   }
 
-/* (MỚI) Cỡ chữ Lịch Âm */
-.day-lunar-date {
-    /* Đây là cỡ chữ mặc định (text-xs)
-      Đại ca đổi thành cỡ mình muốn.
-      Ví dụ: 0.875rem (14px) hoặc 0.8em
-    */
-    font-size: 0.75rem; /* 12px */
-}
 /* ----- CALENDAR (LỊCH) ----- */
+
+/* (MỚI) Cỡ chữ Lịch Âm - Mobile */
+.day-lunar-date {
+    /* (SỬA) Tăng cỡ chữ Lịch Âm (gốc là 0.75rem) */
+    font-size: 0.8rem; /* ~13px */
+    line-height: 1;
+}
+
 /* Ghi chú trong ô lịch (đã co nhỏ) */
 .day-note-list {
     margin-top: 2px;
@@ -206,24 +206,37 @@ body {
     overflow: hidden; display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1; 
-    font-size: 0.6em; /* (Co lại) */
+    
+    /* (SỬA) Tăng cỡ chữ Ghi chú - Mobile (gốc là 0.6em) */
+    font-size: 0.7em; 
+    
     font-weight: 500;
     color: #C0392B; 
     list-style-type: disc; 
     margin-left: -2px; /* (Kéo vào) */
 }
+
+/* Kích cỡ cho Desktop/Tablet */
 @media (min-width: 640px) { /* sm: */
+    
+    /* (MỚI) Cỡ chữ Lịch Âm - Desktop */
+    .day-lunar-date {
+        /* (SỬA) Tăng cỡ chữ Lịch Âm (gốc là 0.75rem) */
+        font-size: 0.85rem; /* ~13.6px */
+    }
+
     .day-note-list {
         margin-top: 4px;
         padding-left: 16px;
     }
     .day-note {
-        font-size: 0.8em;
+        /* (SỬA) Tăng cỡ chữ Ghi chú - Desktop (gốc là 0.8em) */
+        font-size: 0.9em;
         margin-left: 0;
     }
 }
 
-/* Tổng kết ghi chú hàng tháng */
+/* Tổng kết ghi chú hàng tháng (Giữ nguyên) */
 .day-note-grid-group {
     grid-template-columns: auto 1fr;
 }
