@@ -106,20 +106,20 @@ body {
     background-color: #4B5563; color: #E5E7EB; align-self: flex-start; 
 }
 
-/* Wrapper chính của Chat */
-#chat-main-wrapper {
-    background-color: #1F2937; /* bg-gray-800 */
-    border-radius: 0.5rem; /* rounded-lg */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
-    display: flex;
-    flex-direction: column;
-    /* Chiều cao: 100vh - header - bottom_nav - padding */
-    height: calc(100vh - 12rem); 
-    max-width: 1024px; /* max-w-5xl */
-    margin-left: auto;
-    margin-right: auto;
-}
 
+/* (MỚI) CSS cho trang Chat toàn màn hình */
+#chat-main {
+    /* Vì header 'sticky', chúng ta cần đẩy nội dung xuống.
+      Ước tính chiều cao header là 60px.
+    */
+    padding-top: 60px; 
+
+    /* Chiếm 100% chiều cao màn hình.
+      (app.js đã tự thêm padding-bottom cho body 
+      nên nó sẽ tự co lại 80px ở dưới) 
+    */
+    height: 100vh;
+}
 
 
 /* ----- NEWS (TIN TỨC) ----- */
