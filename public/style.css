@@ -191,7 +191,7 @@ body {
 /* (MỚI) Cỡ chữ Lịch Âm - Mobile */
 .day-lunar-date {
     /* (SỬA) Tăng cỡ chữ Lịch Âm (gốc là 0.75rem) */
-    font-size: 0.8rem; /* ~13px */
+    font-size: 0.5rem; /* ~13px */
     line-height: 1;
 }
 
@@ -208,7 +208,7 @@ body {
     -webkit-line-clamp: 1; 
     
     /* (SỬA) Tăng cỡ chữ Ghi chú - Mobile (gốc là 0.6em) */
-    font-size: 0.7em; 
+    font-size: 0.5em; 
     
     font-weight: 500;
     color: #C0392B; 
