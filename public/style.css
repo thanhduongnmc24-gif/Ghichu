@@ -244,6 +244,19 @@ body {
     grid-column-start: 2;
 }
 
+/* (MỚI) Nút chuyển đổi chế độ xem Tổng kết */
+.summary-toggle-btn {
+    background-color: #374151; /* bg-gray-700 */
+    color: #93C5FD; /* text-blue-300 */
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 500;
+    padding: 0.5rem 1rem; /* py-2 px-4 */
+    border-radius: 0.5rem; /* rounded-lg */
+    transition: background-color 0.2s;
+}
+.summary-toggle-btn:hover {
+    background-color: #4B5563; /* bg-gray-600 */
+}
 /* ----- SETTINGS (CÀI ĐẶT) ----- */
 .time-setting-label {
     display: flex;
