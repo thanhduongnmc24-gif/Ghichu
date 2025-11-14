@@ -1220,14 +1220,26 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const date = new Date(isoString);
         
-        // (SỬA LỖI TIMEZONE) Phải lấy giá trị local, không phải UTC
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
+        // (SỬA LỖI TIMEZONE)
+        // Khi server gửi '2025-11-14T05:11:00Z' (giờ UTC),
+        // new Date() tự động chuyển nó sang giờ local (GMT+7)
+        // nên date.getHours() sẽ là 12 (12h trưa), là SAI.
         
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
+        // Chúng ta cần LẤY giá trị Y, M, D, H, M từ chuỗi UTC, 
+        // TRỪ đi phần chênh lệch múi giờ,
+        // SAU ĐÓ mới tạo Date object.
+        
+        // CÁCH MỚI: Tạo Date object, sau đó trừ đi phần chênh lệch múi giờ
+        // để "ép" nó về đúng giá trị local.
+        const offset = date.getTimezoneOffset() * 60000; // offset (phút) -> ms
+        const localDate = new Date(date.getTime() - offset);
+        
+        // Chuyển localDate này sang chuỗi ISO và cắt lấy phần đầu
+        // localDate.toISOString() -> "2025-11-14T05:11:00.000Z"
+        // .slice(0, 16) -> "2025-11-14T05:11"
+        const localISO = localDate.toISOString().slice(0, 16);
+        
+        return localISO;
     }
 
     /**
@@ -1235,6 +1247,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * @returns {string} - Chuỗi "YYYY-MM-DDTHH:mm".
      */
     function getCurrentDateTimeLocal() {
+        // (SỬA LỖI TIMEZONE) Dùng hàm đã vá lỗi ở trên
         return formatISODateForInput(new Date());
     }
 
@@ -1291,7 +1304,9 @@ document.addEventListener('DOMContentLoaded', () => {
         reminders.forEach(item => {
             if (item.remind_at) {
                 const date = new Date(item.remind_at);
-                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                // (SỬA LỖI TIMEZONE) Khi lấy tháng, phải dùng getUTCFullYear() và getUTCMonth()
+                // vì 'remind_at' là giờ UTC
+                const monthKey = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
                 
                 if (!groups[monthKey]) {
                     groups[monthKey] = [];
@@ -1339,7 +1354,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Bỏ qua nếu nhóm rỗng
             if (items.length === 0) return;
 
-            // (CẬP NHẬT) Sắp xếp các item trong nhóm theo ngày hẹn (remind_at) tăng dần
+            // Sắp xếp các item trong nhóm theo ngày hẹn (remind_at) tăng dần
             items.sort((a, b) => {
                 if (!a.remind_at) return 1; // null xuống cuối
                 if (!b.remind_at) return -1; // null xuống cuối
@@ -1426,7 +1441,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * (CẬP NHẬT) Gọi API cập nhật nhắc nhở (chung cho Bật/Tắt và Đổi ngày/giờ)
      */
-    async function updateReminder(id, datetime, isActive) {
+    async function updateReminder(id, datetimeLocalString, isActive) {
         // (SỬA) Thêm kiểm tra pushManager
         if (!swRegistration || !swRegistration.pushManager) {
             alert("Lỗi PushManager. Không thể cập nhật.");
@@ -1438,6 +1453,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // (SỬA LỖI TIMEZONE)
+        // 'datetimeLocalString' = "2025-11-14T05:11" (giờ local của user)
+        // Chúng ta cần chuyển nó thành chuỗi ISO UTC
+        // new Date("2025-11-14T05:11") -> tạo Date object theo giờ local
+        // .toISOString() -> chuyển sang UTC "2025-11-13T22:11:00.000Z" (nếu user ở +7)
+        const isoStringToSend = (datetimeLocalString && datetimeLocalString !== "") 
+            ? new Date(datetimeLocalString).toISOString() 
+            : null;
+
         try {
             const response = await fetch('/api/update-reminder', {
                 method: 'POST',
@@ -1445,7 +1469,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     id: id,
                     endpoint: subscription.endpoint,
-                    datetime: datetime, // Gửi giá trị datetime-local
+                    datetime: isoStringToSend, // (SỬA) Gửi chuỗi ISO UTC
                     isActive: isActive
                 })
             });
