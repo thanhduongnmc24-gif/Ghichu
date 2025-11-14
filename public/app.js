@@ -1520,7 +1520,30 @@ document.addEventListener('DOMContentLoaded', () => {
         // Khởi động Lịch
         renderCalendar(currentViewDate);
         loadSettings();
+        // ===== (MỚI) TẢI VÀ LƯU THÔNG TIN ĐĂNG NHẬP SYNC =====
+        // ==========================================================
         
+        // 1. Tải Tên/Mật khẩu đã lưu khi khởi động
+        if (syncUsernameInput) {
+            syncUsernameInput.value = localStorage.getItem('syncUsername') || '';
+        }
+        if (syncPasswordInput) {
+            syncPasswordInput.value = localStorage.getItem('syncPassword') || '';
+        }
+
+        // 2. Lưu Tên/Mật khẩu khi người dùng thay đổi chúng
+        if (syncUsernameInput) {
+            syncUsernameInput.addEventListener('change', (e) => {
+                localStorage.setItem('syncUsername', e.target.value.trim());
+            });
+        }
+        if (syncPasswordInput) {
+            syncPasswordInput.addEventListener('change', (e) => {
+                localStorage.setItem('syncPassword', e.target.value.trim());
+            });
+        }
+        // ==========================================================
+        // ==========================================================
         // --- Cài đặt ---
         // Thay đổi giờ
         notifyTimeNgay.addEventListener('change', (e) => {
