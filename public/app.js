@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Biến Phần 4 (Điều khiển Tab) ---
     const newsTabBtn = document.getElementById('news-tab-btn');
-    const calendarTabBtn = document.getElementById('calendar-tab-btn'); // (Lưu ý: Biến này có thể không còn dùng)
+    const calendarTabBtn = document.getElementById('calendar-tab-btn'); // (Lưu ý: Biến này có thể không có trong HTML)
     const settingsBtn = document.getElementById('settings-btn'); // (Lưu ý: Biến này có thể không có trong HTML)
     const mobileHeaderTitle = document.getElementById('mobile-header-title');
     const refreshFeedButton = document.getElementById('refresh-feed-button');
@@ -238,33 +238,26 @@ document.addEventListener('DOMContentLoaded', () => {
         chatDisplay.appendChild(loadingBubble);
         chatDisplay.scrollTop = chatDisplay.scrollHeight;
         
-        // ==========================================================
-        // ===== (MỚI - GĐ 2) LẤY ENDPOINT ĐỂ GỬI CHO TÈO =====
-        // ==========================================================
         let endpoint = null;
         if (swRegistration && swRegistration.pushManager) { // (SỬA) Kiểm tra cả pushManager
             try {
-                // Lấy thông tin đăng ký push hiện tại
                 const subscription = await swRegistration.pushManager.getSubscription();
                 if (subscription) {
-                    // Lấy endpoint (danh tính duy nhất của thiết bị)
                     endpoint = subscription.endpoint;
                 }
             } catch (err) {
                 console.warn("Không thể lấy subscription endpoint:", err);
             }
         }
-        // ==========================================================
 
         try {
             // Gửi request lên server
             const response = await fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // Gửi cả lịch sử chat VÀ endpoint
                 body: JSON.stringify({ 
                     history: chatHistory, 
-                    endpoint: endpoint // (MỚI)
+                    endpoint: endpoint
                 })
             });
             
@@ -276,17 +269,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             const answer = result.answer;
             
-            // Thêm câu trả lời của AI vào lịch sử
             chatHistory.push({ role: "model", parts: [{ text: answer }] });
             
-            // Xóa bubble tải và vẽ lại lịch sử
             chatDisplay.removeChild(loadingBubble);
             renderChatHistory();
             
         } catch (error) {
             console.error("Lỗi khi gọi API chat:", error);
             chatDisplay.removeChild(loadingBubble);
-            // Hiển thị bubble lỗi
             const errorBubble = document.createElement('div');
             errorBubble.className = 'model-bubble';
             errorBubble.style.backgroundColor = '#991B1B';
@@ -1221,7 +1211,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
 
     /**
-     * (MỚI) Lấy danh sách nhắc nhở từ server và vẽ bảng
+     * (MỚI) Helper: Chuyển đổi chuỗi ISO (hoặc Date object) thành định dạng cho input datetime-local.
+     * @param {string | Date} isoString - Chuỗi ISO 8601 hoặc Date object.
+     * @returns {string} - Chuỗi "YYYY-MM-DDTHH:mm".
+     */
+    function formatISODateForInput(isoString) {
+        if (!isoString) return "";
+        
+        const date = new Date(isoString);
+        
+        // (SỬA LỖI TIMEZONE) Phải lấy giá trị local, không phải UTC
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    /**
+     * (MỚI) Helper: Lấy thời gian hiện tại cho input datetime-local
+     * @returns {string} - Chuỗi "YYYY-MM-DDTHH:mm".
+     */
+    function getCurrentDateTimeLocal() {
+        return formatISODateForInput(new Date());
+    }
+
+
+    /**
+     * (CẬP NHẬT) Lấy danh sách nhắc nhở từ server và vẽ bảng
      */
     async function fetchReminders() {
         if (!reminderListContainer) return;
@@ -1230,10 +1249,9 @@ document.addEventListener('DOMContentLoaded', () => {
         reminderListLoading.classList.remove('hidden');
         reminderListContainer.innerHTML = ''; // Xóa sạch
 
-        // (SỬA LỖI TREO) BỌC TOÀN BỘ LOGIC VÀO TRY-CATCH
         try {
             // 1. Lấy endpoint
-            if (!swRegistration || !swRegistration.pushManager) { // (SỬA) Kiểm tra cả pushManager
+            if (!swRegistration || !swRegistration.pushManager) { 
                 throw new Error("Service Worker hoặc PushManager chưa sẵn sàng.");
             }
             const subscription = await swRegistration.pushManager.getSubscription();
@@ -1257,44 +1275,56 @@ document.addEventListener('DOMContentLoaded', () => {
             renderReminderList(grouped);
 
         } catch (err) {
-            // (SỬA) Giờ mọi lỗi sẽ được bắt ở đây
             reminderListLoading.textContent = `Lỗi: ${err.message}`;
-            reminderListLoading.classList.remove('hidden'); // Đảm bảo nó hiện
+            reminderListLoading.classList.remove('hidden'); 
         }
     }
 
     /**
-     * (MỚI) Phân nhóm nhắc nhở theo tháng (YYYY-MM)
+     * (CẬP NHẬT) Phân nhóm nhắc nhở theo tháng (YYYY-MM) CỦA NGÀY HẸN (remind_at)
      */
     function groupRemindersByMonth(reminders) {
-        const groups = {}; // { "2025-11": [item1, item2], "2025-10": [item3] }
+        const groups = {
+            "null": [] // Nhóm mặc định cho các mục chưa có ngày hẹn
+        }; 
 
         reminders.forEach(item => {
-            const date = new Date(item.created_at);
-            // Lấy YYYY-MM (cần padStart cho tháng)
-            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-            
-            if (!groups[monthKey]) {
-                groups[monthKey] = [];
+            if (item.remind_at) {
+                const date = new Date(item.remind_at);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (!groups[monthKey]) {
+                    groups[monthKey] = [];
+                }
+                groups[monthKey].push(item);
+            } else {
+                // Nếu remind_at là null, cho vào nhóm "null"
+                groups["null"].push(item);
             }
-            groups[monthKey].push(item);
         });
         
         return groups;
     }
 
     /**
-     * (MỚI) Vẽ toàn bộ danh sách nhắc nhở (đã phân nhóm)
+     * (CẬP NHẬT) Vẽ toàn bộ danh sách nhắc nhở (đã phân nhóm)
      */
     function renderReminderList(groupedReminders) {
         if (!reminderListContainer) return;
         
         reminderListContainer.innerHTML = ''; // Xóa sạch
 
-        // Lấy các key tháng (ví dụ: ["2025-11", "2025-10"]) và sắp xếp giảm dần
-        const sortedMonthKeys = Object.keys(groupedReminders).sort().reverse();
+        // Lấy các key tháng (ví dụ: ["2025-11", "2025-10", "null"])
+        const monthKeys = Object.keys(groupedReminders);
         
-        if (sortedMonthKeys.length === 0) {
+        // Sắp xếp các key (tháng mới nhất lên đầu, "null" xuống cuối)
+        const sortedMonthKeys = monthKeys.sort((a, b) => {
+            if (a === "null") return 1; // "null" luôn ở cuối
+            if (b === "null") return -1; // "null" luôn ở cuối
+            return b.localeCompare(a); // Sắp xếp chuỗi (ví dụ: "2025-11" > "2025-10")
+        });
+        
+        if (sortedMonthKeys.length === 0 || (sortedMonthKeys.length === 1 && sortedMonthKeys[0] === "null" && groupedReminders["null"].length === 0)) {
             reminderListLoading.textContent = "Không có nhắc nhở nào. Hãy thêm một cái mới!";
             reminderListLoading.classList.remove('hidden');
             return;
@@ -1303,19 +1333,42 @@ document.addEventListener('DOMContentLoaded', () => {
         reminderListLoading.classList.add('hidden'); // Ẩn "Đang tải"
 
         // Vẽ từng nhóm tháng
-        sortedMonthKeys.forEach(monthKey => { // "2025-11"
+        sortedMonthKeys.forEach(monthKey => { // "2025-11" hoặc "null"
             const items = groupedReminders[monthKey];
-            const [year, month] = monthKey.split('-');
+            
+            // Bỏ qua nếu nhóm rỗng
+            if (items.length === 0) return;
+
+            // (CẬP NHẬT) Sắp xếp các item trong nhóm theo ngày hẹn (remind_at) tăng dần
+            items.sort((a, b) => {
+                if (!a.remind_at) return 1; // null xuống cuối
+                if (!b.remind_at) return -1; // null xuống cuối
+                return new Date(a.remind_at) - new Date(b.remind_at);
+            });
             
             const monthGroup = document.createElement('div');
             monthGroup.className = 'reminder-month-group bg-gray-800 rounded-lg shadow-lg';
             
+            // Xử lý tiêu đề và nút xóa
+            let headerTitle = "";
+            let deleteButtonHTML = "";
+            if (monthKey === "null") {
+                headerTitle = "Chưa sắp xếp";
+                deleteButtonHTML = `<button class="delete-month-btn text-red-400 text-xs hover:text-red-300" data-month="null">
+                                        Xóa tất cả
+                                    </button>`;
+            } else {
+                const [year, month] = monthKey.split('-');
+                headerTitle = `Tháng ${month}, ${year}`;
+                deleteButtonHTML = `<button class="delete-month-btn text-red-400 text-xs hover:text-red-300" data-month="${monthKey}">
+                                        Xóa tất cả (Tháng ${month})
+                                    </button>`;
+            }
+
             monthGroup.innerHTML = `
                 <div class="flex justify-between items-center p-4 border-b border-gray-700">
-                    <h3 class="text-lg font-semibold text-white">Tháng ${month}, ${year}</h3>
-                    <button class="delete-month-btn text-red-400 text-xs hover:text-red-300" data-month="${monthKey}">
-                        Xóa tất cả (Tháng ${month})
-                    </button>
+                    <h3 class="text-lg font-semibold text-white">${headerTitle}</h3>
+                    ${deleteButtonHTML}
                 </div>
                 
                 <ul class="reminder-list p-4 space-y-3"></ul>
@@ -1330,15 +1383,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 li.dataset.id = item.id;
                 
                 const textClass = item.is_active ? "text-white" : "text-gray-400";
-                
+                // (CẬP NHẬT) Dùng hàm helper để format ngày giờ
+                const dateTimeValue = formatISODateForInput(item.remind_at);
+
                 li.innerHTML = `
                     <span class="reminder-text ${textClass} flex-grow text-left w-full sm:w-auto">
                         ${item.message}
                     </span>
 
                     <div class="flex items-center space-x-3 flex-shrink-0">
-                        <input type="time" class="reminder-time-input bg-gray-600 text-white p-2 rounded border border-gray-500" 
-                               value="${item.remind_at_time || ''}" 
+                        <input type="datetime-local" class="reminder-datetime-input bg-gray-600 text-white p-2 rounded border border-gray-500" 
+                               value="${dateTimeValue}" 
                                ${!item.is_active ? 'disabled' : ''}>
 
                         <label class="ios-toggle">
@@ -1377,9 +1432,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     /**
-     * (MỚI) Gọi API cập nhật nhắc nhở (chung cho Bật/Tắt và Đổi giờ)
+     * (CẬP NHẬT) Gọi API cập nhật nhắc nhở (chung cho Bật/Tắt và Đổi ngày/giờ)
      */
-    async function updateReminder(id, time, isActive) {
+    async function updateReminder(id, datetime, isActive) {
         // (SỬA) Thêm kiểm tra pushManager
         if (!swRegistration || !swRegistration.pushManager) {
             alert("Lỗi PushManager. Không thể cập nhật.");
@@ -1398,7 +1453,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({
                     id: id,
                     endpoint: subscription.endpoint,
-                    time: time,
+                    datetime: datetime, // Gửi giá trị datetime-local
                     isActive: isActive
                 })
             });
@@ -1406,6 +1461,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error(result.error);
             
             console.log("Đã cập nhật nhắc nhở:", id);
+            
+            // (MỚI) Cập nhật xong, tải lại danh sách để sắp xếp lại
+            await fetchReminders();
             
         } catch (err) {
             alert(`Lỗi khi cập nhật: ${err.message}`);
@@ -2165,8 +2223,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 // --- Xử lý nút Xóa (theo tháng) ---
                 const deleteMonthBtn = e.target.closest('.delete-month-btn');
                 if (deleteMonthBtn) {
-                    const monthKey = deleteMonthBtn.dataset.month; // "YYYY-MM"
-                    if (!confirm(`Đại ca có chắc muốn xóa TẤT CẢ nhắc nhở của tháng ${monthKey}?`)) return;
+                    const monthKey = deleteMonthBtn.dataset.month; // "2025-11" hoặc "null"
+                    const confirmText = monthKey === "null" 
+                        ? "Đại ca có chắc muốn xóa TẤT CẢ nhắc nhở 'Chưa sắp xếp' không?"
+                        : `Đại ca có chắc muốn xóa TẤT CẢ nhắc nhở của tháng ${monthKey}?`;
+
+                    if (!confirm(confirmText)) return;
                     
                     const monthGroup = deleteMonthBtn.closest('.reminder-month-group');
                     monthGroup.style.opacity = '0.5';
@@ -2198,7 +2260,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!item) return;
 
                 const id = item.dataset.id;
-                const timeInput = item.querySelector('.reminder-time-input');
+                const timeInput = item.querySelector('.reminder-datetime-input'); // (SỬA)
                 const toggle = item.querySelector('.reminder-toggle-check');
                 const textSpan = item.querySelector('.reminder-text');
 
@@ -2208,13 +2270,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     if (isActive && !timeInput.value) {
                         // Nếu bật mà chưa có giờ, tự động đặt giờ hiện tại
-                        const now = new Date();
-                        // ===================================
-                        // (SỬA LỖI) Sửa constHH -> const hh
-                        // ===================================
-                        const hh = String(now.getHours()).padStart(2, '0');
-                        const mm = String(now.getMinutes()).padStart(2, '0');
-                        timeInput.value = `${hh}:${mm}`;
+                        timeInput.value = getCurrentDateTimeLocal(); // (SỬA)
                     }
                     
                     // Bật/tắt ô nhập giờ
@@ -2223,12 +2279,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     textSpan.classList.toggle('text-white', isActive);
                     textSpan.classList.toggle('text-gray-400', !isActive);
 
-                    // Gọi API
+                    // Gọi API (SỬA)
                     await updateReminder(id, timeInput.value, isActive);
                 }
                 
                 // --- Xử lý Đổi giờ ---
-                if (target.classList.contains('reminder-time-input')) {
+                if (target.classList.contains('reminder-datetime-input')) { // (SỬA)
                     // Chỉ gọi API nếu công tắc đang bật
                     if (toggle.checked) {
                         await updateReminder(id, timeInput.value, true);
