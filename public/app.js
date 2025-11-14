@@ -1520,6 +1520,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Khởi động Lịch
         renderCalendar(currentViewDate);
         loadSettings();
+        
+        // ==========================================================
         // ===== (MỚI) TẢI VÀ LƯU THÔNG TIN ĐĂNG NHẬP SYNC =====
         // ==========================================================
         
@@ -1544,6 +1546,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // ==========================================================
         // ==========================================================
+        
         // --- Cài đặt ---
         // Thay đổi giờ
         notifyTimeNgay.addEventListener('change', (e) => {
@@ -1860,6 +1863,69 @@ document.addEventListener('DOMContentLoaded', () => {
                     adminNoteViewerModal.classList.add('hidden');
                  }
              });
+        }
+
+        // --- (MỚI) Hẹn giờ Thông báo ---
+        const scheduleForm = document.getElementById('schedule-form');
+        if (scheduleForm) {
+            const scheduleTime = document.getElementById('schedule-time');
+            const scheduleMessage = document.getElementById('schedule-message');
+            const scheduleStatusMsg = document.getElementById('schedule-status-msg');
+
+            scheduleForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // 1. Lấy thông tin
+                const dateTime = scheduleTime.value;
+                const message = scheduleMessage.value.trim();
+
+                if (!dateTime || !message) {
+                    scheduleStatusMsg.textContent = 'Vui lòng nhập đủ thời gian và nội dung.';
+                    scheduleStatusMsg.className = 'text-sm text-red-400 mt-3 text-center';
+                    scheduleStatusMsg.classList.remove('hidden');
+                    return;
+                }
+
+                // 2. Lấy endpoint (ID thiết bị)
+                if (!swRegistration) {
+                    alert("Service Worker chưa sẵn sàng!");
+                    return;
+                }
+                const subscription = await swRegistration.pushManager.getSubscription();
+                if (!subscription) {
+                    alert("Đại ca chưa Bật Thông Báo (trong Cài đặt). Không thể hẹn giờ.");
+                    return;
+                }
+                const endpoint = subscription.endpoint;
+
+                // 3. Gửi lên server
+                scheduleStatusMsg.textContent = 'Đang lưu lịch hẹn...';
+                scheduleStatusMsg.className = 'text-sm text-gray-400 mt-3 text-center';
+                scheduleStatusMsg.classList.remove('hidden');
+
+                try {
+                    const response = await fetch('/api/schedule-notification', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            endpoint: endpoint,
+                            dateTime: dateTime,
+                            message: message
+                        })
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error);
+
+                    scheduleStatusMsg.textContent = result.message;
+                    scheduleStatusMsg.className = 'text-sm text-green-400 mt-3 text-center';
+                    scheduleTime.value = '';
+                    scheduleMessage.value = '';
+
+                } catch (err) {
+                    scheduleStatusMsg.textContent = `Lỗi: ${err.message}`;
+                    scheduleStatusMsg.className = 'text-sm text-red-400 mt-3 text-center';
+                }
+            });
         }
 
     })();
