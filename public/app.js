@@ -1218,13 +1218,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function formatISODateForInput(isoString) {
         if (!isoString) return "";
         
-        const date = new Date(isoString);
+        const date = new Date(isoString); // Tạo Date object (đã ở múi giờ local của trình duyệt)
         
-        // (SỬA LỖI TIMEZONE "5h11" -> "12h11")
-        // Server gửi về giờ UTC (ví dụ: 2025-11-20T05:11:00Z)
-        // new Date() tự động chuyển nó sang giờ local (ví dụ: 2025-11-20T12:11:00+0700)
-        // Chúng ta cần lấy giá trị Y, M, D, H, M của giờ local này.
-
+        // (SỬA LỖI TIMEZONE) Lấy các giá trị local, KHÔNG PHẢI UTC
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
@@ -1241,8 +1237,6 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function getCurrentDateTimeLocal() {
         // (SỬA LỖI TIMEZONE)
-        // Cần tạo 1 Date object và dùng hàm format ở trên
-        // để nó hiển thị đúng giờ local, chứ không phải giờ UTC
         return formatISODateForInput(new Date());
     }
 
@@ -1299,6 +1293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         reminders.forEach(item => {
             if (item.remind_at) {
                 const date = new Date(item.remind_at); // Giờ UTC từ server
+                
                 // (SỬA LỖI TIMEZONE) Hiển thị tháng dựa trên giờ Local
                 const year = date.getFullYear();
                 const month = date.getMonth() + 1;
@@ -1332,7 +1327,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sortedMonthKeys = monthKeys.sort((a, b) => {
             if (a === "null") return 1; // "null" luôn ở cuối
             if (b === "null") return -1; // "null" luôn ở cuối
-            return b.localeCompare(a); // Sắp xếp chuỗi (ví dụ: "2025-11" > "2025-10")
+            return a.localeCompare(b); // (SỬA) Sắp xếp TĂNG DẦN (tháng cũ trước)
         });
         
         if (sortedMonthKeys.length === 0 || (sortedMonthKeys.length === 1 && sortedMonthKeys[0] === "null" && groupedReminders["null"].length === 0)) {
@@ -1396,10 +1391,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     <div class="flex items-center space-x-3 flex-shrink-0">
                         <input type="datetime-local" class="reminder-datetime-input" 
-                               value="${dateTimeValue}" 
-                               ${!item.is_active ? 'disabled' : ''}>
-
-                        <label class="ios-toggle">
+                               value="${dateTimeValue}" >
+                               <label class="ios-toggle">
                             <input type="checkbox" class="reminder-toggle-check" ${item.is_active ? 'checked' : ''}>
                             <span class="slider"></span>
                         </label>
@@ -2258,7 +2251,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     // Bật/tắt ô nhập giờ
-                    timeInput.disabled = !isActive;
+                    // timeInput.disabled = !isActive; // (SỬA) Bỏ dòng này, để ô input luôn bật
+                    
                     // Làm mờ/rõ text
                     textSpan.classList.toggle('text-white', isActive);
                     textSpan.classList.toggle('text-gray-400', !isActive);
@@ -2269,10 +2263,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // --- Xử lý Đổi giờ ---
                 if (target.classList.contains('reminder-datetime-input')) { // (SỬA)
-                    // Chỉ gọi API nếu công tắc đang bật
-                    if (toggle.checked) {
-                        await updateReminder(id, timeInput.value, true);
-                    }
+                    // (SỬA) Tự động bật và lưu
+                    // 1. Bật công tắc
+                    toggle.checked = true;
+                    // 2. Làm rõ text
+                    textSpan.classList.add('text-white');
+                    textSpan.classList.remove('text-gray-400');
+                    // 3. Gọi API
+                    await updateReminder(id, timeInput.value, true);
                 }
             });
         }
