@@ -70,12 +70,11 @@ function verifyPassword(inputPassword, storedHash, salt) {
     return storedHash === hashToCompare;
 }
 
-
-// (CẬP NHẬT) Hàm tự động tạo/cập nhật bảng
-(async () => {
+// (MỚI) HÀM KHỞI TẠO DATABASE (Sẽ được gọi SAU KHI server chạy)
+async function initializeDatabase() {
     const client = await pool.connect();
     try {
-        // 1. Bảng Subscriptions (Không đổi)
+        // 1. Bảng Subscriptions
         await client.query(`
             CREATE TABLE IF NOT EXISTS subscriptions (
                 id SERIAL PRIMARY KEY,
@@ -88,7 +87,7 @@ function verifyPassword(inputPassword, storedHash, salt) {
         `);
         console.log("Bảng 'subscriptions' đã sẵn sàng trên Supabase.");
 
-        // 2. Bảng User Notes (Không đổi)
+        // 2. Bảng User Notes
         await client.query(`
             CREATE TABLE IF NOT EXISTS user_notes (
                 id SERIAL PRIMARY KEY,
@@ -102,7 +101,7 @@ function verifyPassword(inputPassword, storedHash, salt) {
         `);
         console.log("Bảng 'user_notes' (có is_admin) đã sẵn sàng trên Supabase.");
 
-        // 3. Cập nhật bảng user_notes để thêm cột 'is_admin' (Không đổi)
+        // 3. Cập nhật bảng user_notes
         try {
             await client.query(`
                 ALTER TABLE user_notes
@@ -113,9 +112,7 @@ function verifyPassword(inputPassword, storedHash, salt) {
             // Lỗi này có thể xảy ra nếu cột đã tồn tại (race condition), bỏ qua
         }
 
-        // 4. (CẬP NHẬT) Bảng Nhắc nhở (Reminders) - Thiết kế lại
-        // Thay vì 'notify_at', chúng ta lưu 'remind_at_time' (chỉ giờ:phút)
-        // và 'is_active' (bật/tắt)
+        // 4. Bảng Reminders
         await client.query(`
             CREATE TABLE IF NOT EXISTS reminders (
                 id SERIAL PRIMARY KEY,
@@ -125,13 +122,12 @@ function verifyPassword(inputPassword, storedHash, salt) {
                 is_active BOOLEAN DEFAULT false,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 
-                -- Thêm liên kết (optional) để dọn dẹp khi subscription bị xóa
                 FOREIGN KEY (endpoint) REFERENCES subscriptions(endpoint) ON DELETE CASCADE
             );
         `);
         console.log("Bảng 'reminders' (thiết kế mới) đã sẵn sàng.");
 
-        // (MỚI) Xóa bảng cũ nếu tồn tại (để tránh nhầm lẫn)
+        // 5. Xóa bảng cũ nếu tồn tại
         try {
             await client.query(`DROP TABLE IF EXISTS scheduled_notifications;`);
             console.log("Đã xóa bảng 'scheduled_notifications' cũ (nếu có).");
@@ -139,13 +135,14 @@ function verifyPassword(inputPassword, storedHash, salt) {
             // Bỏ qua nếu không xóa được
         }
 
-
     } catch (err) {
-        console.error("Lỗi khi tạo/cập nhật bảng:", err);
+        console.error("LỖI KHỞI TẠO DATABASE:", err);
+        // Ném lỗi này để báo cho server biết là DB hỏng
+        throw err; 
     } finally {
         client.release();
     }
-})();
+}
 
 
 // ----- HÀM MIDDLEWARE KIỂM TRA ADMIN (Không thay đổi) -----
@@ -706,13 +703,13 @@ app.post('/api/delete-reminders-by-month', async (req, res) => {
     }
     
     // Đảm bảo múi giờ Hà Nội
-    const hanoiZone = 'Asia/Ho_Chi_Minh';
     const [year, month] = monthYear.split('-');
     
-    // Ngày bắt đầu (ví dụ: 2025-11-01 00:00:00+07)
+    // Ngày bắt đầu (ví dụ: 2025-11-01 00:00:00+00 - UTC)
+    // created_at là 'TIMESTAMP WITH TIME ZONE' nên pg sẽ tự xử lý
     const startDate = new Date(Date.UTC(year, parseInt(month)-1, 1)); 
     
-    // Ngày kết thúc (ví dụ: 2025-12-01 00:00:00+07)
+    // Ngày kết thúc (ví dụ: 2025-12-01 00:00:00+00 - UTC)
     const endDate = new Date(Date.UTC(year, parseInt(month), 1)); 
 
     try {
@@ -722,7 +719,6 @@ app.post('/api/delete-reminders-by-month', async (req, res) => {
             AND created_at >= $2 
             AND created_at < $3
         `;
-        // Cần truyền Date object vào
         const result = await pool.query(query, [endpoint, startDate, endDate]);
 
         res.status(200).json({ 
@@ -797,7 +793,7 @@ async function checkAndSendNotifications() {
     // === (CẬP NHẬT) PHẦN 2: KIỂM TRA NHẮC NHỞ (REMINDERS) ===
     let reminderJobs = [];
     try {
-        // (SỬA) Truy vấn các nhắc nhở ĐÃ BẬT (is_active = true)
+        // Truy vấn các nhắc nhở ĐÃ BẬT (is_active = true)
         // và có remind_at_time khớp với giờ hiện tại (timeStr)
         const jobQuery = `
             SELECT id, endpoint, message 
@@ -823,7 +819,6 @@ async function checkAndSendNotifications() {
         const keys = subMap.get(job.endpoint);
         if (!keys) {
             console.warn("Không tìm thấy keys cho nhắc nhở (endpoint):", job.endpoint);
-            // (SỬA) Chỉ cần bỏ qua, không cần xóa job vì nó sẽ chạy lại vào ngày mai
             return; 
         }
 
@@ -843,15 +838,12 @@ async function checkAndSendNotifications() {
         const sendPromise = webpush.sendNotification(pushSubscription, notificationPayload)
             .then(() => {
                 // (SỬA) Gửi thành công -> TỰ ĐỘNG TẮT (is_active = false)
-                // Để nó không báo lại vào ngày mai
                 console.log("Đã gửi nhắc nhở ID:", job.id, "-> Đang tắt.");
                 return pool.query("UPDATE reminders SET is_active = false WHERE id = $1", [job.id]);
             })
             .catch(err => {
                 if (err.statusCode === 410 || err.statusCode === 404) {
-                    // Sub hỏng -> Xóa sub
                     deleteSubscription(job.endpoint); 
-                    // (Lưu ý: các nhắc nhở của sub này sẽ tự động bị xóa do 'ON DELETE CASCADE')
                 } else {
                     console.error("Lỗi khi gửi push (nhắc nhở):", err);
                 }
@@ -953,13 +945,20 @@ app.get('*', (req, res) => {
 // ==========================================================
 // ===== (CẬP NHẬT) KHỞI ĐỘNG SERVER =====
 // ==========================================================
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);
     
-    // (MỚI) Tự động kiểm tra thông báo mỗi phút, thay vì dùng Cron Job
+    // (MỚI) Khởi động server NGAY LẬP TỨC
+    // Sau đó mới chạy khởi tạo DB
+    try {
+        await initializeDatabase();
+        console.log("Khởi tạo Database thành công.");
+    } catch (err) {
+        console.error("Lỗi nghiêm trọng khi khởi tạo Database, server có thể không ổn định.", err);
+    }
+
+    // (Giữ nguyên) Tự động kiểm tra thông báo
     console.log("Khởi động bộ đếm thời gian thông báo (kiểm tra mỗi 60 giây)...");
-    
-    // Chạy ngay lần đầu tiên khi khởi động để kiểm tra
     (async () => {
         console.log("Khởi động: Chạy kiểm tra thông báo lần đầu...");
         try {
@@ -969,7 +968,6 @@ app.listen(PORT, () => {
         }
     })();
 
-    // Sau đó chạy định kỳ mỗi phút
     setInterval(async () => {
         try {
             // Hàm này đã có log riêng ("Notify Check...") nên không cần log thêm
