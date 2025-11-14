@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Biến Phần 4 (Điều khiển Tab) ---
     const newsTabBtn = document.getElementById('news-tab-btn');
-    const calendarTabBtn = document.getElementById('calendar-tab-btn'); // (Lưu ý: Biến này có thể không có trong HTML)
+    const calendarTabBtn = document.getElementById('calendar-tab-btn'); // (Lưu ý: Biến này có thể không còn dùng)
     const settingsBtn = document.getElementById('settings-btn'); // (Lưu ý: Biến này có thể không có trong HTML)
     const mobileHeaderTitle = document.getElementById('mobile-header-title');
     const refreshFeedButton = document.getElementById('refresh-feed-button');
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // ===== (MỚI - GĐ 2) LẤY ENDPOINT ĐỂ GỬI CHO TÈO =====
         // ==========================================================
         let endpoint = null;
-        if (swRegistration) {
+        if (swRegistration && swRegistration.pushManager) { // (SỬA) Kiểm tra cả pushManager
             try {
                 // Lấy thông tin đăng ký push hiện tại
                 const subscription = await swRegistration.pushManager.getSubscription();
@@ -1033,7 +1033,11 @@ document.addEventListener('DOMContentLoaded', () => {
      * Kiểm tra trạng thái đăng ký Push (đã bật hay tắt) và cập nhật nút.
      */
     async function checkNotificationStatus() {
-        if (!swRegistration) return;
+        // (SỬA) Thêm kiểm tra pushManager
+        if (!swRegistration || !swRegistration.pushManager) {
+            console.warn("PushManager không được hỗ trợ hoặc chưa sẵn sàng.");
+            return; 
+        }
         const subscription = await swRegistration.pushManager.getSubscription();
         
         if (subscription) {
@@ -1052,8 +1056,9 @@ document.addEventListener('DOMContentLoaded', () => {
      * Bao gồm logic Đăng ký (Subscribe) và Hủy đăng ký (Unsubscribe).
      */
     async function handleSubscribeClick() {
-        if (!swRegistration || !vapidPublicKey) {
-            alert("Service Worker hoặc VAPID Key chưa sẵn sàng. Vui lòng thử lại.");
+        // (SỬA) Thêm kiểm tra pushManager
+        if (!swRegistration || !swRegistration.pushManager || !vapidPublicKey) {
+            alert("Service Worker, PushManager, hoặc VAPID Key chưa sẵn sàng. Vui lòng thử lại.");
             return;
         }
         
@@ -1140,7 +1145,8 @@ document.addEventListener('DOMContentLoaded', () => {
      * Chỉ hoạt động nếu người dùng đã đăng ký push.
      */
     async function updateSubscriptionSettings() {
-        if (!swRegistration) return;
+        // (SỬA) Thêm kiểm tra pushManager
+        if (!swRegistration || !swRegistration.pushManager) return;
         const subscription = await swRegistration.pushManager.getSubscription();
         
         if (!subscription) {
@@ -1181,7 +1187,8 @@ document.addEventListener('DOMContentLoaded', () => {
      * Chỉ hoạt động nếu đã đăng ký push.
      */
     async function syncNotesToServer() {
-        if (!swRegistration) return;
+        // (SỬA) Thêm kiểm tra pushManager
+        if (!swRegistration || !swRegistration.pushManager) return;
         const subscription = await swRegistration.pushManager.getSubscription();
         
         if (!subscription) {
@@ -1226,8 +1233,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // (SỬA LỖI TREO) BỌC TOÀN BỘ LOGIC VÀO TRY-CATCH
         try {
             // 1. Lấy endpoint
-            if (!swRegistration) {
-                throw new Error("Service Worker chưa sẵn sàng.");
+            if (!swRegistration || !swRegistration.pushManager) { // (SỬA) Kiểm tra cả pushManager
+                throw new Error("Service Worker hoặc PushManager chưa sẵn sàng.");
             }
             const subscription = await swRegistration.pushManager.getSubscription();
             if (!subscription) {
@@ -1373,6 +1380,11 @@ document.addEventListener('DOMContentLoaded', () => {
      * (MỚI) Gọi API cập nhật nhắc nhở (chung cho Bật/Tắt và Đổi giờ)
      */
     async function updateReminder(id, time, isActive) {
+        // (SỬA) Thêm kiểm tra pushManager
+        if (!swRegistration || !swRegistration.pushManager) {
+            alert("Lỗi PushManager. Không thể cập nhật.");
+            return;
+        }
         const subscription = await swRegistration.pushManager.getSubscription();
         if (!subscription) {
             alert("Không thể xác thực. Vui lòng Bật Thông Báo.");
@@ -2067,7 +2079,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                // Lấy endpoint
+                // (SỬA) Thêm kiểm tra pushManager
+                if (!swRegistration || !swRegistration.pushManager) {
+                    showReminderStatus('Lỗi PushManager. Vui lòng tải lại.', true);
+                    return;
+                }
                 const subscription = await swRegistration.pushManager.getSubscription();
                 if (!subscription) {
                     showReminderStatus('Vui lòng Bật Thông Báo trong Cài đặt.', true);
@@ -2103,6 +2119,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- (MỚI) 2. Xử lý các nút trong danh sách (Event Delegation) ---
         if (reminderListContainer) {
             reminderListContainer.addEventListener('click', async (e) => {
+                // (SỬA) Thêm kiểm tra pushManager
+                if (!swRegistration || !swRegistration.pushManager) {
+                    alert("Lỗi PushManager. Không thể xóa.");
+                    return;
+                }
                 const subscription = await swRegistration.pushManager.getSubscription();
                 if (!subscription) {
                     alert("Không thể xác thực. Vui lòng Bật Thông Báo.");
@@ -2188,9 +2209,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (isActive && !timeInput.value) {
                         // Nếu bật mà chưa có giờ, tự động đặt giờ hiện tại
                         const now = new Date();
-                        constHH = String(now.getHours()).padStart(2, '0');
+                        // ===================================
+                        // (SỬA LỖI) Sửa constHH -> const hh
+                        // ===================================
+                        const hh = String(now.getHours()).padStart(2, '0');
                         const mm = String(now.getMinutes()).padStart(2, '0');
-                        timeInput.value = `${constHH}:${mm}`;
+                        timeInput.value = `${hh}:${mm}`;
                     }
                     
                     // Bật/tắt ô nhập giờ
