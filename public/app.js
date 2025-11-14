@@ -1211,8 +1211,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
 
     /**
-     * (MỚI) Helper: Chuyển đổi chuỗi ISO (hoặc Date object) thành định dạng cho input datetime-local.
-     * @param {string | Date} isoString - Chuỗi ISO 8601 hoặc Date object.
+     * (CẬP NHẬT) Helper: Chuyển đổi chuỗi ISO (hoặc Date object) thành định dạng cho input datetime-local.
+     * @param {string | Date} isoString - Chuỗi ISO 8601 (UTC) hoặc Date object.
      * @returns {string} - Chuỗi "YYYY-MM-DDTHH:mm".
      */
     function formatISODateForInput(isoString) {
@@ -1220,34 +1220,29 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const date = new Date(isoString);
         
-        // (SỬA LỖI TIMEZONE)
-        // Khi server gửi '2025-11-14T05:11:00Z' (giờ UTC),
-        // new Date() tự động chuyển nó sang giờ local (GMT+7)
-        // nên date.getHours() sẽ là 12 (12h trưa), là SAI.
+        // (SỬA LỖI TIMEZONE "5h11" -> "12h11")
+        // Server gửi về giờ UTC (ví dụ: 2025-11-20T05:11:00Z)
+        // new Date() tự động chuyển nó sang giờ local (ví dụ: 2025-11-20T12:11:00+0700)
+        // Chúng ta cần lấy giá trị Y, M, D, H, M của giờ local này.
+
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
         
-        // Chúng ta cần LẤY giá trị Y, M, D, H, M từ chuỗi UTC, 
-        // TRỪ đi phần chênh lệch múi giờ,
-        // SAU ĐÓ mới tạo Date object.
-        
-        // CÁCH MỚI: Tạo Date object, sau đó trừ đi phần chênh lệch múi giờ
-        // để "ép" nó về đúng giá trị local.
-        const offset = date.getTimezoneOffset() * 60000; // offset (phút) -> ms
-        const localDate = new Date(date.getTime() - offset);
-        
-        // Chuyển localDate này sang chuỗi ISO và cắt lấy phần đầu
-        // localDate.toISOString() -> "2025-11-14T05:11:00.000Z"
-        // .slice(0, 16) -> "2025-11-14T05:11"
-        const localISO = localDate.toISOString().slice(0, 16);
-        
-        return localISO;
+        // Trả về chuỗi "YYYY-MM-DDTHH:mm"
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
 
     /**
-     * (MỚI) Helper: Lấy thời gian hiện tại cho input datetime-local
+     * (CẬP NHẬT) Helper: Lấy thời gian hiện tại cho input datetime-local
      * @returns {string} - Chuỗi "YYYY-MM-DDTHH:mm".
      */
     function getCurrentDateTimeLocal() {
-        // (SỬA LỖI TIMEZONE) Dùng hàm đã vá lỗi ở trên
+        // (SỬA LỖI TIMEZONE)
+        // Cần tạo 1 Date object và dùng hàm format ở trên
+        // để nó hiển thị đúng giờ local, chứ không phải giờ UTC
         return formatISODateForInput(new Date());
     }
 
@@ -1303,10 +1298,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         reminders.forEach(item => {
             if (item.remind_at) {
-                const date = new Date(item.remind_at);
-                // (SỬA LỖI TIMEZONE) Khi lấy tháng, phải dùng getUTCFullYear() và getUTCMonth()
-                // vì 'remind_at' là giờ UTC
-                const monthKey = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+                const date = new Date(item.remind_at); // Giờ UTC từ server
+                // (SỬA LỖI TIMEZONE) Hiển thị tháng dựa trên giờ Local
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
+                const monthKey = `${year}-${String(month).padStart(2, '0')}`;
                 
                 if (!groups[monthKey]) {
                     groups[monthKey] = [];
@@ -1364,7 +1360,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const monthGroup = document.createElement('div');
             monthGroup.className = 'reminder-month-group bg-gray-800 rounded-lg shadow-lg';
             
-            // Xử lý tiêu đề và nút xóa
+            // Xử lý tiêu đề
             let headerTitle = "";
             if (monthKey === "null") {
                 headerTitle = "Chưa sắp xếp";
@@ -1399,7 +1395,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </span>
 
                     <div class="flex items-center space-x-3 flex-shrink-0">
-                        <input type="datetime-local" class="reminder-datetime-input bg-gray-600 text-white p-2 rounded border border-gray-500" 
+                        <input type="datetime-local" class="reminder-datetime-input" 
                                value="${dateTimeValue}" 
                                ${!item.is_active ? 'disabled' : ''}>
 
@@ -2254,9 +2250,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (target.classList.contains('reminder-toggle-check')) {
                     const isActive = target.checked;
                     
+                    // (SỬA LỖI) Chỉ gọi API, không tự động gán giờ
                     if (isActive && !timeInput.value) {
-                        // Nếu bật mà chưa có giờ, tự động đặt giờ hiện tại
-                        timeInput.value = getCurrentDateTimeLocal(); // (SỬA)
+                        alert("Đại ca phải chọn ngày giờ trước khi bật!");
+                        target.checked = false; // Tắt lại
+                        return; // Dừng
                     }
                     
                     // Bật/tắt ô nhập giờ
