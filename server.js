@@ -23,9 +23,7 @@ const __dirname = path.dirname(__filename);
 // --- Middleware ---
 app.use(cors());
 app.use(express.json());
-// ==========================================================
-// ===== (SỬA LỖI DEPLOY) SỬA LẠI ĐƯỜNG DẪN ĐÚNG =====
-// ==========================================================
+// (SỬA LỖI DEPLOY) Đảm bảo đường dẫn này đúng (server.js và public/ ngang hàng)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- CÀI ĐẶT GOOGLE AI ---
@@ -115,20 +113,20 @@ async function initializeDatabase() {
             // Lỗi này có thể xảy ra nếu cột đã tồn tại (race condition), bỏ qua
         }
 
-        // 4. Bảng Reminders
+        // 4. (CẬP NHẬT) Bảng Nhắc nhở (Reminders) - Dùng TIMESTAMP
         await client.query(`
             CREATE TABLE IF NOT EXISTS reminders (
                 id SERIAL PRIMARY KEY,
                 endpoint TEXT NOT NULL,
                 message TEXT NOT NULL,
-                remind_at_time TIME WITHOUT TIME ZONE,
+                remind_at TIMESTAMP WITH TIME ZONE, -- (SỬA) Đổi từ TIME sang TIMESTAMP
                 is_active BOOLEAN DEFAULT false,
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                 
                 FOREIGN KEY (endpoint) REFERENCES subscriptions(endpoint) ON DELETE CASCADE
             );
         `);
-        console.log("Bảng 'reminders' (thiết kế mới) đã sẵn sàng.");
+        console.log("Bảng 'reminders' (dùng TIMESTAMP) đã sẵn sàng.");
 
         // 5. Xóa bảng cũ nếu tồn tại
         try {
@@ -453,7 +451,7 @@ app.post('/update-notes', async (req, res) => {
 
 // ----- CÁC ENDPOINT CHO SYNC ONLINE (Không thay đổi) -----
 app.post('/api/sync/up', async (req, res) => {
-    // ... (Giữ nguyên code)
+    // ... (GiTữ nguyên code)
     const { username, password, noteData } = req.body;
     if (!username || !password || !noteData) {
         return res.status(400).json({ error: 'Thiếu Tên, Mật khẩu, hoặc Dữ liệu Ghi chú.' });
@@ -598,7 +596,7 @@ app.post('/api/admin/delete-user', checkAdmin, async (req, res) => {
 // ===== (CẬP NHẬT) CÁC ENDPOINT CHO NHẮC NHỞ (REMINDERS) =====
 // ==========================================================
 
-// (MỚI) API 1: Thêm một nhắc nhở (chỉ thêm text)
+// API 1: Thêm một nhắc nhở (Không đổi)
 app.post('/api/add-reminder', async (req, res) => {
     const { endpoint, message } = req.body;
 
@@ -608,7 +606,7 @@ app.post('/api/add-reminder', async (req, res) => {
 
     try {
         const query = `
-            INSERT INTO reminders (endpoint, message, remind_at_time, is_active)
+            INSERT INTO reminders (endpoint, message, remind_at, is_active)
             VALUES ($1, $2, NULL, false)
             RETURNING *
         `;
@@ -623,7 +621,7 @@ app.post('/api/add-reminder', async (req, res) => {
     }
 });
 
-// (MỚI) API 2: Lấy tất cả nhắc nhở (theo tháng)
+// API 2: Lấy tất cả nhắc nhở (Sắp xếp theo NGÀY HẸN)
 app.post('/api/get-reminders', async (req, res) => {
     const { endpoint } = req.body;
     if (!endpoint) {
@@ -632,11 +630,16 @@ app.post('/api/get-reminders', async (req, res) => {
 
     try {
         const query = `
-            SELECT id, message, remind_at_time, is_active, created_at
+            SELECT id, message, remind_at, is_active
             FROM reminders 
             WHERE endpoint = $1
-            ORDER BY created_at DESC
+            ORDER BY remind_at ASC NULLS LAST, created_at ASC
         `;
+        // Sắp xếp:
+        // 1. Theo ngày hẹn tăng dần (sớm nhất lên đầu)
+        // 2. Những mục "null" (chưa hẹn) xuống cuối
+        // 3. Những mục "null" sắp xếp theo ngày tạo
+        
         const result = await pool.query(query, [endpoint]);
         res.status(200).json(result.rows);
     } catch (error) {
@@ -645,24 +648,26 @@ app.post('/api/get-reminders', async (req, res) => {
     }
 });
 
-// (MỚI) API 3: Cập nhật một nhắc nhở (bật/tắt, đổi giờ)
+// (CẬP NHẬT) API 3: Cập nhật một nhắc nhở (bật/tắt, đổi ngày/giờ)
 app.post('/api/update-reminder', async (req, res) => {
-    const { id, endpoint, time, isActive } = req.body;
-    if (!id || !endpoint || isActive === undefined || time === undefined) {
-        return res.status(400).json({ error: 'Thiếu thông tin (id, endpoint, time, isActive).' });
+    // (SỬA) Đổi 'time' -> 'datetime'
+    const { id, endpoint, datetime, isActive } = req.body;
+    if (!id || !endpoint || isActive === undefined) { // (SỬA) Bỏ yêu cầu 'time'
+        return res.status(400).json({ error: 'Thiếu thông tin (id, endpoint, isActive).' });
     }
 
     try {
-        // Nếu time là null hoặc rỗng, gán nó là NULL trong DB
-        const remindTime = (time && time !== "") ? time : null;
+        // (SỬA) Chuyển đổi 'datetime' (chuỗi ISO) thành TIMESTAMP
+        // Nếu rỗng/null, gán là NULL trong DB
+        const remindAt = (datetime && datetime !== "") ? new Date(datetime) : null;
         
         const query = `
             UPDATE reminders 
-            SET remind_at_time = $1, is_active = $2
+            SET remind_at = $1, is_active = $2
             WHERE id = $3 AND endpoint = $4
             RETURNING *
         `;
-        const result = await pool.query(query, [remindTime, isActive, id, endpoint]);
+        const result = await pool.query(query, [remindAt, isActive, id, endpoint]);
         
         if (result.rowCount === 0) {
             return res.status(404).json({ error: 'Không tìm thấy nhắc nhở hoặc không có quyền.' });
@@ -676,7 +681,7 @@ app.post('/api/update-reminder', async (req, res) => {
     }
 });
 
-// (MỚI) API 4: Xóa một nhắc nhở
+// API 4: Xóa một nhắc nhở (Không đổi)
 app.post('/api/delete-reminder', async (req, res) => {
     const { id, endpoint } = req.body;
     if (!id || !endpoint) {
@@ -698,35 +703,48 @@ app.post('/api/delete-reminder', async (req, res) => {
     }
 });
 
-// (MỚI) API 5: Xóa nhắc nhở theo tháng
+// (CẬP NHẬT) API 5: Xóa nhắc nhở theo tháng (dựa trên 'remind_at')
 app.post('/api/delete-reminders-by-month', async (req, res) => {
-    const { endpoint, monthYear } = req.body; // "YYYY-MM"
+    const { endpoint, monthYear } = req.body; // "YYYY-MM" hoặc "null"
     if (!endpoint || !monthYear) {
         return res.status(400).json({ error: 'Thiếu endpoint hoặc monthYear.' });
     }
     
-    // Đảm bảo múi giờ Hà Nội
-    const [year, month] = monthYear.split('-');
-    
-    // Ngày bắt đầu (ví dụ: 2025-11-01 00:00:00+00 - UTC)
-    // created_at là 'TIMESTAMP WITH TIME ZONE' nên pg sẽ tự xử lý
-    const startDate = new Date(Date.UTC(year, parseInt(month)-1, 1)); 
-    
-    // Ngày kết thúc (ví dụ: 2025-12-01 00:00:00+00 - UTC)
-    const endDate = new Date(Date.UTC(year, parseInt(month), 1)); 
-
     try {
-        const query = `
-            DELETE FROM reminders 
-            WHERE endpoint = $1 
-            AND created_at >= $2 
-            AND created_at < $3
-        `;
-        const result = await pool.query(query, [endpoint, startDate, endDate]);
+        let query;
+        let queryParams;
+        let successMessage;
+
+        if (monthYear === "null") {
+            // Xóa các mục "Chưa sắp xếp"
+            query = `
+                DELETE FROM reminders 
+                WHERE endpoint = $1 AND remind_at IS NULL
+            `;
+            queryParams = [endpoint];
+            successMessage = "Đã xóa các nhắc nhở 'Chưa sắp xếp'.";
+        
+        } else {
+            // Xóa theo tháng
+            const [year, month] = monthYear.split('-');
+            const startDate = new Date(Date.UTC(year, parseInt(month)-1, 1)); 
+            const endDate = new Date(Date.UTC(year, parseInt(month), 1)); 
+
+            query = `
+                DELETE FROM reminders 
+                WHERE endpoint = $1 
+                AND remind_at >= $2 
+                AND remind_at < $3
+            `;
+            queryParams = [endpoint, startDate, endDate];
+            successMessage = `Đã xóa các nhắc nhở của tháng ${monthYear}.`;
+        }
+        
+        const result = await pool.query(query, queryParams);
 
         res.status(200).json({ 
             success: true, 
-            message: `Đã xóa ${result.rowCount} nhắc nhở của tháng ${monthYear}.` 
+            message: successMessage.replace("Đã xóa", `Đã xóa ${result.rowCount}`)
         });
     } catch (error) {
         console.error("Lỗi khi xóa nhắc nhở theo tháng:", error);
@@ -797,15 +815,17 @@ async function checkAndSendNotifications() {
     // === (CẬP NHẬT) PHẦN 2: KIỂM TRA NHẮC NHỞ (REMINDERS) ===
     let reminderJobs = [];
     try {
-        // Truy vấn các nhắc nhở ĐÃ BẬT (is_active = true)
-        // và có remind_at_time khớp với giờ hiện tại (timeStr)
+        // (SỬA) Truy vấn các nhắc nhở ĐÃ BẬT (is_active = true)
+        // và có remind_at (ngày+giờ) nhỏ hơn hoặc bằng 1 phút kể từ bây giờ
+        // (Chúng ta làm tròn hanoiNow về 0 giây để khớp chính xác phút)
+        const hanoiNowRounded = new Date(hanoiNow.getFullYear(), hanoiNow.getMonth(), hanoiNow.getDate(), hanoiNow.getHours(), hanoiNow.getMinutes());
+        
         const jobQuery = `
             SELECT id, endpoint, message 
             FROM reminders 
-            WHERE is_active = true AND remind_at_time = $1
+            WHERE is_active = true AND remind_at <= $1
         `;
-        // So sánh 'HH:mm' với 'HH:mm'
-        const jobResult = await pool.query(jobQuery, [timeStr]); 
+        const jobResult = await pool.query(jobQuery, [hanoiNowRounded]); 
         reminderJobs = jobResult.rows;
     } catch (err) {
         console.error("Lỗi khi truy vấn nhắc nhở:", err);
@@ -816,7 +836,7 @@ async function checkAndSendNotifications() {
     const reminderPromises = []; 
 
     if (reminderJobs.length > 0) {
-        console.log(`[Notify Check] Phát hiện ${reminderJobs.length} nhắc nhở cần gửi (lúc ${timeStr}).`);
+        console.log(`[Notify Check] Phát hiện ${reminderJobs.length} nhắc nhở cần gửi (vào lúc ${timeStr}).`);
     }
 
     reminderJobs.forEach(job => {
@@ -841,9 +861,9 @@ async function checkAndSendNotifications() {
 
         const sendPromise = webpush.sendNotification(pushSubscription, notificationPayload)
             .then(() => {
-                // (SỬA) Gửi thành công -> TỰ ĐỘNG TẮT (is_active = false)
-                console.log("Đã gửi nhắc nhở ID:", job.id, "-> Đang tắt.");
-                return pool.query("UPDATE reminders SET is_active = false WHERE id = $1", [job.id]);
+                // (SỬA) Gửi thành công -> XÓA LUÔN
+                console.log("Đã gửi và XÓA nhắc nhở ID:", job.id);
+                return pool.query("DELETE FROM reminders WHERE id = $1", [job.id]);
             })
             .catch(err => {
                 if (err.statusCode === 410 || err.statusCode === 404) {
@@ -942,9 +962,7 @@ app.get('/trigger-notifications', async (req, res) => {
 
 // ----- CÁC ROUTE TRANG -----
 app.get('*', (req, res) => {
-    // ==========================================================
-    // ===== (SỬA LỖI DEPLOY) SỬA LẠI ĐƯỜNG DẪN ĐÚNG =====
-    // ==========================================================
+    // (SỬA LỖI DEPLOY) Đảm bảo đường dẫn này đúng (server.js và public/ ngang hàng)
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
