@@ -1251,7 +1251,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // 1. Lấy endpoint
-            if (!swRegistration || !swRegistration.pushManager) { 
+            if (!swRegistration || !swRegistration.pushManager) { // (SỬA) Kiểm tra cả pushManager
                 throw new Error("Service Worker hoặc PushManager chưa sẵn sàng.");
             }
             const subscription = await swRegistration.pushManager.getSubscription();
@@ -1351,25 +1351,17 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Xử lý tiêu đề và nút xóa
             let headerTitle = "";
-            let deleteButtonHTML = "";
             if (monthKey === "null") {
                 headerTitle = "Chưa sắp xếp";
-                deleteButtonHTML = `<button class="delete-month-btn text-red-400 text-xs hover:text-red-300" data-month="null">
-                                        Xóa tất cả
-                                    </button>`;
             } else {
                 const [year, month] = monthKey.split('-');
                 headerTitle = `Tháng ${month}, ${year}`;
-                deleteButtonHTML = `<button class="delete-month-btn text-red-400 text-xs hover:text-red-300" data-month="${monthKey}">
-                                        Xóa tất cả (Tháng ${month})
-                                    </button>`;
             }
 
             monthGroup.innerHTML = `
                 <div class="flex justify-between items-center p-4 border-b border-gray-700">
                     <h3 class="text-lg font-semibold text-white">${headerTitle}</h3>
-                    ${deleteButtonHTML}
-                </div>
+                    </div>
                 
                 <ul class="reminder-list p-4 space-y-3"></ul>
             `;
@@ -2174,7 +2166,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // --- (MỚI) 2. Xử lý các nút trong danh sách (Event Delegation) ---
+        // --- (CẬP NHẬT) 2. Xử lý các nút trong danh sách (Event Delegation) ---
         if (reminderListContainer) {
             reminderListContainer.addEventListener('click', async (e) => {
                 // (SỬA) Thêm kiểm tra pushManager
@@ -2220,40 +2212,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 
-                // --- Xử lý nút Xóa (theo tháng) ---
-                const deleteMonthBtn = e.target.closest('.delete-month-btn');
-                if (deleteMonthBtn) {
-                    const monthKey = deleteMonthBtn.dataset.month; // "2025-11" hoặc "null"
-                    const confirmText = monthKey === "null" 
-                        ? "Đại ca có chắc muốn xóa TẤT CẢ nhắc nhở 'Chưa sắp xếp' không?"
-                        : `Đại ca có chắc muốn xóa TẤT CẢ nhắc nhở của tháng ${monthKey}?`;
-
-                    if (!confirm(confirmText)) return;
-                    
-                    const monthGroup = deleteMonthBtn.closest('.reminder-month-group');
-                    monthGroup.style.opacity = '0.5';
-                    
-                    try {
-                        const response = await fetch('/api/delete-reminders-by-month', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ monthYear: monthKey, endpoint: endpoint })
-                        });
-                        const result = await response.json();
-                        if (!response.ok) throw new Error(result.error);
-                        
-                        alert(result.message);
-                        // Xóa nhóm này khỏi DOM
-                        monthGroup.remove();
-                        
-                    } catch (err) {
-                        alert(`Lỗi khi xóa: ${err.message}`);
-                        monthGroup.style.opacity = '1';
-                    }
-                }
+                // --- (SỬA) Xóa bỏ logic 'delete-month-btn' ---
             });
             
-            // --- (MỚI) 3. Xử lý Bật/Tắt và Đổi giờ (Event Delegation) ---
+            // --- (CẬP NHẬT) 3. Xử lý Bật/Tắt và Đổi giờ (Event Delegation) ---
             reminderListContainer.addEventListener('change', async (e) => {
                 const target = e.target;
                 const item = target.closest('.reminder-item');
