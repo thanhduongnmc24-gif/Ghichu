@@ -1223,18 +1223,17 @@ document.addEventListener('DOMContentLoaded', () => {
         reminderListLoading.classList.remove('hidden');
         reminderListContainer.innerHTML = ''; // Xóa sạch
 
-        // 1. Lấy endpoint
-        if (!swRegistration) {
-            reminderListLoading.textContent = "Service Worker chưa sẵn sàng.";
-            return;
-        }
-        const subscription = await swRegistration.pushManager.getSubscription();
-        if (!subscription) {
-            reminderListLoading.textContent = "Vui lòng 'Bật Thông Báo' trong Cài đặt để dùng tính năng này.";
-            return;
-        }
-        
+        // (SỬA LỖI TREO) BỌC TOÀN BỘ LOGIC VÀO TRY-CATCH
         try {
+            // 1. Lấy endpoint
+            if (!swRegistration) {
+                throw new Error("Service Worker chưa sẵn sàng.");
+            }
+            const subscription = await swRegistration.pushManager.getSubscription();
+            if (!subscription) {
+                throw new Error("Vui lòng 'Bật Thông Báo' trong Cài đặt để dùng tính năng này.");
+            }
+            
             // 2. Gọi API
             const response = await fetch('/api/get-reminders', {
                 method: 'POST',
@@ -1242,7 +1241,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ endpoint: subscription.endpoint })
             });
             const reminders = await response.json();
-            if (!response.ok) throw new Error(reminders.error);
+            if (!response.ok) throw new Error(reminders.error || "Lỗi tải danh sách");
 
             // 3. Phân nhóm
             const grouped = groupRemindersByMonth(reminders);
@@ -1251,7 +1250,9 @@ document.addEventListener('DOMContentLoaded', () => {
             renderReminderList(grouped);
 
         } catch (err) {
+            // (SỬA) Giờ mọi lỗi sẽ được bắt ở đây
             reminderListLoading.textContent = `Lỗi: ${err.message}`;
+            reminderListLoading.classList.remove('hidden'); // Đảm bảo nó hiện
         }
     }
 
@@ -1321,7 +1322,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 li.className = "reminder-item bg-gray-700 p-3 rounded-lg flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4";
                 li.dataset.id = item.id;
                 
-                // (SỬA) Nếu bị tắt, làm mờ text
                 const textClass = item.is_active ? "text-white" : "text-gray-400";
                 
                 li.innerHTML = `
@@ -2129,6 +2129,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         // Xóa khỏi DOM
                         item.remove();
+                        // (MỚI) Kiểm tra xem có phải item cuối cùng trong nhóm ko
+                        const list = item.closest('.reminder-list');
+                        if (list.children.length === 0) {
+                            list.closest('.reminder-month-group').remove();
+                        }
                         
                     } catch (err) {
                         alert(`Lỗi khi xóa: ${err.message}`);
