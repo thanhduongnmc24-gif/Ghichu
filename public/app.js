@@ -100,6 +100,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Biến Phần 3 (Trò chuyện) ---
     const chatMain = document.getElementById('chat-main');
 
+    // --- (MỚI) Biến Phần 3.5 (Hẹn giờ/Nhắc nhở) ---
+    const scheduleMain = document.getElementById('schedule-main');
+    const newReminderForm = document.getElementById('new-reminder-form');
+    const newReminderText = document.getElementById('new-reminder-text');
+    const newReminderStatus = document.getElementById('new-reminder-status');
+    const reminderListContainer = document.getElementById('reminder-list-container');
+    const reminderListLoading = document.getElementById('reminder-list-loading');
+    
     // --- Biến Phần 4 (Điều khiển Tab) ---
     const newsTabBtn = document.getElementById('news-tab-btn');
     const calendarTabBtn = document.getElementById('calendar-tab-btn'); // (Lưu ý: Biến này có thể không có trong HTML)
@@ -109,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
     const bottomTabNews = document.getElementById('bottom-tab-news');
     const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
+    const bottomTabSchedule = document.getElementById('bottom-tab-schedule'); // (MỚI)
     const bottomTabChat = document.getElementById('bottom-tab-chat');
     const bottomTabSettings = document.getElementById('bottom-tab-settings');
     const bottomNav = document.getElementById('bottom-nav'); 
@@ -1201,6 +1210,200 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ===================================================================
+    // (CẬP NHẬT) PHẦN 2.5: LOGIC NHẮC NHỞ (REMINDERS)
+    // ===================================================================
+
+    /**
+     * (MỚI) Lấy danh sách nhắc nhở từ server và vẽ bảng
+     */
+    async function fetchReminders() {
+        if (!reminderListContainer) return;
+        
+        reminderListLoading.textContent = "Đang tải...";
+        reminderListLoading.classList.remove('hidden');
+        reminderListContainer.innerHTML = ''; // Xóa sạch
+
+        // 1. Lấy endpoint
+        if (!swRegistration) {
+            reminderListLoading.textContent = "Service Worker chưa sẵn sàng.";
+            return;
+        }
+        const subscription = await swRegistration.pushManager.getSubscription();
+        if (!subscription) {
+            reminderListLoading.textContent = "Vui lòng 'Bật Thông Báo' trong Cài đặt để dùng tính năng này.";
+            return;
+        }
+        
+        try {
+            // 2. Gọi API
+            const response = await fetch('/api/get-reminders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ endpoint: subscription.endpoint })
+            });
+            const reminders = await response.json();
+            if (!response.ok) throw new Error(reminders.error);
+
+            // 3. Phân nhóm
+            const grouped = groupRemindersByMonth(reminders);
+            
+            // 4. Vẽ
+            renderReminderList(grouped);
+
+        } catch (err) {
+            reminderListLoading.textContent = `Lỗi: ${err.message}`;
+        }
+    }
+
+    /**
+     * (MỚI) Phân nhóm nhắc nhở theo tháng (YYYY-MM)
+     */
+    function groupRemindersByMonth(reminders) {
+        const groups = {}; // { "2025-11": [item1, item2], "2025-10": [item3] }
+
+        reminders.forEach(item => {
+            const date = new Date(item.created_at);
+            // Lấy YYYY-MM (cần padStart cho tháng)
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            
+            if (!groups[monthKey]) {
+                groups[monthKey] = [];
+            }
+            groups[monthKey].push(item);
+        });
+        
+        return groups;
+    }
+
+    /**
+     * (MỚI) Vẽ toàn bộ danh sách nhắc nhở (đã phân nhóm)
+     */
+    function renderReminderList(groupedReminders) {
+        if (!reminderListContainer) return;
+        
+        reminderListContainer.innerHTML = ''; // Xóa sạch
+
+        // Lấy các key tháng (ví dụ: ["2025-11", "2025-10"]) và sắp xếp giảm dần
+        const sortedMonthKeys = Object.keys(groupedReminders).sort().reverse();
+        
+        if (sortedMonthKeys.length === 0) {
+            reminderListLoading.textContent = "Không có nhắc nhở nào. Hãy thêm một cái mới!";
+            reminderListLoading.classList.remove('hidden');
+            return;
+        }
+        
+        reminderListLoading.classList.add('hidden'); // Ẩn "Đang tải"
+
+        // Vẽ từng nhóm tháng
+        sortedMonthKeys.forEach(monthKey => { // "2025-11"
+            const items = groupedReminders[monthKey];
+            const [year, month] = monthKey.split('-');
+            
+            const monthGroup = document.createElement('div');
+            monthGroup.className = 'reminder-month-group bg-gray-800 rounded-lg shadow-lg';
+            
+            monthGroup.innerHTML = `
+                <div class="flex justify-between items-center p-4 border-b border-gray-700">
+                    <h3 class="text-lg font-semibold text-white">Tháng ${month}, ${year}</h3>
+                    <button class="delete-month-btn text-red-400 text-xs hover:text-red-300" data-month="${monthKey}">
+                        Xóa tất cả (Tháng ${month})
+                    </button>
+                </div>
+                
+                <ul class="reminder-list p-4 space-y-3"></ul>
+            `;
+            
+            const listElement = monthGroup.querySelector('.reminder-list');
+            
+            // Vẽ từng item
+            items.forEach(item => {
+                const li = document.createElement('li');
+                li.className = "reminder-item bg-gray-700 p-3 rounded-lg flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4";
+                li.dataset.id = item.id;
+                
+                // (SỬA) Nếu bị tắt, làm mờ text
+                const textClass = item.is_active ? "text-white" : "text-gray-400";
+                
+                li.innerHTML = `
+                    <span class="reminder-text ${textClass} flex-grow text-left w-full sm:w-auto">
+                        ${item.message}
+                    </span>
+
+                    <div class="flex items-center space-x-3 flex-shrink-0">
+                        <input type="time" class="reminder-time-input bg-gray-600 text-white p-2 rounded border border-gray-500" 
+                               value="${item.remind_at_time || ''}" 
+                               ${!item.is_active ? 'disabled' : ''}>
+
+                        <label class="ios-toggle">
+                            <input type="checkbox" class="reminder-toggle-check" ${item.is_active ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </label>
+
+                        <button class="reminder-delete-btn text-gray-400 hover:text-red-400 p-1">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                `;
+                listElement.appendChild(li);
+            });
+            
+            reminderListContainer.appendChild(monthGroup);
+        });
+    }
+
+    /**
+     * (MỚI) Hiển thị thông báo trạng thái cho form thêm nhắc nhở
+     */
+    function showReminderStatus(message, isError = false) {
+        if (!newReminderStatus) return;
+        newReminderStatus.textContent = message;
+        newReminderStatus.className = isError 
+            ? 'text-sm text-red-400 mt-3 text-center' 
+            : 'text-sm text-green-400 mt-3 text-center';
+        newReminderStatus.classList.remove('hidden');
+
+        setTimeout(() => {
+            if (newReminderStatus.textContent === message) {
+                newReminderStatus.classList.add('hidden');
+            }
+        }, 4000);
+    }
+    
+    /**
+     * (MỚI) Gọi API cập nhật nhắc nhở (chung cho Bật/Tắt và Đổi giờ)
+     */
+    async function updateReminder(id, time, isActive) {
+        const subscription = await swRegistration.pushManager.getSubscription();
+        if (!subscription) {
+            alert("Không thể xác thực. Vui lòng Bật Thông Báo.");
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/update-reminder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: id,
+                    endpoint: subscription.endpoint,
+                    time: time,
+                    isActive: isActive
+                })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error);
+            
+            console.log("Đã cập nhật nhắc nhở:", id);
+            
+        } catch (err) {
+            alert(`Lỗi khi cập nhật: ${err.message}`);
+            // Lỗi -> tải lại danh sách để khôi phục trạng thái cũ
+            await fetchReminders();
+        }
+    }
+
+
+    // ===================================================================
     // PHẦN 3: LOGIC ADMIN (ĐĂNG NHẬP, XEM, XÓA)
     // ===================================================================
     
@@ -1348,9 +1551,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     /**
      * Chuyển đổi giữa các tab (Trang) của ứng dụng.
-     * @param {'news' | 'calendar' | 'chat' | 'settings'} tabName - Tên tab cần chuyển đến.
+     * @param {'news' | 'calendar' | 'schedule' | 'chat' | 'settings'} tabName - Tên tab cần chuyển đến.
      */
-    function showTab(tabName) {
+    async function showTab(tabName) { // (SỬA) Chuyển thành async
         if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
         
         // --- Dọn dẹp tab cũ ---
@@ -1372,6 +1575,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Ẩn tất cả các trang
         newsMain.classList.add('hidden');
         calendarMain.classList.add('hidden');
+        scheduleMain.classList.add('hidden'); // (MỚI)
         chatMain.classList.add('hidden');
         settingsMain.classList.add('hidden');
         
@@ -1381,6 +1585,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settingsBtn) settingsBtn.classList.remove('active');
         bottomTabNews.classList.remove('active');
         bottomTabCalendar.classList.remove('active');
+        bottomTabSchedule.classList.remove('active'); // (MỚI)
         bottomTabChat.classList.remove('active');
         bottomTabSettings.classList.remove('active');
         
@@ -1408,6 +1613,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (calendarTabBtn) calendarTabBtn.classList.add('active');
                 bottomTabCalendar.classList.add('active');
                 if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Lịch Làm Việc";
+                break;
+                
+            case 'schedule': // (MỚI)
+                scheduleMain.classList.remove('hidden');
+                bottomTabSchedule.classList.add('active');
+                if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Nhắc nhở";
+                await fetchReminders(); // Tải danh sách khi mở tab
                 break;
                 
             case 'chat':
@@ -1446,6 +1658,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mobile (Bottom Nav)
     bottomTabNews.addEventListener('click', () => showTab('news'));
     bottomTabCalendar.addEventListener('click', () => showTab('calendar'));
+    bottomTabSchedule.addEventListener('click', () => showTab('schedule')); // (MỚI)
     bottomTabChat.addEventListener('click', () => showTab('chat'));
     bottomTabSettings.addEventListener('click', () => showTab('settings'));
     
@@ -1522,7 +1735,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSettings();
         
         // ==========================================================
-        // ===== (MỚI) TẢI VÀ LƯU THÔNG TIN ĐĂNG NHẬP SYNC =====
+        // ===== TẢI VÀ LƯU THÔNG TIN ĐĂNG NHẬP SYNC (Không đổi) =====
         // ==========================================================
         
         // 1. Tải Tên/Mật khẩu đã lưu khi khởi động
@@ -1544,11 +1757,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('syncPassword', e.target.value.trim());
             });
         }
-        // ==========================================================
-        // ==========================================================
         
-        // --- Cài đặt ---
-        // Thay đổi giờ
+        // --- Cài đặt (Không đổi) ---
         notifyTimeNgay.addEventListener('change', (e) => {
             appSettings.notifyTimeNgay = e.target.value;
             saveSettings(); 
@@ -1561,10 +1771,9 @@ document.addEventListener('DOMContentLoaded', () => {
             appSettings.notifyTimeOff = e.target.value;
             saveSettings();
         });
-        // Bật/tắt thông báo
         notifyButton.addEventListener('click', handleSubscribeClick);
 
-        // --- Lịch (Tháng) ---
+        // --- Lịch (Tháng) (Không đổi) ---
         prevMonthBtn.addEventListener('click', () => {
             currentViewDate.setMonth(currentViewDate.getMonth() - 1);
             renderCalendar(currentViewDate);
@@ -1573,21 +1782,18 @@ document.addEventListener('DOMContentLoaded', () => {
             currentViewDate.setMonth(currentViewDate.getMonth() + 1);
             renderCalendar(currentViewDate);
         });
-        // (MỚI) Chuyển đổi chế độ xem tổng kết
         toggleSummaryViewBtn.addEventListener('click', () => {
-    // Đảo trạng thái
-       if (summaryViewMode === 'byDate') {
-        summaryViewMode = 'byNote';
-        toggleSummaryViewBtn.textContent = 'Xem theo: Ngày';
-       } else {
-        summaryViewMode = 'byDate';
-        toggleSummaryViewBtn.textContent = 'Xem theo: Ghi chú';
-    }
-    // Vẽ lại bảng tổng kết với trạng thái mới
-    renderMonthlyNoteSummary(currentViewDate);
+           if (summaryViewMode === 'byDate') {
+                summaryViewMode = 'byNote';
+                toggleSummaryViewBtn.textContent = 'Xem theo: Ngày';
+           } else {
+                summaryViewMode = 'byDate';
+                toggleSummaryViewBtn.textContent = 'Xem theo: Ghi chú';
+            }
+            renderMonthlyNoteSummary(currentViewDate);
          });
-        // --- Lịch (Modal Ghi chú) ---
-        // Đóng modal
+         
+        // --- Lịch (Modal Ghi chú) (Không đổi) ---
         closeNoteModalBtn.addEventListener('click', () => {
             noteModal.style.display = 'none';
             currentEditingDateStr = null; 
@@ -1599,7 +1805,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Thêm ghi chú mới
         addNoteForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const noteText = newNoteInput.value.trim();
@@ -1610,13 +1815,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             noteData[currentEditingDateStr].push(noteText);
             
-            saveNoteData(); // Lưu
-            renderNoteList(currentEditingDateStr); // Vẽ lại list trong modal
-            renderCalendar(currentViewDate); // Vẽ lại lịch (hiển thị chấm)
+            saveNoteData(); 
+            renderNoteList(currentEditingDateStr); 
+            renderCalendar(currentViewDate); 
             newNoteInput.value = ''; 
         });
         
-        // Sửa/Xóa ghi chú (dùng Event Delegation)
         noteList.addEventListener('click', (e) => {
             const target = e.target;
             const index = target.dataset.index;
@@ -1625,9 +1829,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const notes = noteData[currentEditingDateStr] || [];
             
             if (target.classList.contains('edit-note')) {
-                // SỬA
                 const oldText = notes[index];
-                const newText = prompt("Sửa ghi chú:", oldText); // Dùng prompt cho nhanh
+                const newText = prompt("Sửa ghi chú:", oldText); 
                 if (newText !== null && newText.trim() !== "") {
                     noteData[currentEditingDateStr][index] = newText.trim();
                     saveNoteData(); 
@@ -1636,7 +1839,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             if (target.classList.contains('delete-note')) {
-                // XÓA
                 if (confirm(`Bạn có chắc muốn xóa ghi chú: "${notes[index]}"?`)) {
                     noteData[currentEditingDateStr].splice(index, 1);
                     saveNoteData(); 
@@ -1646,25 +1848,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // --- Lịch (AI) ---
+        // --- Lịch (AI) (Không đổi) ---
         cal_aiForm.addEventListener('submit', async (e) => {
             e.preventDefault(); 
             const text = cal_aiInput.value.trim();
             if (!text) return;
             
-            // Vô hiệu hóa form
             cal_aiInput.disabled = true;
             cal_aiForm.querySelector('button').disabled = true;
             cal_aiForm.querySelector('button').textContent = "Đang xử lý...";
             
             try {
-                // Gọi API AI
                 const response = await fetch('/api/calendar-ai-parse', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: text })
                 });
-                const updates = await response.json(); // Mong đợi 1 mảng
+                const updates = await response.json(); 
                 
                 if (Array.isArray(updates)) {
                     updates.forEach(update => {
@@ -1677,7 +1877,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             noteData[dateStr].push(noteText); 
                         }
                     });
-                    saveNoteData(); // Lưu 1 lần sau khi thêm hết
+                    saveNoteData(); 
                     renderCalendar(currentViewDate); 
                     cal_aiInput.value = ''; 
                 } else {
@@ -1688,13 +1888,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Không thể phân tích. Vui lòng kiểm tra lại prompt và API key.');
             }
             
-            // Mở lại form
             cal_aiInput.disabled = false;
             cal_aiForm.querySelector('button').disabled = false;
             cal_aiForm.querySelector('button').textContent = "Phân tích";
         });
 
-        // --- Đồng bộ Online (Sync) ---
+        // --- Đồng bộ Online (Sync) (Không đổi) ---
         if (syncUpBtn) {
             syncUpBtn.addEventListener('click', async () => {
                 const username = syncUsernameInput.value.trim();
@@ -1716,7 +1915,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify({ 
                             username: username, 
                             password: password, 
-                            noteData: noteData // Dùng biến noteData toàn cục
+                            noteData: noteData 
                         })
                     });
                     const result = await response.json();
@@ -1733,7 +1932,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-
         if (syncDownBtn) {
             syncDownBtn.addEventListener('click', async () => {
                 const username = syncUsernameInput.value.trim();
@@ -1769,11 +1967,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const downloadedNotes = await response.json();
                     
-                    // 1. Cập nhật dữ liệu
                     noteData = downloadedNotes || {};
-                    // 2. Lưu vào local
-                    saveNoteData(); // Hàm này đã bao gồm cả lưu localStorage
-                    // 3. Vẽ lại lịch
+                    saveNoteData(); 
                     renderCalendar(currentViewDate); 
                     
                     showSyncStatus('Tải về và đồng bộ thành công!', false);
@@ -1788,7 +1983,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // --- Admin ---
+        // --- Admin (Không đổi) ---
         if (adminLoginBtn) {
             adminLoginBtn.addEventListener('click', async () => {
                 const username = syncUsernameInput.value.trim();
@@ -1806,7 +2001,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const creds = { adminUser: username, adminPass: password };
 
                 try {
-                    // Chúng ta dùng API 'get-users' để kiểm tra đăng nhập
                     const response = await fetch('/api/admin/get-users', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1816,10 +2010,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.error || 'Lỗi không xác định');
                     
-                    // Đăng nhập thành công
                     showSyncStatus('Đăng nhập Admin thành công!', false);
-                    currentAdminCreds = creds; // Lưu lại thông tin đăng nhập
-                    loadAdminPanel(); // Tải bảng admin
+                    currentAdminCreds = creds; 
+                    loadAdminPanel(); 
 
                 } catch (err) {
                     showSyncStatus(err.message, true);
@@ -1831,12 +2024,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-        
         if (adminLogoutBtn) {
             adminLogoutBtn.addEventListener('click', adminLogout);
         }
-
-        // Gắn listener cho các nút trong danh sách (event delegation)
         if (adminUserListBody) {
             adminUserListBody.addEventListener('click', (e) => {
                 const target = e.target;
@@ -1850,8 +2040,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-        
-        // Đóng modal xem ghi chú (Admin)
         if (adminCloseNoteViewer) {
             adminCloseNoteViewer.addEventListener('click', () => {
                 adminNoteViewerModal.classList.add('hidden');
@@ -1865,65 +2053,157 @@ document.addEventListener('DOMContentLoaded', () => {
              });
         }
 
-        // --- (MỚI) Hẹn giờ Thông báo ---
-        const scheduleForm = document.getElementById('schedule-form');
-        if (scheduleForm) {
-            const scheduleTime = document.getElementById('schedule-time');
-            const scheduleMessage = document.getElementById('schedule-message');
-            const scheduleStatusMsg = document.getElementById('schedule-status-msg');
+        // ==========================================================
+        // ===== (CẬP NHẬT) KHỐI SỰ KIỆN CHO TAB NHẮC NHỞ (SCHEDULE) =====
+        // ==========================================================
 
-            scheduleForm.addEventListener('submit', async (e) => {
+        // --- (MỚI) 1. Thêm nhắc nhở mới ---
+        if (newReminderForm) {
+            newReminderForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-
-                // 1. Lấy thông tin
-                const dateTime = scheduleTime.value;
-                const message = scheduleMessage.value.trim();
-
-                if (!dateTime || !message) {
-                    scheduleStatusMsg.textContent = 'Vui lòng nhập đủ thời gian và nội dung.';
-                    scheduleStatusMsg.className = 'text-sm text-red-400 mt-3 text-center';
-                    scheduleStatusMsg.classList.remove('hidden');
+                const message = newReminderText.value.trim();
+                if (!message) {
+                    showReminderStatus('Vui lòng nhập nội dung nhắc nhở.', true);
                     return;
                 }
 
-                // 2. Lấy endpoint (ID thiết bị)
-                if (!swRegistration) {
-                    alert("Service Worker chưa sẵn sàng!");
-                    return;
-                }
+                // Lấy endpoint
                 const subscription = await swRegistration.pushManager.getSubscription();
                 if (!subscription) {
-                    alert("Đại ca chưa Bật Thông Báo (trong Cài đặt). Không thể hẹn giờ.");
+                    showReminderStatus('Vui lòng Bật Thông Báo trong Cài đặt.', true);
                     return;
                 }
-                const endpoint = subscription.endpoint;
-
-                // 3. Gửi lên server
-                scheduleStatusMsg.textContent = 'Đang lưu lịch hẹn...';
-                scheduleStatusMsg.className = 'text-sm text-gray-400 mt-3 text-center';
-                scheduleStatusMsg.classList.remove('hidden');
-
+                
+                showReminderStatus('Đang thêm...', false);
+                
                 try {
-                    const response = await fetch('/api/schedule-notification', {
+                    const response = await fetch('/api/add-reminder', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            endpoint: endpoint,
-                            dateTime: dateTime,
+                            endpoint: subscription.endpoint,
                             message: message
                         })
                     });
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.error);
 
-                    scheduleStatusMsg.textContent = result.message;
-                    scheduleStatusMsg.className = 'text-sm text-green-400 mt-3 text-center';
-                    scheduleTime.value = '';
-                    scheduleMessage.value = '';
+                    showReminderStatus('Thêm thành công!', false);
+                    newReminderText.value = '';
+                    
+                    // Tải lại toàn bộ danh sách
+                    await fetchReminders();
 
                 } catch (err) {
-                    scheduleStatusMsg.textContent = `Lỗi: ${err.message}`;
-                    scheduleStatusMsg.className = 'text-sm text-red-400 mt-3 text-center';
+                    showReminderStatus(`Lỗi: ${err.message}`, true);
+                }
+            });
+        }
+        
+        // --- (MỚI) 2. Xử lý các nút trong danh sách (Event Delegation) ---
+        if (reminderListContainer) {
+            reminderListContainer.addEventListener('click', async (e) => {
+                const subscription = await swRegistration.pushManager.getSubscription();
+                if (!subscription) {
+                    alert("Không thể xác thực. Vui lòng Bật Thông Báo.");
+                    return;
+                }
+                const endpoint = subscription.endpoint;
+
+                // --- Xử lý nút Xóa (trong item) ---
+                const deleteBtn = e.target.closest('.reminder-delete-btn');
+                if (deleteBtn) {
+                    const item = deleteBtn.closest('.reminder-item');
+                    const id = item.dataset.id;
+                    if (!confirm("Đại ca có chắc muốn xóa nhắc nhở này?")) return;
+                    
+                    item.style.opacity = '0.5'; // Làm mờ
+                    try {
+                        const response = await fetch('/api/delete-reminder', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: id, endpoint: endpoint })
+                        });
+                        const result = await response.json();
+                        if (!response.ok) throw new Error(result.error);
+                        
+                        // Xóa khỏi DOM
+                        item.remove();
+                        
+                    } catch (err) {
+                        alert(`Lỗi khi xóa: ${err.message}`);
+                        item.style.opacity = '1'; // Khôi phục
+                    }
+                }
+                
+                // --- Xử lý nút Xóa (theo tháng) ---
+                const deleteMonthBtn = e.target.closest('.delete-month-btn');
+                if (deleteMonthBtn) {
+                    const monthKey = deleteMonthBtn.dataset.month; // "YYYY-MM"
+                    if (!confirm(`Đại ca có chắc muốn xóa TẤT CẢ nhắc nhở của tháng ${monthKey}?`)) return;
+                    
+                    const monthGroup = deleteMonthBtn.closest('.reminder-month-group');
+                    monthGroup.style.opacity = '0.5';
+                    
+                    try {
+                        const response = await fetch('/api/delete-reminders-by-month', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ monthYear: monthKey, endpoint: endpoint })
+                        });
+                        const result = await response.json();
+                        if (!response.ok) throw new Error(result.error);
+                        
+                        alert(result.message);
+                        // Xóa nhóm này khỏi DOM
+                        monthGroup.remove();
+                        
+                    } catch (err) {
+                        alert(`Lỗi khi xóa: ${err.message}`);
+                        monthGroup.style.opacity = '1';
+                    }
+                }
+            });
+            
+            // --- (MỚI) 3. Xử lý Bật/Tắt và Đổi giờ (Event Delegation) ---
+            reminderListContainer.addEventListener('change', async (e) => {
+                const target = e.target;
+                const item = target.closest('.reminder-item');
+                if (!item) return;
+
+                const id = item.dataset.id;
+                const timeInput = item.querySelector('.reminder-time-input');
+                const toggle = item.querySelector('.reminder-toggle-check');
+                const textSpan = item.querySelector('.reminder-text');
+
+                // --- Xử lý Bật/Tắt (Toggle) ---
+                if (target.classList.contains('reminder-toggle-check')) {
+                    const isActive = target.checked;
+                    
+                    if (isActive && !timeInput.value) {
+                        // Nếu bật mà chưa có giờ, tự động đặt giờ hiện tại
+                        const now = new Date();
+                        constHH = String(now.getHours()).padStart(2, '0');
+                        const mm = String(now.getMinutes()).padStart(2, '0');
+                        timeInput.value = `${constHH}:${mm}`;
+                    }
+                    
+                    // Bật/tắt ô nhập giờ
+                    timeInput.disabled = !isActive;
+                    // Làm mờ/rõ text
+                    textSpan.classList.toggle('text-white', isActive);
+                    textSpan.classList.toggle('text-gray-400', !isActive);
+
+                    // Gọi API
+                    await updateReminder(id, timeInput.value, isActive);
+                }
+                
+                // --- Xử lý Đổi giờ ---
+                if (target.classList.contains('reminder-time-input')) {
+                    // Chỉ gọi API nếu công tắc đang bật
+                    if (toggle.checked) {
+                        await updateReminder(id, timeInput.value, true);
+                    }
                 }
             });
         }
