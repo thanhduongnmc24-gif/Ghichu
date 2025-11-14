@@ -216,7 +216,7 @@
                     <-- Danh sách các item -->
                     <ul class="reminder-list p-4 space-y-3">
                         
-                        <-- (VÍ DỤ) Cấu trúc 1 Item -->
+                        <-- (VÍ DỤ) Cấu trúc 1 Item (ĐÃ CẬP NHẬT) -->
                         <li class="reminder-item bg-gray-700 p-3 rounded-lg flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4" data-id="1">
                             
                             <-- 1. Nội dung (Text) -->
@@ -226,8 +226,8 @@
             
                             <-- 2. Nhóm điều khiển (Controls) -->
                             <div class="flex items-center space-x-3 flex-shrink-0">
-                                <-- 3. Ô chọn giờ -->
-                                <input type="time" class="reminder-time-input bg-gray-600 text-white p-2 rounded border border-gray-500" value="09:00" disabled>
+                                <-- 3. (CẬP NHẬT) Ô chọn NGÀY & GIỜ -->
+                                <input type="datetime-local" class="reminder-datetime-input bg-gray-600 text-white p-2 rounded border border-gray-500" value="2025-11-14T09:00" disabled>
             
                                 <-- 4. Nút Bật/Tắt (iOS Toggle) -->
                                 <label class="ios-toggle">
@@ -242,13 +242,24 @@
                             </div>
                         </li>
                         
-                        <-- (VÍ DỤ) Item bị tắt -->
-                        <li class="reminder-item bg-gray-700 p-3 rounded-lg flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4" data-id="2">
+                    </ul>
+                </div>
+                
+                <-- (VÍ DỤ) Cấu trúc Nhóm "Chưa sắp xếp" (remind_at = NULL) -->
+                <div class="reminder-month-group bg-gray-800 rounded-lg shadow-lg">
+                    <div class="flex justify-between items-center p-4 border-b border-gray-700">
+                        <h3 class="text-lg font-semibold text-white">Chưa sắp xếp</h3>
+                        <button class="delete-month-btn text-red-400 text-xs hover:text-red-300" data-month="null">
+                            Xóa tất cả
+                        </button>
+                    </div>
+                    <ul class="reminder-list p-4 space-y-3">
+                        <li class="reminder-item bg-gray-700 p-3 rounded-lg flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4" data-id="3">
                             <span class="reminder-text text-gray-400 flex-grow text-left w-full sm:w-auto">
-                                Đón con
+                                Ghi chú chưa đặt lịch
                             </span>
                             <div class="flex items-center space-x-3 flex-shrink-0">
-                                <input type="time" class="reminder-time-input bg-gray-600 text-white p-2 rounded border border-gray-500" value="17:00" disabled>
+                                <input type="datetime-local" class="reminder-datetime-input bg-gray-600 text-white p-2 rounded border border-gray-500" value="" disabled>
                                 <label class="ios-toggle">
                                     <input type="checkbox" class="reminder-toggle-check">
                                     <span class="slider"></span>
@@ -258,7 +269,6 @@
                                 </button>
                             </div>
                         </li>
-                        
                     </ul>
                 </div>
                 -->
@@ -435,7 +445,7 @@
         </button>
         <button id="bottom-tab-schedule" class="bottom-nav-btn">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.58 1.055 5.454 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
-            <span>Hẹn giờ</span>
+            <span>Nhắc nhở</span>
         </button>
         <button id="bottom-tab-chat" class="bottom-nav-btn">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
