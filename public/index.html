@@ -60,6 +60,20 @@
         input:checked + .slider:before {
             transform: translateX(22px); /* Di chuyển chấm tròn */
         }
+        
+        /* (SỬA LỖI TRÀN VIỀN IPHONE) */
+        .reminder-datetime-input {
+            background-color: #4B5563; /* bg-gray-600 */
+            color: white;
+            padding: 0.5rem; /* p-2 */
+            border-radius: 0.25rem; /* rounded */
+            border: 1px solid #6B7280; /* border-gray-500 */
+            
+            /* Giới hạn chiều rộng và cỡ chữ để vừa trên mobile */
+            max-width: 175px; /* Giới hạn chiều rộng */
+            font-size: 0.875rem; /* text-sm */
+            line-height: 1.25rem;
+        }
     </style>
     </head>
 <body class="bg-gray-900 text-gray-100 antialiased">
