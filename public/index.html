@@ -39,7 +39,7 @@
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://thethao247.vn/bong-da.rss" data-source="Thể Thao 247">Thể Thao 247</button>
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
                          <button id="refresh-feed-button" class="refresh-button" title="Tải lại tin tức">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l-1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                         </button>
                     </div>
                  </div>
@@ -50,7 +50,7 @@
                  
                  <div class="flex items-center space-x-2">
                      <button id="refresh-feed-button-mobile" class="refresh-button" title="Tải lại tin tức">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l-1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                      </button>
                      <button id="rss-menu-btn" class="text-gray-300 hover:text-white focus:outline-none focus:text-white p-2">
                           <span class="sr-only">Mở menu RSS</span>
@@ -116,18 +116,35 @@
             </div>
         </section>
         
+        <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mt-6">
+            <h2 class="text-xl font-bold text-white mb-4">Hẹn giờ Thông báo</h2>
+            <form id="schedule-form" class="space-y-3">
+                <label class="block">
+                    <span class="text-sm font-medium text-gray-300">Thời gian hẹn:</span>
+                    <input type="datetime-local" id="schedule-time" class="w-full mt-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600">
+                </label>
+                <label class="block">
+                    <span class="text-sm font-medium text-gray-300">Nội dung nhắc:</span>
+                    <input type="text" id="schedule-message" placeholder="Nhập nội dung nhắc nhở..." class="w-full mt-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600">
+                </label>
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg">
+                    Đặt lịch hẹn
+                </button>
+                <p id="schedule-status-msg" class="text-sm text-gray-400 mt-3 text-center hidden"></p>
+            </form>
+        </section>
         <section id="monthly-note-summary" class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mt-6">
-    <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold text-white">Tổng kết Ghi chú Tháng</h2>
-        <button id="toggle-summary-view-btn" class="summary-toggle-btn">
-            Xem theo: Ghi chú
-        </button>
-    </div>
-
-    <div id="monthly-note-list" class="space-y-3">
-        <p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>
-    </div>
-</section>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-white">Tổng kết Ghi chú Tháng</h2>
+                <button id="toggle-summary-view-btn" class="summary-toggle-btn">
+                    Xem theo: Ghi chú
+                </button>
+            </div>
+        
+            <div id="monthly-note-list" class="space-y-3">
+                <p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>
+            </div>
+        </section>
 
     </main>
     
