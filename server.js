@@ -24,9 +24,9 @@ const __dirname = path.dirname(__filename);
 app.use(cors());
 app.use(express.json());
 // ==========================================================
-// ===== (SỬA LỖI DEPLOY) ĐI LÙI LẠI 1 CẤP ĐỂ TÌM 'public' =====
+// ===== (SỬA LỖI DEPLOY) SỬA LẠI ĐƯỜNG DẪN ĐÚNG =====
 // ==========================================================
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // --- CÀI ĐẶT GOOGLE AI ---
 const API_KEY = process.env.GEMINI_API_KEY;
@@ -943,9 +943,9 @@ app.get('/trigger-notifications', async (req, res) => {
 // ----- CÁC ROUTE TRANG -----
 app.get('*', (req, res) => {
     // ==========================================================
-    // ===== (SỬA LỖI DEPLOY) ĐI LÙI LẠI 1 CẤP ĐỂ TÌM 'public' =====
+    // ===== (SỬA LỖI DEPLOY) SỬA LẠI ĐƯỜNG DẪN ĐÚNG =====
     // ==========================================================
-    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 
