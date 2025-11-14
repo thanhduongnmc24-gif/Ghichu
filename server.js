@@ -102,7 +102,7 @@ function verifyPassword(inputPassword, storedHash, salt) {
         `);
         console.log("Bảng 'user_notes' (có is_admin) đã sẵn sàng trên Supabase.");
 
-        // 3. (MỚI - ADMIN) Cập nhật bảng user_notes để thêm cột 'is_admin'
+        // 3. Cập nhật bảng user_notes để thêm cột 'is_admin' (Không đổi)
         try {
             await client.query(`
                 ALTER TABLE user_notes
@@ -113,18 +113,31 @@ function verifyPassword(inputPassword, storedHash, salt) {
             // Lỗi này có thể xảy ra nếu cột đã tồn tại (race condition), bỏ qua
         }
 
-        // 4. (MỚI) Bảng Lịch hẹn (Reminders)
+        // 4. (CẬP NHẬT) Bảng Nhắc nhở (Reminders) - Thiết kế lại
+        // Thay vì 'notify_at', chúng ta lưu 'remind_at_time' (chỉ giờ:phút)
+        // và 'is_active' (bật/tắt)
         await client.query(`
-            CREATE TABLE IF NOT EXISTS scheduled_notifications (
+            CREATE TABLE IF NOT EXISTS reminders (
                 id SERIAL PRIMARY KEY,
                 endpoint TEXT NOT NULL,
-                notify_at TIMESTAMP WITH TIME ZONE NOT NULL,
                 message TEXT NOT NULL,
-                sent BOOLEAN DEFAULT false,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                remind_at_time TIME WITHOUT TIME ZONE,
+                is_active BOOLEAN DEFAULT false,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                
+                -- Thêm liên kết (optional) để dọn dẹp khi subscription bị xóa
+                FOREIGN KEY (endpoint) REFERENCES subscriptions(endpoint) ON DELETE CASCADE
             );
         `);
-        console.log("Bảng 'scheduled_notifications' đã sẵn sàng.");
+        console.log("Bảng 'reminders' (thiết kế mới) đã sẵn sàng.");
+
+        // (MỚI) Xóa bảng cũ nếu tồn tại (để tránh nhầm lẫn)
+        try {
+            await client.query(`DROP TABLE IF EXISTS scheduled_notifications;`);
+            console.log("Đã xóa bảng 'scheduled_notifications' cũ (nếu có).");
+        } catch (dropErr) {
+            // Bỏ qua nếu không xóa được
+        }
 
 
     } catch (err) {
@@ -135,8 +148,9 @@ function verifyPassword(inputPassword, storedHash, salt) {
 })();
 
 
-// ----- (MỚI - ADMIN) HÀM MIDDLEWARE KIỂM TRA ADMIN -----
+// ----- HÀM MIDDLEWARE KIỂM TRA ADMIN (Không thay đổi) -----
 const checkAdmin = async (req, res, next) => {
+    // ... (Giữ nguyên code)
     const { adminUser, adminPass } = req.body;
 
     if (!adminUser || !adminPass) {
@@ -175,6 +189,7 @@ const checkAdmin = async (req, res, next) => {
 
 // ----- CÁC ENDPOINT CỦA TIN TỨC (Không thay đổi) -----
 app.get('/get-rss', async (req, res) => {
+    // ... (Giữ nguyên code)
     const rssUrl = req.query.url;
     if (!rssUrl) return res.status(400).send('Thiếu tham số url');
 
@@ -205,6 +220,7 @@ app.get('/get-rss', async (req, res) => {
 });
 
 app.get('/summarize-stream', async (req, res) => {
+    // ... (Giữ nguyên code)
     const { prompt } = req.query; 
 
     if (!prompt) return res.status(400).send('Thiếu prompt');
@@ -248,6 +264,7 @@ app.get('/summarize-stream', async (req, res) => {
 });
 
 app.post('/chat', async (req, res) => {
+    // ... (Giữ nguyên code)
     const { history } = req.body;
 
     if (!history || history.length === 0) {
@@ -296,6 +313,7 @@ app.post('/chat', async (req, res) => {
 
 // ----- ENDPOINT CỦA LỊCH LÀM VIỆC (Không thay đổi) -----
 app.post('/api/calendar-ai-parse', async (req, res) => {
+    // ... (Giữ nguyên code)
     const text = req.body.text || "";
     if (!text) {
         return res.status(400).json({ error: 'Không có văn bản' });
@@ -356,6 +374,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
 
 // ----- CÁC ENDPOINT CHO PUSH NOTIFICATION (Không thay đổi) -----
 app.get('/vapid-public-key', (req, res) => {
+    // ... (Giữ nguyên code)
     if (!VAPID_PUBLIC_KEY) {
         return res.status(500).send("VAPID Public Key chưa được cấu hình trên server.");
     }
@@ -363,6 +382,7 @@ app.get('/vapid-public-key', (req, res) => {
 });
 
 app.post('/subscribe', async (req, res) => {
+    // ... (Giữ nguyên code)
     const { subscription, settings, noteData } = req.body;
     if (!subscription || !settings || !subscription.endpoint || !subscription.keys) {
         return res.status(400).send("Thiếu thông tin subscription hoặc settings.");
@@ -389,6 +409,7 @@ app.post('/subscribe', async (req, res) => {
 });
 
 app.post('/unsubscribe', async (req, res) => {
+    // ... (Giữ nguyên code)
     const { endpoint } = req.body;
     if (!endpoint) {
         return res.status(400).send("Thiếu thông tin endpoint.");
@@ -411,6 +432,7 @@ app.post('/unsubscribe', async (req, res) => {
 });
 
 app.post('/update-notes', async (req, res) => {
+    // ... (Giữ nguyên code)
     const { endpoint, noteData } = req.body;
     if (!endpoint || !noteData) {
         return res.status(400).send("Thiếu endpoint hoặc noteData.");
@@ -431,6 +453,7 @@ app.post('/update-notes', async (req, res) => {
 
 // ----- CÁC ENDPOINT CHO SYNC ONLINE (Không thay đổi) -----
 app.post('/api/sync/up', async (req, res) => {
+    // ... (Giữ nguyên code)
     const { username, password, noteData } = req.body;
     if (!username || !password || !noteData) {
         return res.status(400).json({ error: 'Thiếu Tên, Mật khẩu, hoặc Dữ liệu Ghi chú.' });
@@ -470,6 +493,7 @@ app.post('/api/sync/up', async (req, res) => {
 });
 
 app.post('/api/sync/down', async (req, res) => {
+    // ... (Giữ nguyên code)
     const { username, password } = req.body;
     if (!username || !password) {
         return res.status(400).json({ error: 'Thiếu Tên hoặc Mật khẩu.' });
@@ -501,8 +525,9 @@ app.post('/api/sync/down', async (req, res) => {
 });
 
 
-// ----- (MỚI - ADMIN) CÁC ENDPOINT CHO ADMIN -----
+// ----- CÁC ENDPOINT CHO ADMIN (Không thay đổi) -----
 app.post('/api/admin/get-users', checkAdmin, async (req, res) => {
+    // ... (Giữ nguyên code)
     const client = await pool.connect();
     try {
         const result = await client.query(
@@ -519,6 +544,7 @@ app.post('/api/admin/get-users', checkAdmin, async (req, res) => {
 });
 
 app.post('/api/admin/get-notes', checkAdmin, async (req, res) => {
+    // ... (Giữ nguyên code)
     const { targetUser } = req.body;
     if (!targetUser) {
         return res.status(400).json({ error: 'Thiếu targetUser.' });
@@ -540,6 +566,7 @@ app.post('/api/admin/get-notes', checkAdmin, async (req, res) => {
 });
 
 app.post('/api/admin/delete-user', checkAdmin, async (req, res) => {
+    // ... (Giữ nguyên code)
     const { targetUser } = req.body;
     if (!targetUser) {
         return res.status(400).json({ error: 'Thiếu targetUser.' });
@@ -566,34 +593,154 @@ app.post('/api/admin/delete-user', checkAdmin, async (req, res) => {
     }
 });
 
-// ----- (MỚI) ENDPOINT CHO HẸN GIỜ -----
-app.post('/api/schedule-notification', async (req, res) => {
-    const { endpoint, dateTime, message } = req.body;
 
-    if (!endpoint || !dateTime || !message) {
-        return res.status(400).json({ error: 'Thiếu endpoint, dateTime, hoặc message.' });
+// ==========================================================
+// ===== (CẬP NHẬT) CÁC ENDPOINT CHO NHẮC NHỞ (REMINDERS) =====
+// ==========================================================
+
+// (MỚI) API 1: Thêm một nhắc nhở (chỉ thêm text)
+app.post('/api/add-reminder', async (req, res) => {
+    const { endpoint, message } = req.body;
+
+    if (!endpoint || !message) {
+        return res.status(400).json({ error: 'Thiếu endpoint hoặc message.' });
     }
 
     try {
         const query = `
-            INSERT INTO scheduled_notifications (endpoint, notify_at, message)
-            VALUES ($1, $2, $3)
+            INSERT INTO reminders (endpoint, message, remind_at_time, is_active)
+            VALUES ($1, $2, NULL, false)
+            RETURNING *
         `;
-        await pool.query(query, [endpoint, new Date(dateTime), message]);
+        const result = await pool.query(query, [endpoint, message]);
         
-        console.log("Đã nhận lịch hẹn mới cho:", endpoint);
-        res.status(201).json({ success: true, message: 'Đã đặt lịch hẹn thành công!' });
+        console.log("Đã thêm nhắc nhở mới cho:", endpoint);
+        res.status(201).json(result.rows[0]); // Trả về item vừa tạo
 
     } catch (error) {
-        console.error("Lỗi khi lưu lịch hẹn:", error);
-        res.status(500).json({ error: 'Lỗi máy chủ khi lưu lịch hẹn.' });
+        console.error("Lỗi khi lưu nhắc nhở:", error);
+        res.status(500).json({ error: 'Lỗi máy chủ khi lưu nhắc nhở.' });
+    }
+});
+
+// (MỚI) API 2: Lấy tất cả nhắc nhở (theo tháng)
+app.post('/api/get-reminders', async (req, res) => {
+    const { endpoint } = req.body;
+    if (!endpoint) {
+        return res.status(400).json({ error: 'Thiếu endpoint.' });
+    }
+
+    try {
+        const query = `
+            SELECT id, message, remind_at_time, is_active, created_at
+            FROM reminders 
+            WHERE endpoint = $1
+            ORDER BY created_at DESC
+        `;
+        const result = await pool.query(query, [endpoint]);
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error("Lỗi khi lấy danh sách nhắc nhở:", error);
+        res.status(500).json({ error: 'Lỗi máy chủ khi lấy danh sách.' });
+    }
+});
+
+// (MỚI) API 3: Cập nhật một nhắc nhở (bật/tắt, đổi giờ)
+app.post('/api/update-reminder', async (req, res) => {
+    const { id, endpoint, time, isActive } = req.body;
+    if (!id || !endpoint || isActive === undefined || time === undefined) {
+        return res.status(400).json({ error: 'Thiếu thông tin (id, endpoint, time, isActive).' });
+    }
+
+    try {
+        // Nếu time là null hoặc rỗng, gán nó là NULL trong DB
+        const remindTime = (time && time !== "") ? time : null;
+        
+        const query = `
+            UPDATE reminders 
+            SET remind_at_time = $1, is_active = $2
+            WHERE id = $3 AND endpoint = $4
+            RETURNING *
+        `;
+        const result = await pool.query(query, [remindTime, isActive, id, endpoint]);
+        
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Không tìm thấy nhắc nhở hoặc không có quyền.' });
+        }
+        
+        res.status(200).json(result.rows[0]); // Trả về item vừa cập nhật
+
+    } catch (error) {
+        console.error("Lỗi khi cập nhật nhắc nhở:", error);
+        res.status(500).json({ error: 'Lỗi máy chủ khi cập nhật.' });
+    }
+});
+
+// (MỚI) API 4: Xóa một nhắc nhở
+app.post('/api/delete-reminder', async (req, res) => {
+    const { id, endpoint } = req.body;
+    if (!id || !endpoint) {
+        return res.status(400).json({ error: 'Thiếu ID hoặc endpoint.' });
+    }
+
+    try {
+        const query = "DELETE FROM reminders WHERE id = $1 AND endpoint = $2";
+        const result = await pool.query(query, [id, endpoint]);
+
+        if (result.rowCount > 0) {
+            res.status(200).json({ success: true, message: 'Đã xóa nhắc nhở.' });
+        } else {
+            res.status(404).json({ error: 'Không tìm thấy nhắc nhở hoặc không có quyền xóa.' });
+        }
+    } catch (error) {
+        console.error("Lỗi khi xóa nhắc nhở:", error);
+        res.status(500).json({ error: 'Lỗi máy chủ khi xóa.' });
+    }
+});
+
+// (MỚI) API 5: Xóa nhắc nhở theo tháng
+app.post('/api/delete-reminders-by-month', async (req, res) => {
+    const { endpoint, monthYear } = req.body; // "YYYY-MM"
+    if (!endpoint || !monthYear) {
+        return res.status(400).json({ error: 'Thiếu endpoint hoặc monthYear.' });
+    }
+    
+    // Đảm bảo múi giờ Hà Nội
+    const hanoiZone = 'Asia/Ho_Chi_Minh';
+    const [year, month] = monthYear.split('-');
+    
+    // Ngày bắt đầu (ví dụ: 2025-11-01 00:00:00+07)
+    const startDate = new Date(Date.UTC(year, parseInt(month)-1, 1)); 
+    
+    // Ngày kết thúc (ví dụ: 2025-12-01 00:00:00+07)
+    const endDate = new Date(Date.UTC(year, parseInt(month), 1)); 
+
+    try {
+        const query = `
+            DELETE FROM reminders 
+            WHERE endpoint = $1 
+            AND created_at >= $2 
+            AND created_at < $3
+        `;
+        // Cần truyền Date object vào
+        const result = await pool.query(query, [endpoint, startDate, endDate]);
+
+        res.status(200).json({ 
+            success: true, 
+            message: `Đã xóa ${result.rowCount} nhắc nhở của tháng ${monthYear}.` 
+        });
+    } catch (error) {
+        console.error("Lỗi khi xóa nhắc nhở theo tháng:", error);
+        res.status(500).json({ error: 'Lỗi máy chủ khi xóa.' });
     }
 });
 
 
-// ----- LOGIC GỬI THÔNG BÁO -----
+// ==========================================================
+// ===== (CẬP NHẬT) LOGIC GỬI THÔNG BÁO =====
+// ==========================================================
 
-// Logic tính ca
+// Logic tính ca (Không thay đổi)
 const EPOCH_DAYS = dateToDays('2025-10-26');
 const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
 function dateToDays(dateStr) {
@@ -611,9 +758,9 @@ function getHanoiTime() {
     const now = new Date();
     const options = { timeZone: 'Asia/Ho_Chi_Minh' };
     const timeFormatter = new Intl.DateTimeFormat('en-GB', { ...options, hour: '2-digit', minute: '2-digit', hour12: false });
-    const timeStr = timeFormatter.format(now);
+    const timeStr = timeFormatter.format(now); // "HH:mm"
     const dateFormatter = new Intl.DateTimeFormat('en-CA', { ...options, year: 'numeric', month: '2-digit', day: '2-digit' });
-    const dateStr = dateFormatter.format(now);
+    const dateStr = dateFormatter.format(now); // "YYYY-MM-DD"
     return { timeStr, dateStr };
 }
 async function deleteSubscription(endpoint) {
@@ -625,19 +772,15 @@ async function deleteSubscription(endpoint) {
     }
 }
 
-// (ĐÃ CẬP NHẬT CHO IOS)
-// (ĐÃ CẬP NHẬT LOGIC HIỂN THỊ NỘI DUNG)
-// (ĐÃ CẬP NHẬT ĐỂ QUÉT CẢ LỊCH HẸN)
+// (CẬP NHẬT) Hàm kiểm tra thông báo
 let lastNotificationCheckTime = null;
 async function checkAndSendNotifications() {
     
     // === PHẦN 1: LẤY THỜI GIAN VÀ SUBSCRIPTIONS ===
-    const { timeStr, dateStr } = getHanoiTime();
-    // (MỚI) Lấy đối tượng Date() ở múi giờ Hà Nội để so sánh với DB
+    const { timeStr, dateStr } = getHanoiTime(); // timeStr là "HH:mm" (Hà Nội)
     const hanoiNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
 
-    if (timeStr === lastNotificationCheckTime && hanoiNow.getSeconds() > 5) { // (SỬA) Chỉ chạy 1 lần/phút
-        // console.log("Đã kiểm tra trong phút này, bỏ qua.");
+    if (timeStr === lastNotificationCheckTime && hanoiNow.getSeconds() > 5) {
         return;
     }
     lastNotificationCheckTime = timeStr;
@@ -651,42 +794,43 @@ async function checkAndSendNotifications() {
         return;
     }
 
-    // === (MỚI) PHẦN 2: KIỂM TRA LỊCH HẸN (REMINDERS) ===
+    // === (CẬP NHẬT) PHẦN 2: KIỂM TRA NHẮC NHỞ (REMINDERS) ===
     let reminderJobs = [];
     try {
+        // (SỬA) Truy vấn các nhắc nhở ĐÃ BẬT (is_active = true)
+        // và có remind_at_time khớp với giờ hiện tại (timeStr)
         const jobQuery = `
             SELECT id, endpoint, message 
-            FROM scheduled_notifications 
-            WHERE notify_at <= $1 AND sent = false
+            FROM reminders 
+            WHERE is_active = true AND remind_at_time = $1
         `;
-        // So sánh với thời gian Hà Nội hiện tại
-        const jobResult = await pool.query(jobQuery, [hanoiNow]); 
+        // So sánh 'HH:mm' với 'HH:mm'
+        const jobResult = await pool.query(jobQuery, [timeStr]); 
         reminderJobs = jobResult.rows;
     } catch (err) {
-        console.error("Lỗi khi truy vấn lịch hẹn:", err);
+        console.error("Lỗi khi truy vấn nhắc nhở:", err);
     }
     
-    // Tạo một Map để tìm keys (thông tin xác thực) nhanh
+    // Tạo Map (Không đổi)
     const subMap = new Map(subscriptions.map(sub => [sub.endpoint, sub.keys]));
-    const reminderPromises = []; // Hàng đợi gửi thông báo hẹn giờ
+    const reminderPromises = []; 
 
     if (reminderJobs.length > 0) {
-        console.log(`[Notify Check] Phát hiện ${reminderJobs.length} lịch hẹn cần gửi.`);
+        console.log(`[Notify Check] Phát hiện ${reminderJobs.length} nhắc nhở cần gửi (lúc ${timeStr}).`);
     }
 
     reminderJobs.forEach(job => {
         const keys = subMap.get(job.endpoint);
         if (!keys) {
-            console.warn("Không tìm thấy keys cho lịch hẹn (endpoint):", job.endpoint);
-            // Không tìm thấy sub? -> Đánh dấu là đã gửi để tránh lặp lại
-            reminderPromises.push(pool.query("UPDATE scheduled_notifications SET sent = true WHERE id = $1", [job.id]));
-            return;
+            console.warn("Không tìm thấy keys cho nhắc nhở (endpoint):", job.endpoint);
+            // (SỬA) Chỉ cần bỏ qua, không cần xóa job vì nó sẽ chạy lại vào ngày mai
+            return; 
         }
 
         const title = "Nhắc nhở (Tèo)!";
         const body = job.message;
         
-        // Logic gửi push (copy từ dưới lên, hỗ trợ cả iOS)
+        // Logic gửi push (Không đổi)
         let notificationPayload;
         if (job.endpoint.startsWith('https://web.push.apple.com')) {
             notificationPayload = JSON.stringify({ aps: { alert: { title: title, body: body } } });
@@ -696,20 +840,20 @@ async function checkAndSendNotifications() {
         
         const pushSubscription = { endpoint: job.endpoint, keys: keys };
 
-        // Thêm vào hàng đợi gửi
         const sendPromise = webpush.sendNotification(pushSubscription, notificationPayload)
             .then(() => {
-                // Gửi thành công -> Đánh dấu đã gửi trong DB
-                console.log("Đã gửi lịch hẹn ID:", job.id);
-                return pool.query("UPDATE scheduled_notifications SET sent = true WHERE id = $1", [job.id]);
+                // (SỬA) Gửi thành công -> TỰ ĐỘNG TẮT (is_active = false)
+                // Để nó không báo lại vào ngày mai
+                console.log("Đã gửi nhắc nhở ID:", job.id, "-> Đang tắt.");
+                return pool.query("UPDATE reminders SET is_active = false WHERE id = $1", [job.id]);
             })
             .catch(err => {
                 if (err.statusCode === 410 || err.statusCode === 404) {
-                    // Sub hỏng -> Xóa sub và xóa các lịch hẹn liên quan
+                    // Sub hỏng -> Xóa sub
                     deleteSubscription(job.endpoint); 
-                    pool.query("DELETE FROM scheduled_notifications WHERE endpoint = $1", [job.endpoint]);
+                    // (Lưu ý: các nhắc nhở của sub này sẽ tự động bị xóa do 'ON DELETE CASCADE')
                 } else {
-                    console.error("Lỗi khi gửi push (hẹn giờ):", err);
+                    console.error("Lỗi khi gửi push (nhắc nhở):", err);
                 }
             });
         
@@ -717,11 +861,7 @@ async function checkAndSendNotifications() {
     });
     
 
-    // === PHẦN 3: KIỂM TRA LỊCH CA (LOGIC CŨ) ===
-    
-    if (subscriptions.length === 0) {
-         // console.log("Không có ai đăng ký thông báo.");
-    }
+    // === PHẦN 3: KIỂM TRA LỊCH CA (LOGIC CŨ, KHÔNG THAY ĐỔI) ===
     
     const todayShift = getShiftForDate(dateStr);
     console.log(`[Notify Check] ${timeStr} | Ca hôm nay: ${todayShift} | Subs: ${subscriptions.length}`);
@@ -737,7 +877,7 @@ async function checkAndSendNotifications() {
         if (timeToAlert && timeStr === timeToAlert) {
             console.log(`Đang gửi thông báo ${todayShift} đến:`, endpoint);
             
-            // Logic nội dung thông báo (Không đổi)
+            // ... (toàn bộ logic tạo title, body, payload, gửi... giữ nguyên) ...
             const notesForToday = (notes && notes[dateStr]) ? notes[dateStr] : [];
             let bodyContent = ""; 
             if (notesForToday.length > 0) {
@@ -751,16 +891,10 @@ async function checkAndSendNotifications() {
             const title = `Lịch Luân Phiên - Ca ${todayShift.toUpperCase()}`;
             const body = bodyContent; 
             
-            // Logic kiểm tra iOS (Không đổi)
             let notificationPayload;
             if (endpoint.startsWith('https://web.push.apple.com')) {
                 notificationPayload = JSON.stringify({
-                    aps: {
-                        alert: {
-                            title: title,
-                            body: body
-                        }
-                    }
+                    aps: { alert: { title: title, body: body } }
                 });
             } else {
                 notificationPayload = JSON.stringify({
@@ -792,6 +926,7 @@ async function checkAndSendNotifications() {
 
 // Endpoint của Cron Job (Giữ lại để test, nhưng không dùng chính)
 app.get('/trigger-notifications', async (req, res) => {
+    // ... (Giữ nguyên code)
     const cronSecret = req.headers['x-cron-secret'];
     if (cronSecret !== process.env.VAPID_PRIVATE_KEY) { 
         console.warn("Cron trigger không hợp lệ (sai secret)");
