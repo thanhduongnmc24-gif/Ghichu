@@ -19,7 +19,49 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
+    
+    <style>
+        .ios-toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px; /* Chiều rộng */
+            height: 28px; /* Chiều cao */
+        }
+        .ios-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #4B5563; /* Màu xám (tắt) */
+            transition: .4s;
+            border-radius: 28px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px; /* Kích thước chấm tròn */
+            width: 22px;
+            left: 3px; /* Vị trí ban đầu (tắt) */
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #10B981; /* Màu xanh (bật) */
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px); /* Di chuyển chấm tròn */
+        }
+    </style>
+    </head>
 <body class="bg-gray-900 text-gray-100 antialiased">
 
     <header class="bg-gray-800 shadow-md sticky top-0 z-30">
@@ -116,23 +158,6 @@
             </div>
         </section>
         
-        <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mt-6">
-            <h2 class="text-xl font-bold text-white mb-4">Hẹn giờ Thông báo</h2>
-            <form id="schedule-form" class="space-y-3">
-                <label class="block">
-                    <span class="text-sm font-medium text-gray-300">Thời gian hẹn:</span>
-                    <input type="datetime-local" id="schedule-time" class="w-full mt-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600">
-                </label>
-                <label class="block">
-                    <span class="text-sm font-medium text-gray-300">Nội dung nhắc:</span>
-                    <input type="text" id="schedule-message" placeholder="Nhập nội dung nhắc nhở..." class="w-full mt-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600">
-                </label>
-                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg">
-                    Đặt lịch hẹn
-                </button>
-                <p id="schedule-status-msg" class="text-sm text-gray-400 mt-3 text-center hidden"></p>
-            </form>
-        </section>
         <section id="monthly-note-summary" class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mt-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-white">Tổng kết Ghi chú Tháng</h2>
@@ -164,6 +189,85 @@
         
     </main>
 
+    <main id="schedule-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
+        
+        <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6">
+            <h2 class="text-xl font-bold text-white mb-4">Thêm Nhắc nhở mới</h2>
+            <form id="new-reminder-form" class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                <input type="text" id="new-reminder-text" placeholder="Nhập nội dung nhắc nhở..." class="flex-grow w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg transition-colors flex-shrink-0 w-full sm:w-auto">
+                    Thêm
+                </button>
+            </form>
+            <p id="new-reminder-status" class="text-sm text-gray-400 mt-3 text-center hidden"></p>
+        </section>
+
+        <section>
+            <h2 class="text-xl font-bold text-white mb-4">Danh sách Nhắc nhở</h2>
+            
+            <div id="reminder-list-container" class="space-y-6">
+                <div class="flex justify-between items-center p-4 border-b border-gray-700">
+                        <h3 class="text-lg font-semibold text-white">Tháng 11, 2025</h3>
+                        <button class="delete-month-btn text-red-400 text-xs hover:text-red-300" data-month="2025-11">
+                            Xóa tất cả (Tháng 11)
+                        </button>
+                    </div>
+                    
+                    <-- Danh sách các item -->
+                    <ul class="reminder-list p-4 space-y-3">
+                        
+                        <-- (VÍ DỤ) Cấu trúc 1 Item -->
+                        <li class="reminder-item bg-gray-700 p-3 rounded-lg flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4" data-id="1">
+                            
+                            <-- 1. Nội dung (Text) -->
+                            <span class="reminder-text text-white flex-grow text-left w-full sm:w-auto">
+                                Họp với sếp
+                            </span>
+            
+                            <-- 2. Nhóm điều khiển (Controls) -->
+                            <div class="flex items-center space-x-3 flex-shrink-0">
+                                <-- 3. Ô chọn giờ -->
+                                <input type="time" class="reminder-time-input bg-gray-600 text-white p-2 rounded border border-gray-500" value="09:00" disabled>
+            
+                                <-- 4. Nút Bật/Tắt (iOS Toggle) -->
+                                <label class="ios-toggle">
+                                    <input type="checkbox" class="reminder-toggle-check" checked>
+                                    <span class="slider"></span>
+                                </label>
+            
+                                <-- 5. Nút Xóa -->
+                                <button class="reminder-delete-btn text-gray-400 hover:text-red-400 p-1">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                        </li>
+                        
+                        <-- (VÍ DỤ) Item bị tắt -->
+                        <li class="reminder-item bg-gray-700 p-3 rounded-lg flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4" data-id="2">
+                            <span class="reminder-text text-gray-400 flex-grow text-left w-full sm:w-auto">
+                                Đón con
+                            </span>
+                            <div class="flex items-center space-x-3 flex-shrink-0">
+                                <input type="time" class="reminder-time-input bg-gray-600 text-white p-2 rounded border border-gray-500" value="17:00" disabled>
+                                <label class="ios-toggle">
+                                    <input type="checkbox" class="reminder-toggle-check">
+                                    <span class="slider"></span>
+                                </label>
+                                <button class="reminder-delete-btn text-gray-400 hover:text-red-400 p-1">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                        </li>
+                        
+                    </ul>
+                </div>
+                -->
+
+            </div>
+
+            <p id="reminder-list-loading" class="text-gray-400 italic text-center p-4 bg-gray-800 rounded-lg shadow-lg">Đang tải danh sách...</p>
+        </section>
+    </main>
     <main id="settings-main" class="container mx-auto p-4 sm:p-8 hidden">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full mx-auto">
             <div class="flex justify-between items-center mb-6">
@@ -328,6 +432,10 @@
         <button id="bottom-tab-calendar" class="bottom-nav-btn">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25m10.5-2.25v2.25M6.75 21H3.375c-.621 0-1.125-.504-1.125-1.125V7.5c0-.621.504-1.125 1.125-1.125h13.5c.621 0 1.125.504 1.125 1.125v12.375c0 .621-.504 1.125-1.125 1.125H6.75zM16.5 7.5h-9v9h9v-9z" /></svg>
             <span>Lịch</span>
+        </button>
+        <button id="bottom-tab-schedule" class="bottom-nav-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.58 1.055 5.454 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+            <span>Hẹn giờ</span>
         </button>
         <button id="bottom-tab-chat" class="bottom-nav-btn">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
