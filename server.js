@@ -635,11 +635,6 @@ app.post('/api/get-reminders', async (req, res) => {
             WHERE endpoint = $1
             ORDER BY remind_at ASC NULLS LAST, created_at ASC
         `;
-        // Sắp xếp:
-        // 1. Theo ngày hẹn tăng dần (sớm nhất lên đầu)
-        // 2. Những mục "null" (chưa hẹn) xuống cuối
-        // 3. Những mục "null" sắp xếp theo ngày tạo
-        
         const result = await pool.query(query, [endpoint]);
         res.status(200).json(result.rows);
     } catch (error) {
@@ -650,15 +645,15 @@ app.post('/api/get-reminders', async (req, res) => {
 
 // (CẬP NHẬT) API 3: Cập nhật một nhắc nhở (bật/tắt, đổi ngày/giờ)
 app.post('/api/update-reminder', async (req, res) => {
-    // (SỬA) Đổi 'time' -> 'datetime'
     const { id, endpoint, datetime, isActive } = req.body;
-    if (!id || !endpoint || isActive === undefined) { // (SỬA) Bỏ yêu cầu 'datetime' (có thể là null)
+    if (!id || !endpoint || isActive === undefined) { 
         return res.status(400).json({ error: 'Thiếu thông tin (id, endpoint, isActive).' });
     }
 
     try {
-        // (SỬA) Chuyển đổi 'datetime' (chuỗi ISO) thành TIMESTAMP
-        // Nếu rỗng/null, gán là NULL trong DB
+        // (SỬA LỖI TIMEZONE)
+        // 'datetime' là chuỗi ISO UTC (ví dụ: "2025-11-13T22:11:00.000Z")
+        // Chỉ cần gán nó là null nếu nó rỗng
         const remindAt = (datetime && datetime !== "") ? new Date(datetime) : null;
         
         const query = `
@@ -703,8 +698,7 @@ app.post('/api/delete-reminder', async (req, res) => {
     }
 });
 
-// (SỬA) API 5: Xóa bỏ API "/api/delete-reminders-by-month"
-// ... (Đã xóa)
+// (SỬA) Xóa bỏ API 5: "/api/delete-reminders-by-month"
 
 
 // ==========================================================
@@ -769,17 +763,25 @@ async function checkAndSendNotifications() {
     // === (CẬP NHẬT) PHẦN 2: KIỂM TRA NHẮC NHỞ (REMINDERS) ===
     let reminderJobs = [];
     try {
-        // (SỬA) Truy vấn các nhắc nhở ĐÃ BẬT (is_active = true)
-        // và có remind_at (ngày+giờ) nhỏ hơn hoặc bằng 1 phút kể từ bây giờ
-        // (Chúng ta làm tròn hanoiNow về 0 giây để khớp chính xác phút)
-        const hanoiNowRounded = new Date(hanoiNow.getFullYear(), hanoiNow.getMonth(), hanoiNow.getDate(), hanoiNow.getHours(), hanoiNow.getMinutes());
+        // (SỬA LỖI TIMEZONE)
+        // Chúng ta cần lấy thời gian UTC hiện tại, làm tròn xuống phút
+        // vì 'remind_at' trong DB là UTC.
+        const nowUTC = new Date();
+        const utcNowRounded = new Date(Date.UTC(
+            nowUTC.getUTCFullYear(),
+            nowUTC.getUTCMonth(),
+            nowUTC.getUTCDate(),
+            nowUTC.getUTCHours(),
+            nowUTC.getUTCMinutes()
+        ));
         
         const jobQuery = `
             SELECT id, endpoint, message 
             FROM reminders 
             WHERE is_active = true AND remind_at <= $1
         `;
-        const jobResult = await pool.query(jobQuery, [hanoiNowRounded]); 
+        // Tìm tất cả nhắc nhở (đã bật) có thời gian hẹn <= thời gian hiện tại
+        const jobResult = await pool.query(jobQuery, [utcNowRounded]); 
         reminderJobs = jobResult.rows;
     } catch (err) {
         console.error("Lỗi khi truy vấn nhắc nhở:", err);
