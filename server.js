@@ -113,6 +113,20 @@ function verifyPassword(inputPassword, storedHash, salt) {
             // Lỗi này có thể xảy ra nếu cột đã tồn tại (race condition), bỏ qua
         }
 
+        // 4. (MỚI) Bảng Lịch hẹn (Reminders)
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS scheduled_notifications (
+                id SERIAL PRIMARY KEY,
+                endpoint TEXT NOT NULL,
+                notify_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                message TEXT NOT NULL,
+                sent BOOLEAN DEFAULT false,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        console.log("Bảng 'scheduled_notifications' đã sẵn sàng.");
+
+
     } catch (err) {
         console.error("Lỗi khi tạo/cập nhật bảng:", err);
     } finally {
@@ -552,6 +566,30 @@ app.post('/api/admin/delete-user', checkAdmin, async (req, res) => {
     }
 });
 
+// ----- (MỚI) ENDPOINT CHO HẸN GIỜ -----
+app.post('/api/schedule-notification', async (req, res) => {
+    const { endpoint, dateTime, message } = req.body;
+
+    if (!endpoint || !dateTime || !message) {
+        return res.status(400).json({ error: 'Thiếu endpoint, dateTime, hoặc message.' });
+    }
+
+    try {
+        const query = `
+            INSERT INTO scheduled_notifications (endpoint, notify_at, message)
+            VALUES ($1, $2, $3)
+        `;
+        await pool.query(query, [endpoint, new Date(dateTime), message]);
+        
+        console.log("Đã nhận lịch hẹn mới cho:", endpoint);
+        res.status(201).json({ success: true, message: 'Đã đặt lịch hẹn thành công!' });
+
+    } catch (error) {
+        console.error("Lỗi khi lưu lịch hẹn:", error);
+        res.status(500).json({ error: 'Lỗi máy chủ khi lưu lịch hẹn.' });
+    }
+});
+
 
 // ----- LOGIC GỬI THÔNG BÁO -----
 
@@ -589,17 +627,20 @@ async function deleteSubscription(endpoint) {
 
 // (ĐÃ CẬP NHẬT CHO IOS)
 // (ĐÃ CẬP NHẬT LOGIC HIỂN THỊ NỘI DUNG)
+// (ĐÃ CẬP NHẬT ĐỂ QUÉT CẢ LỊCH HẸN)
 let lastNotificationCheckTime = null;
 async function checkAndSendNotifications() {
+    
+    // === PHẦN 1: LẤY THỜI GIAN VÀ SUBSCRIPTIONS ===
     const { timeStr, dateStr } = getHanoiTime();
+    // (MỚI) Lấy đối tượng Date() ở múi giờ Hà Nội để so sánh với DB
+    const hanoiNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
 
-    if (timeStr === lastNotificationCheckTime) {
+    if (timeStr === lastNotificationCheckTime && hanoiNow.getSeconds() > 5) { // (SỬA) Chỉ chạy 1 lần/phút
         // console.log("Đã kiểm tra trong phút này, bỏ qua.");
         return;
     }
     lastNotificationCheckTime = timeStr;
-    
-    const todayShift = getShiftForDate(dateStr);
     
     let subscriptions;
     try {
@@ -610,11 +651,79 @@ async function checkAndSendNotifications() {
         return;
     }
 
-    if (subscriptions.length === 0) {
-         // console.log("Không có ai đăng ký thông báo.");
-        return;
+    // === (MỚI) PHẦN 2: KIỂM TRA LỊCH HẸN (REMINDERS) ===
+    let reminderJobs = [];
+    try {
+        const jobQuery = `
+            SELECT id, endpoint, message 
+            FROM scheduled_notifications 
+            WHERE notify_at <= $1 AND sent = false
+        `;
+        // So sánh với thời gian Hà Nội hiện tại
+        const jobResult = await pool.query(jobQuery, [hanoiNow]); 
+        reminderJobs = jobResult.rows;
+    } catch (err) {
+        console.error("Lỗi khi truy vấn lịch hẹn:", err);
     }
     
+    // Tạo một Map để tìm keys (thông tin xác thực) nhanh
+    const subMap = new Map(subscriptions.map(sub => [sub.endpoint, sub.keys]));
+    const reminderPromises = []; // Hàng đợi gửi thông báo hẹn giờ
+
+    if (reminderJobs.length > 0) {
+        console.log(`[Notify Check] Phát hiện ${reminderJobs.length} lịch hẹn cần gửi.`);
+    }
+
+    reminderJobs.forEach(job => {
+        const keys = subMap.get(job.endpoint);
+        if (!keys) {
+            console.warn("Không tìm thấy keys cho lịch hẹn (endpoint):", job.endpoint);
+            // Không tìm thấy sub? -> Đánh dấu là đã gửi để tránh lặp lại
+            reminderPromises.push(pool.query("UPDATE scheduled_notifications SET sent = true WHERE id = $1", [job.id]));
+            return;
+        }
+
+        const title = "Nhắc nhở (Tèo)!";
+        const body = job.message;
+        
+        // Logic gửi push (copy từ dưới lên, hỗ trợ cả iOS)
+        let notificationPayload;
+        if (job.endpoint.startsWith('https://web.push.apple.com')) {
+            notificationPayload = JSON.stringify({ aps: { alert: { title: title, body: body } } });
+        } else {
+            notificationPayload = JSON.stringify({ title: title, body: body });
+        }
+        
+        const pushSubscription = { endpoint: job.endpoint, keys: keys };
+
+        // Thêm vào hàng đợi gửi
+        const sendPromise = webpush.sendNotification(pushSubscription, notificationPayload)
+            .then(() => {
+                // Gửi thành công -> Đánh dấu đã gửi trong DB
+                console.log("Đã gửi lịch hẹn ID:", job.id);
+                return pool.query("UPDATE scheduled_notifications SET sent = true WHERE id = $1", [job.id]);
+            })
+            .catch(err => {
+                if (err.statusCode === 410 || err.statusCode === 404) {
+                    // Sub hỏng -> Xóa sub và xóa các lịch hẹn liên quan
+                    deleteSubscription(job.endpoint); 
+                    pool.query("DELETE FROM scheduled_notifications WHERE endpoint = $1", [job.endpoint]);
+                } else {
+                    console.error("Lỗi khi gửi push (hẹn giờ):", err);
+                }
+            });
+        
+        reminderPromises.push(sendPromise);
+    });
+    
+
+    // === PHẦN 3: KIỂM TRA LỊCH CA (LOGIC CŨ) ===
+    
+    if (subscriptions.length === 0) {
+         // console.log("Không có ai đăng ký thông báo.");
+    }
+    
+    const todayShift = getShiftForDate(dateStr);
     console.log(`[Notify Check] ${timeStr} | Ca hôm nay: ${todayShift} | Subs: ${subscriptions.length}`);
 
     const sendPromises = subscriptions.map(sub => {
@@ -628,36 +737,23 @@ async function checkAndSendNotifications() {
         if (timeToAlert && timeStr === timeToAlert) {
             console.log(`Đang gửi thông báo ${todayShift} đến:`, endpoint);
             
-            // ==========================================================
-            // ===== (MỚI) BẮT ĐẦU LOGIC NỘI DUNG THÔNG BÁO =====
-            // ==========================================================
+            // Logic nội dung thông báo (Không đổi)
             const notesForToday = (notes && notes[dateStr]) ? notes[dateStr] : [];
-            let bodyContent = ""; // Dùng biến này
-
+            let bodyContent = ""; 
             if (notesForToday.length > 0) {
-                // Nếu có ghi chú, chỉ hiện ghi chú
                 bodyContent = "Ghi chú:\n" + notesForToday.join('\n');
             } else {
-                // Nếu không có ghi chú, hiện nội dung dự phòng
                 bodyContent = `Không có ghi chú cho hôm nay (${dateStr}).`;
             }
-            
-            // Cắt bớt nếu quá dài
             if (bodyContent.length > 150) {
                 bodyContent = bodyContent.substring(0, 150) + "...";
             }
-
             const title = `Lịch Luân Phiên - Ca ${todayShift.toUpperCase()}`;
-            const body = bodyContent; // Gán nội dung đã xử lý
-            // ==========================================================
-            // ===== (MỚI) KẾT THÚC LOGIC NỘI DUNG THÔNG BÁO =====
-            // ==========================================================
+            const body = bodyContent; 
             
-
-            // --- Logic kiểm tra iOS (Giữ nguyên) ---
+            // Logic kiểm tra iOS (Không đổi)
             let notificationPayload;
             if (endpoint.startsWith('https://web.push.apple.com')) {
-                // Định dạng APNs (Apple)
                 notificationPayload = JSON.stringify({
                     aps: {
                         alert: {
@@ -667,13 +763,11 @@ async function checkAndSendNotifications() {
                     }
                 });
             } else {
-                // Định dạng VAPID chuẩn (Android, Desktop)
                 notificationPayload = JSON.stringify({
                     title: title,
                     body: body
                 });
             }
-            // --- Kết thúc logic iOS ---
 
             const pushSubscription = {
                 endpoint: endpoint,
@@ -685,15 +779,17 @@ async function checkAndSendNotifications() {
                     if (err.statusCode === 410 || err.statusCode === 404) {
                         deleteSubscription(endpoint);
                     } else {
-                        console.error("Lỗi khi gửi push:", err);
+                        console.error("Lỗi khi gửi push (ca):", err);
                     }
                 });
         }
         return Promise.resolve();
     });
     
-    await Promise.all(sendPromises);
+    // (SỬA) Chạy cả hai hàng đợi (lịch ca và lịch hẹn)
+    await Promise.all([...sendPromises, ...reminderPromises]);
 }
+
 // Endpoint của Cron Job (Giữ lại để test, nhưng không dùng chính)
 app.get('/trigger-notifications', async (req, res) => {
     const cronSecret = req.headers['x-cron-secret'];
