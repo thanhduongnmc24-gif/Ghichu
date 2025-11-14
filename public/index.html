@@ -206,68 +206,7 @@
             <h2 class="text-xl font-bold text-white mb-4">Danh sách Nhắc nhở</h2>
             
             <div id="reminder-list-container" class="space-y-6">
-                <div class="flex justify-between items-center p-4 border-b border-gray-700">
-                        <h3 class="text-lg font-semibold text-white">Tháng 11, 2025</h3>
-                        </div>
-                    
-                    <-- Danh sách các item -->
-                    <ul class="reminder-list p-4 space-y-3">
-                        
-                        <-- (VÍ DỤ) Cấu trúc 1 Item (ĐÃ CẬP NHẬT) -->
-                        <li class="reminder-item bg-gray-700 p-3 rounded-lg flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4" data-id="1">
-                            
-                            <-- 1. Nội dung (Text) -->
-                            <span class="reminder-text text-white flex-grow text-left w-full sm:w-auto">
-                                Họp với sếp
-                            </span>
-            
-                            <-- 2. Nhóm điều khiển (Controls) -->
-                            <div class="flex items-center space-x-3 flex-shrink-0">
-                                <-- 3. (CẬP NHẬT) Ô chọn NGÀY & GIỜ -->
-                                <input type="datetime-local" class="reminder-datetime-input bg-gray-600 text-white p-2 rounded border border-gray-500" value="2025-11-14T09:00" disabled>
-            
-                                <-- 4. Nút Bật/Tắt (iOS Toggle) -->
-                                <label class="ios-toggle">
-                                    <input type="checkbox" class="reminder-toggle-check" checked>
-                                    <span class="slider"></span>
-                                </label>
-            
-                                <-- 5. Nút Xóa -->
-                                <button class="reminder-delete-btn text-gray-400 hover:text-red-400 p-1">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                </button>
-                            </div>
-                        </li>
-                        
-                    </ul>
                 </div>
-                
-                <-- (VÍ DỤ) Cấu trúc Nhóm "Chưa sắp xếp" (remind_at = NULL) -->
-                <div class="reminder-month-group bg-gray-800 rounded-lg shadow-lg">
-                    <div class="flex justify-between items-center p-4 border-b border-gray-700">
-                        <h3 class="text-lg font-semibold text-white">Chưa sắp xếp</h3>
-                        </div>
-                    <ul class="reminder-list p-4 space-y-3">
-                        <li class="reminder-item bg-gray-700 p-3 rounded-lg flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4" data-id="3">
-                            <span class="reminder-text text-gray-400 flex-grow text-left w-full sm:w-auto">
-                                Ghi chú chưa đặt lịch
-                            </span>
-                            <div class="flex items-center space-x-3 flex-shrink-0">
-                                <input type="datetime-local" class="reminder-datetime-input bg-gray-600 text-white p-2 rounded border border-gray-500" value="" disabled>
-                                <label class="ios-toggle">
-                                    <input type="checkbox" class="reminder-toggle-check">
-                                    <span class="slider"></span>
-                                </label>
-                                <button class="reminder-delete-btn text-gray-400 hover:text-red-400 p-1">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                </button>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-                -->
-
-            </div>
 
             <p id="reminder-list-loading" class="text-gray-400 italic text-center p-4 bg-gray-800 rounded-lg shadow-lg">Đang tải danh sách...</p>
         </section>
