@@ -2229,50 +2229,75 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             // --- (CẬP NHẬT) 3. Xử lý Bật/Tắt và Đổi giờ (Event Delegation) ---
+            // (SỬA) BỘ LẮNG NGHE 'change' (CHO CHECKBOX BẬT/TẮT)
             reminderListContainer.addEventListener('change', async (e) => {
                 const target = e.target;
-                const item = target.closest('.reminder-item');
-                if (!item) return;
-
-                const id = item.dataset.id;
-                const timeInput = item.querySelector('.reminder-datetime-input'); // (SỬA)
-                const toggle = item.querySelector('.reminder-toggle-check');
-                const textSpan = item.querySelector('.reminder-text');
-
-                // --- Xử lý Bật/Tắt (Toggle) ---
+                
+                // --- CHỈ XỬ LÝ BẬT/TẮT (TOGGLE) ---
                 if (target.classList.contains('reminder-toggle-check')) {
+                    const item = target.closest('.reminder-item');
+                    if (!item) return;
+
+                    const id = item.dataset.id;
+                    const timeInput = item.querySelector('.reminder-datetime-input');
+                    const textSpan = item.querySelector('.reminder-text');
                     const isActive = target.checked;
-                    
-                    // (SỬA LỖI) Chỉ gọi API, không tự động gán giờ
+
+                    // Nếu bật mà chưa có giờ -> báo lỗi
                     if (isActive && !timeInput.value) {
                         alert("Đại ca phải chọn ngày giờ trước khi bật!");
                         target.checked = false; // Tắt lại
                         return; // Dừng
                     }
                     
-                    // (SỬA LỖI) Bỏ 'disabled' (đã xóa khỏi render)
-                    // timeInput.disabled = !isActive; 
-                    
                     // Làm mờ/rõ text
                     textSpan.classList.toggle('text-white', isActive);
                     textSpan.classList.toggle('text-gray-400', !isActive);
 
-                    // Gọi API (SỬA)
+                    // Gọi API (việc này SẼ tải lại list, nhưng không sao
+                    // vì người dùng không ở trong picker)
                     await updateReminder(id, timeInput.value, isActive);
                 }
-                
-                // --- Xử lý Đổi giờ ---
-                if (target.classList.contains('reminder-datetime-input')) { // (SỬA)
-                    // (SỬA) Tự động bật và lưu
-                    // 1. Bật công tắc
-                    toggle.checked = true;
-                    // 2. Làm rõ text
-                    textSpan.classList.add('text-white');
-                    textSpan.classList.remove('text-gray-400');
-                    // 3. Gọi API
+            });
+
+            // (MỚI) BỘ LẮNG NGHE 'blur' (CHO Ô THỜI GIAN)
+            // 'blur' (mất focus) là sự kiện đáng tin cậy khi picker đóng
+            // Chúng ta dùng 'true' (useCapture) để đảm bảo bắt được sự kiện
+            reminderListContainer.addEventListener('blur', async (e) => {
+                const target = e.target;
+
+                // --- CHỈ XỬ LÝ ĐỔI GIỜ (datetime-local) ---
+                if (target.classList.contains('reminder-datetime-input')) {
+                    const item = target.closest('.reminder-item');
+                    if (!item) return;
+
+                    const id = item.dataset.id;
+                    const timeInput = target; // Chính là target
+                    const toggle = item.querySelector('.reminder-toggle-check');
+                    const textSpan = item.querySelector('.reminder-text');
+
+                    // Nếu không có giá trị (user xóa rỗng) -> không làm gì
+                    // (Người dùng phải bấm Tắt (toggle) để hủy)
+                    if (!timeInput.value) {
+                        return;
+                    }
+                    
+                    // Tự động bật và lưu
+                    
+                    // 1. Bật công tắc (nếu chưa bật)
+                    if (!toggle.checked) {
+                        toggle.checked = true;
+                    }
+                    // 2. Làm rõ text (nếu chưa rõ)
+                    if (!textSpan.classList.contains('text-white')) {
+                        textSpan.classList.add('text-white');
+                        textSpan.classList.remove('text-gray-400');
+                    }
+                    
+                    // 3. Gọi API (hàm này sẽ fetchReminders và sắp xếp lại)
                     await updateReminder(id, timeInput.value, true);
                 }
-            });
+            }, true); // (QUAN TRỌNG) Dùng capturing (true)
         }
 
     })();
