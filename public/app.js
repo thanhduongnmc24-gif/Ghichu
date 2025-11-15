@@ -1390,7 +1390,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // (SỬA) Vẽ từng item
             items.forEach(item => {
                 const li = document.createElement('li');
-                li.className = "reminder-item bg-gray-700 p-3 rounded-lg flex items-center space-x-4 cursor-pointer";
+                li.className = "reminder-item bg-gray-700 p-3 rounded-lg flex flex-col space-y-3 cursor-pointer";
                 li.dataset.id = item.id;
                 // (MỚI) Lưu trữ toàn bộ dữ liệu vào dataset
                 li.dataset.title = item.title;
