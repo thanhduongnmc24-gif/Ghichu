@@ -100,13 +100,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Biến Phần 3 (Trò chuyện) ---
     const chatMain = document.getElementById('chat-main');
 
-    // --- (MỚI) Biến Phần 3.5 (Hẹn giờ/Nhắc nhở) ---
+    // --- (CẬP NHẬT) Biến Phần 3.5 (Hẹn giờ/Nhắc nhở) ---
     const scheduleMain = document.getElementById('schedule-main');
     const newReminderForm = document.getElementById('new-reminder-form');
-    const newReminderText = document.getElementById('new-reminder-text');
+    // (SỬA) Đổi tên 'text' -> 'title' và thêm 'content'
+    const newReminderTitle = document.getElementById('new-reminder-title'); 
+    const newReminderContent = document.getElementById('new-reminder-content');
     const newReminderStatus = document.getElementById('new-reminder-status');
     const reminderListContainer = document.getElementById('reminder-list-container');
     const reminderListLoading = document.getElementById('reminder-list-loading');
+    
+    // (MỚI) Biến cho Modal Edit
+    const reminderEditModal = document.getElementById('reminder-edit-modal');
+    const closeReminderEditModalBtn = document.getElementById('close-reminder-edit-modal');
+    const editReminderForm = document.getElementById('edit-reminder-form');
+    const editReminderId = document.getElementById('edit-reminder-id');
+    const editReminderTitle = document.getElementById('edit-reminder-title');
+    const editReminderContent = document.getElementById('edit-reminder-content');
+    const editReminderDatetime = document.getElementById('edit-reminder-datetime');
+    const editReminderActive = document.getElementById('edit-reminder-active');
+    const saveReminderBtn = document.getElementById('save-reminder-btn');
     
     // --- Biến Phần 4 (Điều khiển Tab) ---
     const newsTabBtn = document.getElementById('news-tab-btn');
@@ -1374,20 +1387,35 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const listElement = monthGroup.querySelector('.reminder-list');
             
-            // Vẽ từng item
+            // (SỬA) Vẽ từng item
             items.forEach(item => {
                 const li = document.createElement('li');
-                li.className = "reminder-item bg-gray-700 p-3 rounded-lg flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4";
+                li.className = "reminder-item bg-gray-700 p-3 rounded-lg flex items-center space-x-4 cursor-pointer";
                 li.dataset.id = item.id;
-                
-                const textClass = item.is_active ? "text-white" : "text-gray-400";
-                // (CẬP NHẬT) Dùng hàm helper để format ngày giờ
+                // (MỚI) Lưu trữ toàn bộ dữ liệu vào dataset
+                li.dataset.title = item.title;
+                li.dataset.content = item.content || ''; // Đảm bảo không phải null
                 const dateTimeValue = formatISODateForInput(item.remind_at);
+                li.dataset.datetime = dateTimeValue;
+                li.dataset.active = item.is_active;
+
+                const textClass = item.is_active ? "text-white" : "text-gray-400";
+                
+                // (MỚI) Rút gọn nội dung (ví dụ: 50 ký tự)
+                let contentPreview = item.content || '';
+                if (contentPreview.length > 50) {
+                    contentPreview = contentPreview.substring(0, 50) + '...';
+                }
 
                 li.innerHTML = `
-                    <span class="reminder-text ${textClass} flex-grow text-left w-full sm:w-auto">
-                        ${item.message}
-                    </span>
+                    <div class="reminder-content-clickable flex-grow overflow-hidden">
+                        <span class="reminder-title ${textClass} font-semibold block truncate">
+                            ${item.title}
+                        </span>
+                        <span class="reminder-preview text-gray-400 text-sm block truncate">
+                            ${contentPreview || '(Không có nội dung)'}
+                        </span>
+                    </div>
 
                     <div class="flex items-center space-x-3 flex-shrink-0">
                         <input type="datetime-local" class="reminder-datetime-input" 
@@ -1428,52 +1456,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     /**
-     * (CẬP NHẬT) Gọi API cập nhật nhắc nhở (chung cho Bật/Tắt và Đổi ngày/giờ)
+     * (CẬP NHẬT) Gọi API cập nhật nhắc nhở (chung cho Bật/Tắt, Đổi ngày/giờ, VÀ NỘI DUNG)
+     * @param {string} id - ID của nhắc nhở
+     * @param {object} data - Dữ liệu cần cập nhật
+     * @param {string} [data.datetimeLocalString] - (Tùy chọn) Giờ local
+     * @param {boolean} [data.isActive] - (Tùy chọn) Trạng thái
+     * @param {string} [data.title] - (Tùy chọn) Tiêu đề
+     * @param {string} [data.content] - (Tùy chọn) Nội dung
      */
-    async function updateReminder(id, datetimeLocalString, isActive) {
-        // (SỬA) Thêm kiểm tra pushManager
+    async function updateReminder(id, data) {
         if (!swRegistration || !swRegistration.pushManager) {
             alert("Lỗi PushManager. Không thể cập nhật.");
-            return;
+            return false; // (MỚI) Trả về false nếu lỗi
         }
         const subscription = await swRegistration.pushManager.getSubscription();
         if (!subscription) {
             alert("Không thể xác thực. Vui lòng Bật Thông Báo.");
-            return;
+            return false; // (MỚI) Trả về false nếu lỗi
         }
 
-        // (SỬA LỖI TIMEZONE)
-        // 'datetimeLocalString' = "2025-11-14T05:11" (giờ local của user)
-        // Chúng ta cần chuyển nó thành chuỗi ISO UTC
-        // new Date("2025-11-14T05:11") -> tạo Date object theo giờ local
-        // .toISOString() -> chuyển sang UTC "2025-11-13T22:11:00.000Z" (nếu user ở +7)
-        const isoStringToSend = (datetimeLocalString && datetimeLocalString !== "") 
-            ? new Date(datetimeLocalString).toISOString() 
-            : null;
+        // (MỚI) Xây dựng payload
+        const payload = {
+            id: id,
+            endpoint: subscription.endpoint,
+        };
+
+        if (data.datetimeLocalString !== undefined) {
+            payload.datetime = (data.datetimeLocalString && data.datetimeLocalString !== "") 
+                ? new Date(data.datetimeLocalString).toISOString() 
+                : null;
+        }
+        if (data.isActive !== undefined) {
+            payload.isActive = data.isActive;
+        }
+        if (data.title !== undefined) {
+            payload.title = data.title;
+        }
+        if (data.content !== undefined) {
+            payload.content = data.content;
+        }
 
         try {
             const response = await fetch('/api/update-reminder', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id: id,
-                    endpoint: subscription.endpoint,
-                    datetime: isoStringToSend, // (SỬA) Gửi chuỗi ISO UTC
-                    isActive: isActive
-                })
+                body: JSON.stringify(payload)
             });
             const result = await response.json();
             if (!response.ok) throw new Error(result.error);
             
             console.log("Đã cập nhật nhắc nhở:", id);
-            
-            // (MỚI) Cập nhật xong, tải lại danh sách để sắp xếp lại
-            await fetchReminders();
+            return true; // (MỚI) Trả về true nếu thành công
             
         } catch (err) {
             alert(`Lỗi khi cập nhật: ${err.message}`);
-            // Lỗi -> tải lại danh sách để khôi phục trạng thái cũ
-            await fetchReminders();
+            return false; // (MỚI) Trả về false nếu lỗi
         }
     }
 
@@ -2132,17 +2169,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // ===== (CẬP NHẬT) KHỐI SỰ KIỆN CHO TAB NHẮC NHỞ (SCHEDULE) =====
         // ==========================================================
 
-        // --- (MỚI) 1. Thêm nhắc nhở mới ---
+        // --- (CẬP NHẬT) 1. Thêm nhắc nhở mới ---
         if (newReminderForm) {
             newReminderForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const message = newReminderText.value.trim();
-                if (!message) {
-                    showReminderStatus('Vui lòng nhập nội dung nhắc nhở.', true);
+                // (SỬA) Lấy title và content
+                const title = newReminderTitle.value.trim();
+                const content = newReminderContent.value.trim();
+                
+                if (!title) { // (SỬA)
+                    showReminderStatus('Vui lòng nhập tiêu đề nhắc nhở.', true);
                     return;
                 }
 
-                // (SỬA) Thêm kiểm tra pushManager
                 if (!swRegistration || !swRegistration.pushManager) {
                     showReminderStatus('Lỗi PushManager. Vui lòng tải lại.', true);
                     return;
@@ -2159,18 +2198,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     const response = await fetch('/api/add-reminder', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
+                        body: JSON.stringify({ // (SỬA)
                             endpoint: subscription.endpoint,
-                            message: message
+                            title: title,
+                            content: content
                         })
                     });
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.error);
 
                     showReminderStatus('Thêm thành công!', false);
-                    newReminderText.value = '';
+                    newReminderTitle.value = ''; // (SỬA)
+                    newReminderContent.value = ''; // (SỬA)
                     
-                    // Tải lại toàn bộ danh sách
                     await fetchReminders();
 
                 } catch (err) {
@@ -2179,29 +2219,33 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        // --- (CẬP NHẬT) 2. Xử lý các nút trong danh sách (Event Delegation) ---
+        // --- (CẬP NHẬT) 2. Xử lý click trong danh sách (Mở Modal + Xóa) ---
         if (reminderListContainer) {
             reminderListContainer.addEventListener('click', async (e) => {
-                // (SỬA) Thêm kiểm tra pushManager
-                if (!swRegistration || !swRegistration.pushManager) {
-                    alert("Lỗi PushManager. Không thể xóa.");
-                    return;
-                }
-                const subscription = await swRegistration.pushManager.getSubscription();
-                if (!subscription) {
-                    alert("Không thể xác thực. Vui lòng Bật Thông Báo.");
-                    return;
-                }
-                const endpoint = subscription.endpoint;
+                const item = e.target.closest('.reminder-item');
+                if (!item) return;
 
                 // --- Xử lý nút Xóa (trong item) ---
                 const deleteBtn = e.target.closest('.reminder-delete-btn');
                 if (deleteBtn) {
-                    const item = deleteBtn.closest('.reminder-item');
+                    // (SỬA) Ngăn modal mở
+                    e.stopPropagation(); 
+                    
+                    if (!swRegistration || !swRegistration.pushManager) {
+                        alert("Lỗi PushManager. Không thể xóa.");
+                        return;
+                    }
+                    const subscription = await swRegistration.pushManager.getSubscription();
+                    if (!subscription) {
+                        alert("Không thể xác thực. Vui lòng Bật Thông Báo.");
+                        return;
+                    }
+                    const endpoint = subscription.endpoint;
+                    
                     const id = item.dataset.id;
                     if (!confirm("Đại ca có chắc muốn xóa nhắc nhở này?")) return;
                     
-                    item.style.opacity = '0.5'; // Làm mờ
+                    item.style.opacity = '0.5'; 
                     try {
                         const response = await fetch('/api/delete-reminder', {
                             method: 'POST',
@@ -2211,9 +2255,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const result = await response.json();
                         if (!response.ok) throw new Error(result.error);
                         
-                        // Xóa khỏi DOM
                         item.remove();
-                        // (MỚI) Kiểm tra xem có phải item cuối cùng trong nhóm ko
                         const list = item.closest('.reminder-list');
                         if (list.children.length === 0) {
                             list.closest('.reminder-month-group').remove();
@@ -2221,83 +2263,170 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                     } catch (err) {
                         alert(`Lỗi khi xóa: ${err.message}`);
-                        item.style.opacity = '1'; // Khôi phục
+                        item.style.opacity = '1'; 
                     }
+                    return; // Dừng
                 }
                 
-                // --- (SỬA) Xóa bỏ logic 'delete-month-btn' ---
+                // --- (MỚI) Xử lý Mở Modal Edit ---
+                // Nếu click vào bất cứ đâu (trừ nút toggle, delete, datetime)
+                const toggle = e.target.closest('.reminder-toggle-check');
+                const datetime = e.target.closest('.reminder-datetime-input');
+                
+                if (!toggle && !datetime) { // Nếu không phải 3 nút điều khiển
+                    // Lấy dữ liệu từ dataset
+                    const id = item.dataset.id;
+                    const title = item.dataset.title;
+                    const content = item.dataset.content;
+                    const dtValue = item.dataset.datetime;
+                    const isActive = item.dataset.active === 'true'; // Chuyển chuỗi sang boolean
+
+                    // Mở Modal
+                    editReminderId.value = id;
+                    editReminderTitle.value = title;
+                    editReminderContent.value = content;
+                    editReminderDatetime.value = dtValue;
+                    editReminderActive.checked = isActive;
+                    
+                    reminderEditModal.classList.remove('hidden');
+                }
             });
             
-            // --- (CẬP NHẬT) 3. Xử lý Bật/Tắt và Đổi giờ (Event Delegation) ---
-            // (SỬA) BỘ LẮNG NGHE 'change' (CHO CHECKBOX BẬT/TẮT)
+            // --- (CẬP NHẬT) 3. Xử lý Bật/Tắt (Event Delegation) ---
             reminderListContainer.addEventListener('change', async (e) => {
                 const target = e.target;
                 
-                // --- CHỈ XỬ LÝ BẬT/TẮT (TOGGLE) ---
                 if (target.classList.contains('reminder-toggle-check')) {
                     const item = target.closest('.reminder-item');
                     if (!item) return;
 
                     const id = item.dataset.id;
                     const timeInput = item.querySelector('.reminder-datetime-input');
-                    const textSpan = item.querySelector('.reminder-text');
+                    const textSpan = item.querySelector('.reminder-title'); // (SỬA)
                     const isActive = target.checked;
 
-                    // Nếu bật mà chưa có giờ -> báo lỗi
                     if (isActive && !timeInput.value) {
                         alert("Đại ca phải chọn ngày giờ trước khi bật!");
-                        target.checked = false; // Tắt lại
-                        return; // Dừng
+                        target.checked = false; 
+                        return; 
                     }
                     
-                    // Làm mờ/rõ text
                     textSpan.classList.toggle('text-white', isActive);
                     textSpan.classList.toggle('text-gray-400', !isActive);
 
-                    // Gọi API (việc này SẼ tải lại list, nhưng không sao
-                    // vì người dùng không ở trong picker)
-                    await updateReminder(id, timeInput.value, isActive);
+                    // (SỬA) Gọi API
+                    const success = await updateReminder(id, {
+                        datetimeLocalString: timeInput.value,
+                        isActive: isActive
+                    });
+                    
+                    // (SỬA) Chỉ tải lại nếu lỗi (để khôi phục)
+                    if (!success) {
+                        await fetchReminders();
+                    } else {
+                        // (MỚI) Cập nhật lại dataset
+                        item.dataset.active = isActive.toString();
+                        item.dataset.datetime = timeInput.value;
+                    }
                 }
             });
-
-            // (MỚI) BỘ LẮNG NGHE 'blur' (CHO Ô THỜI GIAN)
-            // 'blur' (mất focus) là sự kiện đáng tin cậy khi picker đóng
-            // Chúng ta dùng 'true' (useCapture) để đảm bảo bắt được sự kiện
+            
+            // --- (CẬP NHẬT) 4. Xử lý Đổi giờ (Event Delegation) ---
             reminderListContainer.addEventListener('blur', async (e) => {
                 const target = e.target;
 
-                // --- CHỈ XỬ LÝ ĐỔI GIỜ (datetime-local) ---
                 if (target.classList.contains('reminder-datetime-input')) {
                     const item = target.closest('.reminder-item');
                     if (!item) return;
 
                     const id = item.dataset.id;
-                    const timeInput = target; // Chính là target
+                    const timeInput = target; 
                     const toggle = item.querySelector('.reminder-toggle-check');
-                    const textSpan = item.querySelector('.reminder-text');
+                    const textSpan = item.querySelector('.reminder-title'); // (SỬA)
 
-                    // Nếu không có giá trị (user xóa rỗng) -> không làm gì
-                    // (Người dùng phải bấm Tắt (toggle) để hủy)
                     if (!timeInput.value) {
                         return;
                     }
                     
-                    // Tự động bật và lưu
-                    
-                    // 1. Bật công tắc (nếu chưa bật)
                     if (!toggle.checked) {
                         toggle.checked = true;
                     }
-                    // 2. Làm rõ text (nếu chưa rõ)
                     if (!textSpan.classList.contains('text-white')) {
                         textSpan.classList.add('text-white');
                         textSpan.classList.remove('text-gray-400');
                     }
                     
-                    // 3. Gọi API (hàm này sẽ fetchReminders và sắp xếp lại)
-                    await updateReminder(id, timeInput.value, true);
+                    // (SỬA) Gọi API
+                    const success = await updateReminder(id, {
+                        datetimeLocalString: timeInput.value,
+                        isActive: true
+                    });
+
+                    // (SỬA) Chỉ tải lại nếu lỗi
+                    if (!success) {
+                        await fetchReminders();
+                    } else {
+                         // (MỚI) Cập nhật lại dataset
+                        item.dataset.active = 'true';
+                        item.dataset.datetime = timeInput.value;
+                        // Tải lại để sắp xếp
+                        await fetchReminders();
+                    }
                 }
-            }, true); // (QUAN TRỌNG) Dùng capturing (true)
+            }, true); 
+        }
+
+        // --- (MỚI) 5. Xử lý sự kiện cho Modal Edit ---
+        if (closeReminderEditModalBtn) {
+            closeReminderEditModalBtn.addEventListener('click', () => {
+                reminderEditModal.classList.add('hidden');
+            });
+        }
+        if (reminderEditModal) {
+             reminderEditModal.addEventListener('click', (e) => {
+                 if (e.target === reminderEditModal) {
+                    reminderEditModal.classList.add('hidden');
+                 }
+             });
+        }
+        if (editReminderForm) {
+            editReminderForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                saveReminderBtn.disabled = true;
+                saveReminderBtn.textContent = "Đang lưu...";
+
+                // Lấy tất cả dữ liệu
+                const id = editReminderId.value;
+                const title = editReminderTitle.value.trim();
+                const content = editReminderContent.value.trim();
+                const datetime = editReminderDatetime.value;
+                const isActive = editReminderActive.checked;
+
+                if (!title) {
+                    alert("Tiêu đề không được để trống!");
+                    saveReminderBtn.disabled = false;
+                    saveReminderBtn.textContent = "Lưu thay đổi";
+                    return;
+                }
+                
+                // (MỚI) Gọi hàm updateReminder với đầy đủ dữ liệu
+                const success = await updateReminder(id, {
+                    datetimeLocalString: datetime,
+                    isActive: isActive,
+                    title: title,
+                    content: content
+                });
+                
+                saveReminderBtn.disabled = false;
+                saveReminderBtn.textContent = "Lưu thay đổi";
+
+                if (success) {
+                    reminderEditModal.classList.add('hidden');
+                    await fetchReminders(); // Tải lại toàn bộ
+                } else {
+                    alert("Lưu thất bại! Vui lòng thử lại.");
+                }
+            });
         }
 
     })();
