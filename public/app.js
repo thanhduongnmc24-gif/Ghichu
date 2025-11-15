@@ -1032,6 +1032,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ==========================================================
+    // ===== (BẮT ĐẦU SỬA) THÊM HÀM HELPER getEndpoint() ========
+    // ==========================================================
+    /**
+     * (MỚI) Helper: Lấy endpoint hiện tại (nếu có)
+     */
+    async function getEndpoint() {
+        if (!swRegistration || !swRegistration.pushManager) {
+            console.warn("getEndpoint: PushManager không sẵn sàng.");
+            return null;
+        }
+        try {
+            const subscription = await swRegistration.pushManager.getSubscription();
+            return subscription ? subscription.endpoint : null;
+        } catch (err) {
+            console.error("Lỗi khi lấy endpoint:", err);
+            return null;
+        }
+    }
+    // ==========================================================
+    // ===== (KẾT THÚC SỬA) THÊM HÀM HELPER getEndpoint() =======
+    // ==========================================================
+    
     /**
      * Kiểm tra trạng thái đăng ký Push (đã bật hay tắt) và cập nhật nút.
      */
@@ -2028,13 +2051,22 @@ document.addEventListener('DOMContentLoaded', () => {
             cal_aiForm.querySelector('button').textContent = "Phân tích";
         });
 
-        // --- Đồng bộ Online (Sync) (Không đổi) ---
+        // ==========================================================
+        // ===== (BẮT ĐẦU SỬA) CẬP NHẬT LISTENER SYNC-UP ===========
+        // ==========================================================
         if (syncUpBtn) {
             syncUpBtn.addEventListener('click', async () => {
                 const username = syncUsernameInput.value.trim();
                 const password = syncPasswordInput.value.trim();
                 if (!username || !password) {
                     showSyncStatus('Vui lòng nhập Tên và Mật khẩu.', true);
+                    return;
+                }
+                
+                // (MỚI) Lấy endpoint
+                const endpoint = await getEndpoint();
+                if (!endpoint) {
+                    showSyncStatus('Vui lòng Bật Thông Báo trước khi đồng bộ.', true);
                     return;
                 }
                 
@@ -2050,7 +2082,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify({ 
                             username: username, 
                             password: password, 
-                            noteData: noteData 
+                            noteData: noteData,
+                            endpoint: endpoint // (MỚI) Gửi endpoint
                         })
                     });
                     const result = await response.json();
@@ -2067,6 +2100,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+        // ==========================================================
+        // ===== (KẾT THÚC SỬA) CẬP NHẬT LISTENER SYNC-UP ===========
+        // ==========================================================
+        
+        // ==========================================================
+        // ===== (BẮT ĐẦU SỬA) CẬP NHẬT LISTENER SYNC-DOWN =========
+        // ==========================================================
         if (syncDownBtn) {
             syncDownBtn.addEventListener('click', async () => {
                 const username = syncUsernameInput.value.trim();
@@ -2075,8 +2115,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     showSyncStatus('Vui lòng nhập Tên và Mật khẩu.', true);
                     return;
                 }
+                
+                // (MỚI) Lấy endpoint của máy MỚI này
+                const endpoint = await getEndpoint();
+                if (!endpoint) {
+                    showSyncStatus('Vui lòng Bật Thông Báo trước khi đồng bộ.', true);
+                    return;
+                }
 
-                if (!confirm('HÀNH ĐỘNG NGUY HIỂM!\n\nViệc này sẽ GHI ĐÈ toàn bộ ghi chú hiện tại trên máy này bằng dữ liệu trên server.\n\nĐại ca có chắc chắn muốn tải về?')) {
+                if (!confirm('HÀNH ĐỘNG NGUY HIỂM!\n\nViệc này sẽ GHI ĐÈ toàn bộ ghi chú hiện tại VÀ chuyển toàn bộ NHẮC NHỞ trên server về máy này.\n\nĐại ca có chắc chắn muốn tải về?')) {
                     return;
                 }
 
@@ -2091,7 +2138,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
                             username: username, 
-                            password: password 
+                            password: password,
+                            endpoint: endpoint // (MỚI) Gửi endpoint của máy mới
                         })
                     });
                     
@@ -2104,9 +2152,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     noteData = downloadedNotes || {};
                     saveNoteData(); 
-                    renderCalendar(currentViewDate); 
+                    renderCalendar(currentViewDate); // Tải lại lịch
                     
-                    showSyncStatus('Tải về và đồng bộ thành công!', false);
+                    showSyncStatus('Tải về (Ghi chú + Nhắc nhở) thành công!', false);
+                    
+                    // (MỚI) Tự động chuyển sang tab Nhắc nhở để tải lại
+                    // (Hoặc nếu đang ở tab đó thì tải lại)
+                    if (currentTab === 'schedule') {
+                         await fetchReminders();
+                    }
                     
                 } catch (err) {
                     showSyncStatus(err.message, true);
@@ -2117,6 +2171,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
+        // ==========================================================
+        // ===== (KẾT THÚC SỬA) CẬP NHẬT LISTENER SYNC-DOWN =========
+        // ==========================================================
         
         // --- Admin (Không đổi) ---
         if (adminLoginBtn) {
