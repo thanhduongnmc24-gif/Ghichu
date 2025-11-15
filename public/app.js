@@ -1390,7 +1390,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // (SỬA) Vẽ từng item
             items.forEach(item => {
                 const li = document.createElement('li');
-                li.className = "reminder-item bg-gray-700 p-3 rounded-lg flex flex-col space-y-3 cursor-pointer";
+                
+                // ==========================================================
+                // ===== (BẮT ĐẦU SỬA) THAY ĐỔI 1: THAY ĐỔI CLASS CỦA LI =====
+                // ==========================================================
+                li.className = "reminder-item flex items-start space-x-2";
+                // ==========================================================
+                // ===== (KẾT THÚC SỬA) THAY ĐỔI 1 ===========================
+                // ==========================================================
+                
                 li.dataset.id = item.id;
                 // (MỚI) Lưu trữ toàn bộ dữ liệu vào dataset
                 li.dataset.title = item.title;
@@ -1407,20 +1415,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     contentPreview = contentPreview.substring(0, 50) + '...';
                 }
 
+                // ==========================================================
+                // ===== (BẮT ĐẦU SỬA) THAY ĐỔI 2: THAY ĐỔI innerHTML =======
+                // ==========================================================
                 li.innerHTML = `
-                   <div class="reminder-content-clickable flex-grow overflow-hidden min-w-0">
-                        <span class="reminder-title ${textClass} font-semibold block truncate">
-                            ${item.title}
-                        </span>
-                        <span class="reminder-preview text-gray-400 text-sm block truncate">
-                            ${contentPreview || '(Không có nội dung)'}
-                        </span>
+                    <div class="reminder-content-clickable bg-gray-700 p-3 rounded-lg flex flex-col space-y-3 cursor-pointer flex-grow overflow-hidden min-w-0">
+                        
+                        <div class="flex-grow overflow-hidden min-w-0">
+                            <span class="reminder-title ${textClass} font-semibold block truncate">
+                                ${item.title}
+                            </span>
+                            <span class="reminder-preview text-gray-400 text-sm block truncate">
+                                ${contentPreview || '(Không có nội dung)'}
+                            </span>
+                        </div>
+                        
+                        <div class="flex items-center flex-wrap gap-3">
+                            <input type="datetime-local" class="reminder-datetime-input" 
+                                   value="${dateTimeValue}" >
+                        </div>
+
                     </div>
 
-                    <div class="flex items-center space-x-3 flex-shrink-0">
-                        <input type="datetime-local" class="reminder-datetime-input" 
-                               value="${dateTimeValue}" >
-                               <label class="ios-toggle">
+                    <div class="reminder-controls flex-shrink-0 flex flex-col items-center space-y-3 pt-2">
+                        
+                        <label class="ios-toggle">
                             <input type="checkbox" class="reminder-toggle-check" ${item.is_active ? 'checked' : ''}>
                             <span class="slider"></span>
                         </label>
@@ -1430,6 +1449,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         </button>
                     </div>
                 `;
+                // ==========================================================
+                // ===== (KẾT THÚC SỬA) THAY ĐỔI 2 ===========================
+                // ==========================================================
+                
                 listElement.appendChild(li);
             });
             
@@ -2268,13 +2291,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     return; // Dừng
                 }
                 
-                // --- (MỚI) Xử lý Mở Modal Edit ---
-                // Nếu click vào bất cứ đâu (trừ nút toggle, delete, datetime)
-                const toggle = e.target.closest('.reminder-toggle-check');
-                const datetime = e.target.closest('.reminder-datetime-input');
+                // ==========================================================
+                // ===== (BẮT ĐẦU SỬA) THAY ĐỔI 3: LOGIC MỞ MODAL ===========
+                // ==========================================================
                 
-                if (!toggle && !datetime) { // Nếu không phải 3 nút điều khiển
-                    // Lấy dữ liệu từ dataset
+                // --- (SỬA) Xử lý Mở Modal Edit ---
+                // (SỬA) Chỉ mở modal nếu click vào box nội dung
+                const contentBoxClick = e.target.closest('.reminder-content-clickable');
+                
+                if (contentBoxClick) { 
+                    // Lấy dữ liệu từ dataset CỦA ITEM (LI)
                     const id = item.dataset.id;
                     const title = item.dataset.title;
                     const content = item.dataset.content;
@@ -2290,6 +2316,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     reminderEditModal.classList.remove('hidden');
                 }
+                // Nếu không click vào contentBox (mà click vào toggle, delete, or empty space)
+                // thì không làm gì cả (click handler sẽ tự kết thúc).
+
+                // ==========================================================
+                // ===== (KẾT THÚC SỬA) THAY ĐỔI 3 ===========================
+                // ==========================================================
             });
             
             // --- (CẬP NHẬT) 3. Xử lý Bật/Tắt (Event Delegation) ---
@@ -2301,8 +2333,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!item) return;
 
                     const id = item.dataset.id;
+                    // (SỬA) Tìm input thời gian trong box nội dung
                     const timeInput = item.querySelector('.reminder-datetime-input');
-                    const textSpan = item.querySelector('.reminder-title'); // (SỬA)
+                    // (SỬA) Tìm tiêu đề trong box nội dung
+                    const textSpan = item.querySelector('.reminder-title'); 
                     const isActive = target.checked;
 
                     if (isActive && !timeInput.value) {
@@ -2341,8 +2375,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const id = item.dataset.id;
                     const timeInput = target; 
+                    // (SỬA) Tìm toggle và title ở vị trí mới của chúng
                     const toggle = item.querySelector('.reminder-toggle-check');
-                    const textSpan = item.querySelector('.reminder-title'); // (SỬA)
+                    const textSpan = item.querySelector('.reminder-title');
 
                     if (!timeInput.value) {
                         return;
