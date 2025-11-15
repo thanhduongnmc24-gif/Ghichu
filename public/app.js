@@ -1408,7 +1408,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 li.innerHTML = `
-                    <div class="reminder-content-clickable flex-grow overflow-hidden min-w-0">
+                   <div class="reminder-content-clickable flex-grow overflow-hidden min-w-0">
                         <span class="reminder-title ${textClass} font-semibold block truncate">
                             ${item.title}
                         </span>
