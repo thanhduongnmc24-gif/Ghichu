@@ -97,12 +97,13 @@ async function initializeDatabase() {
                 salt TEXT NOT NULL,
                 notes JSONB DEFAULT '{}'::jsonb,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                is_admin BOOLEAN DEFAULT false
+                is_admin BOOLEAN DEFAULT false,
+                endpoint TEXT 
             );
         `);
-        console.log("Bảng 'user_notes' (có is_admin) đã sẵn sàng trên Supabase.");
+        console.log("Bảng 'user_notes' (có is_admin, endpoint) đã sẵn sàng trên Supabase.");
 
-        // 3. Cập nhật bảng user_notes
+        // 3. Cập nhật bảng user_notes (Thêm is_admin)
         try {
             await client.query(`
                 ALTER TABLE user_notes
@@ -113,7 +114,18 @@ async function initializeDatabase() {
             // Lỗi này có thể xảy ra nếu cột đã tồn tại (race condition), bỏ qua
         }
 
-        // 4. (CẬP NHẬT) Bảng Nhắc nhở (Reminders) - Thêm Title/Content
+        // 4. (MỚI) Cập nhật bảng user_notes (Thêm endpoint)
+        try {
+            await client.query(`
+                ALTER TABLE user_notes
+                ADD COLUMN IF NOT EXISTS endpoint TEXT;
+            `);
+            console.log("Bảng 'user_notes' đã được cập nhật với cột 'endpoint'.");
+        } catch (alterErr) {
+            // Lỗi này có thể xảy ra nếu cột đã tồn tại (race condition), bỏ qua
+        }
+
+        // 5. (CẬP NHẬT) Bảng Nhắc nhở (Reminders) - Thêm Title/Content
         await client.query(`
             CREATE TABLE IF NOT EXISTS reminders (
                 id SERIAL PRIMARY KEY,
@@ -139,7 +151,7 @@ async function initializeDatabase() {
             console.warn("Lỗi khi cập nhật cấu trúc bảng reminders (có thể đã chạy rồi):", alterErr.message);
         }
 
-        // 5. Xóa bảng cũ nếu tồn tại
+        // 6. Xóa bảng cũ nếu tồn tại
         try {
             await client.query(`DROP TABLE IF EXISTS scheduled_notifications;`);
             console.log("Đã xóa bảng 'scheduled_notifications' cũ (nếu có).");
@@ -242,7 +254,7 @@ app.get('/summarize-stream', async (req, res) => {
 
     try {
         const model = genAI.getGenerativeModel({
-             model: "gemini-2.5-flash-preview-09-2025", 
+             model: "gemini-1.5-flash-latest", // (Sửa nhỏ) Dùng 1.5 flash
              systemInstruction: "Bạn là Tèo một trợ lý tóm tắt tin tức. Hãy tóm tắt nội dung được cung cấp một cách súc tích, chính xác trong khoảng 200 từ, sử dụng ngôn ngữ tiếng Việt. Luôn giả định người dùng đang ở múi giờ Hà Nội (GMT+7). Và địa chỉ người dùng ở Bình Sơn, Quảng Ngãi"
         });
 
@@ -281,7 +293,7 @@ app.post('/chat', async (req, res) => {
     }
     if (!API_KEY) return res.status(500).send('API Key chưa được cấu hình trên server');
 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`; // (Sửa nhỏ) Dùng 1.5 flash
 
     const payload = {
         contents: history,
@@ -361,7 +373,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
 
     try {
          const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.5-flash",
+            model: "gemini-1.5-flash-latest", // (Sửa nhỏ) Dùng 1.5 flash
             generationConfig: {
                 responseMimeType: "application/json" 
             }
@@ -460,12 +472,19 @@ app.post('/update-notes', async (req, res) => {
 });
 
 
-// ----- CÁC ENDPOINT CHO SYNC ONLINE (Không thay đổi) -----
+// ==========================================================
+// ===== (CẬP NHẬT) CÁC ENDPOINT CHO SYNC ONLINE =====
+// ==========================================================
 app.post('/api/sync/up', async (req, res) => {
-    // ... (Giữ nguyên code)
-    const { username, password, noteData } = req.body;
+    // (SỬA) Nhận thêm endpoint
+    const { username, password, noteData, endpoint } = req.body; 
+    
     if (!username || !password || !noteData) {
         return res.status(400).json({ error: 'Thiếu Tên, Mật khẩu, hoặc Dữ liệu Ghi chú.' });
+    }
+    // (MỚI) Endpoint là tùy chọn nhưng cần thiết cho việc đồng bộ nhắc nhở
+    if (!endpoint) {
+         console.warn(`[Sync Up] ${username} đang tải lên mà không có endpoint.`);
     }
 
     const client = await pool.connect();
@@ -481,17 +500,22 @@ app.post('/api/sync/up', async (req, res) => {
                 return res.status(401).json({ error: 'Mật khẩu không đúng.' });
             }
 
-            await client.query("UPDATE user_notes SET notes = $1 WHERE username = $2", [noteData, username]);
-            res.status(200).json({ success: true, message: 'Đã cập nhật dữ liệu thành công.' });
+            // (SỬA) Cập nhật cả notes VÀ endpoint
+            await client.query(
+                "UPDATE user_notes SET notes = $1, endpoint = $2 WHERE username = $3", 
+                [noteData, endpoint, username]
+            );
+            res.status(200).json({ success: true, message: 'Đã cập nhật dữ liệu (và endpoint) thành công.' });
 
         } else {
             // --- Người dùng mới -> Tạo mới ---
             const { salt, hash } = hashPassword(password);
+            // (SỬA) Thêm endpoint khi tạo mới
             await client.query(
-                "INSERT INTO user_notes (username, password_hash, salt, notes) VALUES ($1, $2, $3, $4)",
-                [username, hash, salt, noteData]
+                "INSERT INTO user_notes (username, password_hash, salt, notes, endpoint) VALUES ($1, $2, $3, $4, $5)",
+                [username, hash, salt, noteData, endpoint]
             );
-            res.status(201).json({ success: true, message: 'Đã tạo tài khoản và lưu dữ liệu thành công.' });
+            res.status(201).json({ success: true, message: 'Đã tạo tài khoản (và endpoint) và lưu dữ liệu thành công.' });
         }
     } catch (error) {
         console.error("Lỗi khi /api/sync/up:", error);
@@ -502,10 +526,14 @@ app.post('/api/sync/up', async (req, res) => {
 });
 
 app.post('/api/sync/down', async (req, res) => {
-    // ... (Giữ nguyên code)
-    const { username, password } = req.body;
+    // (SỬA) Nhận new_endpoint (của máy đang tải về)
+    const { username, password, endpoint: new_endpoint } = req.body;
+    
     if (!username || !password) {
         return res.status(400).json({ error: 'Thiếu Tên hoặc Mật khẩu.' });
+    }
+    if (!new_endpoint) {
+        return res.status(400).json({ error: 'Thiếu endpoint của thiết bị này. Vui lòng bật thông báo.' });
     }
 
     const client = await pool.connect();
@@ -522,8 +550,41 @@ app.post('/api/sync/down', async (req, res) => {
         if (!isVerified) {
             return res.status(401).json({ error: 'Mật khẩu không đúng.' });
         }
+        
+        // (MỚI) Lấy old_endpoint (của máy cũ)
+        const old_endpoint = user.endpoint;
 
-        res.status(200).json(user.notes || {}); // Trả về data
+        // (MỚI) Thực hiện chuyển đổi reminders
+        if (old_endpoint && old_endpoint !== new_endpoint) {
+            console.log(`[Sync Down] Chuyển reminders từ ${old_endpoint} SANG ${new_endpoint}`);
+            
+            // 1. Chuyển reminders
+            
+            // Đơn giản nhất: Xóa hết nhắc nhở (nếu có) ở máy mới
+            await client.query("DELETE FROM reminders WHERE endpoint = $1", [new_endpoint]);
+            
+            // Chuyển toàn bộ nhắc nhở từ endpoint cũ sang endpoint mới
+            const updateRemindersQuery = `
+                UPDATE reminders 
+                SET endpoint = $1 
+                WHERE endpoint = $2
+            `;
+            await client.query(updateRemindersQuery, [new_endpoint, old_endpoint]);
+            
+            // (Tùy chọn) Xóa subscription cũ
+            await client.query("DELETE FROM subscriptions WHERE endpoint = $1", [old_endpoint]);
+
+        } else {
+             console.log(`[Sync Down] Không cần chuyển reminders (endpoint mới hoặc giống nhau).`);
+        }
+
+        // (MỚI) Cập nhật endpoint mới vào user_notes
+        await client.query(
+            "UPDATE user_notes SET endpoint = $1 WHERE username = $2",
+            [new_endpoint, username]
+        );
+
+        res.status(200).json(user.notes || {}); // Trả về data (như cũ)
 
     } catch (error) {
         console.error("Lỗi khi /api/sync/down:", error);
@@ -604,14 +665,14 @@ app.post('/api/admin/delete-user', checkAdmin, async (req, res) => {
 
 
 // ==========================================================
-// ===== (CẬP NHẬT) CÁC ENDPOINT CHO NHẮC NHỞ (REMINDERS) =====
+// ===== CÁC ENDPOINT CHO NHẮC NHỞ (REMINDERS) (Không đổi) =====
 // ==========================================================
 
-// API 1: Thêm một nhắc nhở (CẬP NHẬT)
+// API 1: Thêm một nhắc nhở
 app.post('/api/add-reminder', async (req, res) => {
-    const { endpoint, title, content } = req.body; // (SỬA)
+    const { endpoint, title, content } = req.body; 
 
-    if (!endpoint || !title) { // (SỬA)
+    if (!endpoint || !title) { 
         return res.status(400).json({ error: 'Thiếu endpoint hoặc title.' });
     }
 
@@ -620,8 +681,8 @@ app.post('/api/add-reminder', async (req, res) => {
             INSERT INTO reminders (endpoint, title, content, remind_at, is_active)
             VALUES ($1, $2, $3, NULL, false)
             RETURNING *
-        `; // (SỬA)
-        const result = await pool.query(query, [endpoint, title, content]); // (SỬA)
+        `; 
+        const result = await pool.query(query, [endpoint, title, content]); 
         
         console.log("Đã thêm nhắc nhở mới cho:", endpoint);
         res.status(201).json(result.rows[0]); // Trả về item vừa tạo
@@ -632,7 +693,7 @@ app.post('/api/add-reminder', async (req, res) => {
     }
 });
 
-// API 2: Lấy tất cả nhắc nhở (CẬP NHẬT)
+// API 2: Lấy tất cả nhắc nhở
 app.post('/api/get-reminders', async (req, res) => {
     const { endpoint } = req.body;
     if (!endpoint) {
@@ -645,7 +706,7 @@ app.post('/api/get-reminders', async (req, res) => {
             FROM reminders 
             WHERE endpoint = $1
             ORDER BY remind_at ASC NULLS LAST, created_at ASC
-        `; // (SỬA)
+        `; 
         const result = await pool.query(query, [endpoint]);
         res.status(200).json(result.rows);
     } catch (error) {
@@ -654,7 +715,7 @@ app.post('/api/get-reminders', async (req, res) => {
     }
 });
 
-// (CẬP NHẬT) API 3: Cập nhật một nhắc nhở (bật/tắt, đổi ngày/giờ, VÀ NỘI DUNG)
+// API 3: Cập nhật một nhắc nhở
 app.post('/api/update-reminder', async (req, res) => {
     const { id, endpoint, datetime, isActive, title, content } = req.body;
     
@@ -668,7 +729,7 @@ app.post('/api/update-reminder', async (req, res) => {
         let query;
         let params;
 
-        // (MỚI) Phân luồng:
+        // Phân luồng:
         // Nếu 'title' được gửi -> đây là lệnh Cập nhật đầy đủ từ Modal
         if (title !== undefined) {
              query = `
@@ -704,7 +765,7 @@ app.post('/api/update-reminder', async (req, res) => {
     }
 });
 
-// API 4: Xóa một nhắc nhở (Không đổi)
+// API 4: Xóa một nhắc nhở
 app.post('/api/delete-reminder', async (req, res) => {
     const { id, endpoint } = req.body;
     if (!id || !endpoint) {
@@ -728,10 +789,10 @@ app.post('/api/delete-reminder', async (req, res) => {
 
 
 // ==========================================================
-// ===== (CẬP NHẬT) LOGIC GỬI THÔNG BÁO =====
+// ===== LOGIC GỬI THÔNG BÁO (Không thay đổi) =====
 // ==========================================================
 
-// Logic tính ca (Không thay đổi)
+// Logic tính ca
 const EPOCH_DAYS = dateToDays('2025-10-26');
 const SHIFT_PATTERN = ['ngày', 'đêm', 'giãn ca'];
 function dateToDays(dateStr) {
@@ -764,7 +825,7 @@ async function deleteSubscription(endpoint) {
     }
 }
 
-// (CẬP NHẬT) Hàm kiểm tra thông báo
+// Hàm kiểm tra thông báo
 let lastNotificationCheckTime = null;
 async function checkAndSendNotifications() {
     
@@ -794,14 +855,14 @@ async function checkAndSendNotifications() {
         return;
     }
 
-    // === (CẬP NHẬT) PHẦN 2: KIỂM TRA NHẮC NHỞ (REMINDERS) ===
+    // === PHẦN 2: KIỂM TRA NHẮC NHỞ (REMINDERS) ===
     let reminderJobs = [];
     try {
         const jobQuery = `
             SELECT id, endpoint, title, content
             FROM reminders 
             WHERE is_active = true AND remind_at <= $1
-        `; // (SỬA) Lấy title, content
+        `; 
         // Tìm tất cả nhắc nhở (đã bật) có thời gian hẹn <= thời gian hiện tại (UTC)
         const jobResult = await pool.query(jobQuery, [utcNowRounded]); 
         reminderJobs = jobResult.rows;
@@ -823,8 +884,8 @@ async function checkAndSendNotifications() {
             return; 
         }
 
-        const title = job.title; // (SỬA)
-        const body = job.content || '(Không có nội dung)'; // (SỬA)
+        const title = job.title; 
+        const body = job.content || '(Không có nội dung)'; 
         
         let notificationPayload;
         if (job.endpoint.startsWith('https://web.push.apple.com')) {
@@ -943,7 +1004,7 @@ app.get('*', (req, res) => {
 
 
 // ==========================================================
-// ===== (CẬP NHẬT) KHỞI ĐỘNG SERVER =====
+// ===== KHỞI ĐỘNG SERVER =====
 // ==========================================================
 app.listen(PORT, async () => {
     console.log(`Server đang chạy tại http://localhost:${PORT}`);
