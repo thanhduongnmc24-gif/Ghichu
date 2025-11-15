@@ -645,6 +645,7 @@ app.post('/api/get-reminders', async (req, res) => {
 
 // (CẬP NHẬT) API 3: Cập nhật một nhắc nhở (bật/tắt, đổi ngày/giờ)
 app.post('/api/update-reminder', async (req, res) => {
+    // (SỬA) Đổi 'time' -> 'datetime'
     const { id, endpoint, datetime, isActive } = req.body;
     if (!id || !endpoint || isActive === undefined) { 
         return res.status(400).json({ error: 'Thiếu thông tin (id, endpoint, isActive).' });
