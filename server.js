@@ -744,9 +744,19 @@ async function checkAndSendNotifications() {
     
     // === PHẦN 1: LẤY THỜI GIAN VÀ SUBSCRIPTIONS ===
     const { timeStr, dateStr } = getHanoiTime(); // timeStr là "HH:mm" (Hà Nội)
-    const hanoiNow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
+    
+    // (SỬA LỖI TIMEZONE) Lấy giờ UTC hiện tại
+    const nowUTC = new Date();
+    // (SỬA LỖI TIMEZONE) Làm tròn giờ UTC xuống phút
+    const utcNowRounded = new Date(Date.UTC(
+        nowUTC.getUTCFullYear(),
+        nowUTC.getUTCMonth(),
+        nowUTC.getUTCDate(),
+        nowUTC.getUTCHours(),
+        nowUTC.getUTCMinutes()
+    ));
 
-    if (timeStr === lastNotificationCheckTime && hanoiNow.getSeconds() > 5) {
+    if (timeStr === lastNotificationCheckTime) { // Vẫn dùng timeStr (local) để giới hạn 1 lần/phút
         return;
     }
     lastNotificationCheckTime = timeStr;
@@ -763,24 +773,12 @@ async function checkAndSendNotifications() {
     // === (CẬP NHẬT) PHẦN 2: KIỂM TRA NHẮC NHỞ (REMINDERS) ===
     let reminderJobs = [];
     try {
-        // (SỬA LỖI TIMEZONE)
-        // Chúng ta cần lấy thời gian UTC hiện tại, làm tròn xuống phút
-        // vì 'remind_at' trong DB là UTC.
-        const nowUTC = new Date();
-        const utcNowRounded = new Date(Date.UTC(
-            nowUTC.getUTCFullYear(),
-            nowUTC.getUTCMonth(),
-            nowUTC.getUTCDate(),
-            nowUTC.getUTCHours(),
-            nowUTC.getUTCMinutes()
-        ));
-        
         const jobQuery = `
             SELECT id, endpoint, message 
             FROM reminders 
             WHERE is_active = true AND remind_at <= $1
         `;
-        // Tìm tất cả nhắc nhở (đã bật) có thời gian hẹn <= thời gian hiện tại
+        // Tìm tất cả nhắc nhở (đã bật) có thời gian hẹn <= thời gian hiện tại (UTC)
         const jobResult = await pool.query(jobQuery, [utcNowRounded]); 
         reminderJobs = jobResult.rows;
     } catch (err) {
@@ -817,9 +815,11 @@ async function checkAndSendNotifications() {
 
         const sendPromise = webpush.sendNotification(pushSubscription, notificationPayload)
             .then(() => {
-                // (SỬA) Gửi thành công -> XÓA LUÔN
-                console.log("Đã gửi và XÓA nhắc nhở ID:", job.id);
-                return pool.query("DELETE FROM reminders WHERE id = $1", [job.id]);
+                // ==========================================================
+                // (SỬA LỖI) THAY ĐỔI TỪ XÓA -> TẮT
+                // ==========================================================
+                console.log("Đã gửi và TẮT nhắc nhở ID:", job.id);
+                return pool.query("UPDATE reminders SET is_active = false WHERE id = $1", [job.id]);
             })
             .catch(err => {
                 if (err.statusCode === 410 || err.statusCode === 404) {
