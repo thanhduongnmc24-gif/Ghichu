@@ -61,34 +61,28 @@
             transform: translateX(22px); /* Di chuyển chấm tròn */
         }
         
-       /* (SỬA LỖI TRÀN VIỀN IPHONE) */
+        /* (SỬA LỖI TRÀN VIỀN IPHONE) */
         .reminder-datetime-input {
             background-color: #4B5563; /* bg-gray-600 */
-            
-            /* (SỬA LỖI iOS)
-               Dùng 'initial' để iOS tự chọn màu chữ placeholder (thường là xám/đen).
-               Nếu để 'white' ở đây, placeholder và giá trị sẽ vô hình trên iOS.
-            */
-            color: initial; 
+            color: white; /* Luôn là màu trắng cho Chrome/Desktop */
             
             padding: 0.5rem; /* p-2 */
             border-radius: 0.25rem; /* rounded */
             border: 1px solid #6B7280; /* border-gray-500 */
             
-            max-width: 200px; 
+            /* (SỬA) Bỏ max-width, vì bây giờ nó sẽ co giãn */
+            /* max-width: 200px; */ 
+            
             font-size: 0.875rem; /* text-sm */
             line-height: 1.25rem;
-
-            /* (MỚI) Căn phải cho đẹp mắt */
             text-align: right;
-        }
 
-        /* (MỚI) SỬA LỖI iOS
-           Chỉ khi input có giá trị (value KHÔNG rỗng)
-           thì mới ép chữ hiển thị thành màu trắng.
-        */
-        .reminder-datetime-input[value]:not([value=""]) {
-            color: white;
+            /* (MỚI - SỬA LỖI iOS TRIỆT ĐỂ)
+               Báo cho iOS biết đây là nền tối.
+               Nó sẽ tự động dùng chữ màu sáng (trắng) 
+               cho placeholder ("dd/mm/yyyy") và cả giá trị đã chọn.
+            */
+            color-scheme: dark;
         }
     </style>
     </head>
