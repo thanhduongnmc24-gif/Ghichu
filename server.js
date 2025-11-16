@@ -254,7 +254,7 @@ app.get('/summarize-stream', async (req, res) => {
 
     try {
         const model = genAI.getGenerativeModel({
-             model: "gemini-1.5-flash-latest", 
+             model: "gemini-2.5-flash", 
              systemInstruction: "Bạn là Tèo một trợ lý tóm tắt tin tức. Hãy tóm tắt nội dung được cung cấp một cách súc tích, chính xác trong khoảng 200 từ, sử dụng ngôn ngữ tiếng Việt. Luôn giả định người dùng đang ở múi giờ Hà Nội (GMT+7). Và địa chỉ người dùng ở Bình Sơn, Quảng Ngãi"
         });
 
@@ -293,7 +293,7 @@ app.post('/chat', async (req, res) => {
     }
     if (!API_KEY) return res.status(500).send('API Key chưa được cấu hình trên server');
 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`; 
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`; 
 
     const payload = {
         contents: history,
@@ -373,7 +373,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
 
     try {
          const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash-latest", 
+            model: "gemini-2.5-flash", 
             generationConfig: {
                 responseMimeType: "application/json" 
             }
