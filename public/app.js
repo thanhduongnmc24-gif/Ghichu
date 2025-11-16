@@ -1370,9 +1370,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * (CẬP NHẬT) Vẽ toàn bộ danh sách nhắc nhở (đã phân nhóm)
-     */
-   /**
-     * (CẬP NHẬT) Vẽ toàn bộ danh sách nhắc nhở (đã phân nhóm)
      * (SỬA BỐ CỤC MOBILE 17/11/2025)
      */
     function renderReminderList(groupedReminders) {
@@ -1481,111 +1478,7 @@ document.addEventListener('DOMContentLoaded', () => {
             reminderListContainer.appendChild(monthGroup);
         });
     }
-        
-        if (sortedMonthKeys.length === 0 || (sortedMonthKeys.length === 1 && sortedMonthKeys[0] === "null" && groupedReminders["null"].length === 0)) {
-            reminderListLoading.textContent = "Không có nhắc nhở nào. Hãy thêm một cái mới!";
-            reminderListLoading.classList.remove('hidden');
-            return;
-        }
-        
-        reminderListLoading.classList.add('hidden'); // Ẩn "Đang tải"
 
-        // Vẽ từng nhóm tháng
-        sortedMonthKeys.forEach(monthKey => { // "2025-11" hoặc "null"
-            const items = groupedReminders[monthKey];
-            
-            // Bỏ qua nếu nhóm rỗng
-            if (items.length === 0) return;
-
-            // Sắp xếp các item trong nhóm theo ngày hẹn (remind_at) tăng dần
-            items.sort((a, b) => {
-                if (!a.remind_at) return 1; // null xuống cuối
-                if (!b.remind_at) return -1; // null xuống cuối
-                return new Date(a.remind_at) - new Date(b.remind_at);
-            });
-            
-            const monthGroup = document.createElement('div');
-            monthGroup.className = 'reminder-month-group bg-gray-800 rounded-lg shadow-lg';
-            
-            // Xử lý tiêu đề
-            let headerTitle = "";
-            if (monthKey === "null") {
-                headerTitle = "Chưa sắp xếp";
-            } else {
-                const [year, month] = monthKey.split('-');
-                headerTitle = `Tháng ${month}, ${year}`;
-            }
-
-            monthGroup.innerHTML = `
-                <div class="flex justify-between items-center p-4 border-b border-gray-700">
-                    <h3 class="text-lg font-semibold text-white">${headerTitle}</h3>
-                    </div>
-                
-                <ul class="reminder-list p-4 space-y-3"></ul>
-            `;
-            
-            const listElement = monthGroup.querySelector('.reminder-list');
-            
-            // (SỬA) Vẽ từng item
-            items.forEach(item => {
-                const li = document.createElement('li');
-                
-                li.className = "reminder-item flex items-start space-x-2";
-                
-                li.dataset.id = item.id;
-                // (MỚI) Lưu trữ toàn bộ dữ liệu vào dataset
-                li.dataset.title = item.title;
-                li.dataset.content = item.content || ''; // Đảm bảo không phải null
-                const dateTimeValue = formatISODateForInput(item.remind_at);
-                li.dataset.datetime = dateTimeValue;
-                li.dataset.active = item.is_active;
-
-                const textClass = item.is_active ? "text-white" : "text-gray-400";
-                
-                // (MỚI) Rút gọn nội dung (ví dụ: 50 ký tự)
-                let contentPreview = item.content || '';
-                if (contentPreview.length > 50) {
-                    contentPreview = contentPreview.substring(0, 50) + '...';
-                }
-
-                li.innerHTML = `
-                    <div class="reminder-content-clickable bg-gray-700 p-3 rounded-lg flex flex-col space-y-3 cursor-pointer flex-grow overflow-hidden min-w-0">
-                        
-                        <div class="flex-grow overflow-hidden min-w-0">
-                            <span class="reminder-title ${textClass} font-semibold block truncate">
-                                ${item.title}
-                            </span>
-                            <span class="reminder-preview text-gray-400 text-sm block truncate">
-                                ${contentPreview || '(Không có nội dung)'}
-                            </span>
-                        </div>
-                        
-                        <div class="flex items-center flex-wrap gap-3">
-                            <input type="datetime-local" class="reminder-datetime-input" 
-                                   value="${dateTimeValue}" >
-                        </div>
-
-                    </div>
-
-                    <div class="reminder-controls flex-shrink-0 flex flex-col items-center space-y-3 pt-2">
-                        
-                        <label class="ios-toggle">
-                            <input type="checkbox" class="reminder-toggle-check" ${item.is_active ? 'checked' : ''}>
-                            <span class="slider"></span>
-                        </label>
-
-                        <button class="reminder-delete-btn text-gray-400 hover:text-red-400 p-1">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                    </div>
-                `;
-                
-                listElement.appendChild(li);
-            });
-            
-            reminderListContainer.appendChild(monthGroup);
-        });
-    }
 
     /**
      * (MỚI) Hiển thị thông báo trạng thái cho form thêm nhắc nhở
@@ -2489,7 +2382,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!item) return;
 
                     const id = item.dataset.id;
-                    // (SỬA) Tìm input thời gian trong box nội dung
+                    // (SỬA) Tìm input thời gian trong box điều khiển
                     const timeInput = item.querySelector('.reminder-datetime-input');
                     // (SỬA) Tìm tiêu đề trong box nội dung
                     const textSpan = item.querySelector('.reminder-title'); 
