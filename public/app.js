@@ -2,7 +2,7 @@
 /* FILE: public/app.js                                                 */
 /* MỤC ĐÍCH: Logic JavaScript chính cho toàn bộ ứng dụng Ghichu App.     */
 /* PHIÊN BẢN: Đã tách logic tính toán sang utils.js                     */
-/* CẬP NHẬT: Gộp tab Nhắc Nhở vào tab Lịch (Sub-tab)                    */
+/* CẬP NHẬT: Chuyển Sub-tab Lịch/Nhắc nhở lên Header Mobile             */
 /* =================================================================== */
 
 // ===================================================================
@@ -103,9 +103,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- (CẬP NHẬT) Biến Phần 3.5 (Lịch / Nhắc nhở) ---
     
-    // (MỚI) Biến cho Sub-tab
+    // (MỚI) Biến cho Sub-tab (trong Header)
+    const calendarSubtabHeader = document.getElementById('calendar-subtab-header');
     const calSubtabWork = document.getElementById('cal-subtab-work');
     const calSubtabReminders = document.getElementById('cal-subtab-reminders');
+    
+    // (MỚI) Biến cho nội dung Sub-tab (trong Main)
     const calendarWorkContent = document.getElementById('calendar-work-content');
     const calendarRemindersContent = document.getElementById('calendar-reminders-content');
 
@@ -134,7 +137,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const newsTabBtn = document.getElementById('news-tab-btn');
     const calendarTabBtn = document.getElementById('calendar-tab-btn'); // (Lưu ý: Biến này có thể không có trong HTML)
     const settingsBtn = document.getElementById('settings-btn'); // (Lưu ý: Biến này có thể không có trong HTML)
+    
+    // (CẬP NHẬT) Biến Header Mobile
     const mobileHeaderTitle = document.getElementById('mobile-header-title');
+    const mobileHeaderLeft = document.getElementById('mobile-header-left'); // (MỚI)
+    
     const refreshFeedButton = document.getElementById('refresh-feed-button');
     const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
     const bottomTabNews = document.getElementById('bottom-tab-news');
@@ -1687,7 +1694,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function adminDeleteUser(targetUser) {
         if (!currentAdminCreds) return;
 
-        if (!confirm(`ĐẠI CA ADMIN!\n\nĐại ca có chắc chắn muốn XÓA VĨNH VIỄN người dùng "${targetUser}" không?\n\nHành động này không thể hoàn tác.`)) {
+        if (!confirm(`ĐẠI CA ADMIN!\n\NĐại ca có chắc chắn muốn XÓA VĨNH VIỄN người dùng "${targetUser}" không?\n\nHành động này không thể hoàn tác.`)) {
             return;
         }
 
@@ -1788,9 +1795,11 @@ document.addEventListener('DOMContentLoaded', () => {
         bottomTabChat.classList.remove('active');
         bottomTabSettings.classList.remove('active');
         
-        // 3. Ẩn các nút header mobile
+        // 3. (CẬP NHẬT) Ẩn/Hiện các thành phần Header Mobile
         if (rssMenuBtn) rssMenuBtn.classList.add('hidden');
         if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.add('hidden');
+        if (mobileHeaderTitle) mobileHeaderTitle.classList.add('hidden');
+        if (calendarSubtabHeader) calendarSubtabHeader.classList.add('hidden');
         
         // 4. Ẩn nút Chat FAB (desktop)
         chatFab.classList.add('hidden'); // (Biến này có thể không có trong HTML)
@@ -1801,8 +1810,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 newsMain.classList.remove('hidden');
                 if (newsTabBtn) newsTabBtn.classList.add('active');
                 bottomTabNews.classList.add('active');
-                if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Tin Tức";
-                // Hiện lại các nút của tab Tin tức
+                
+                // (CẬP NHẬT) Hiển thị Header cho Tin tức
+                if (mobileHeaderTitle) {
+                    mobileHeaderTitle.textContent = "Tin Tức";
+                    mobileHeaderTitle.classList.remove('hidden');
+                }
                 if (rssMenuBtn) rssMenuBtn.classList.remove('hidden');
                 if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.remove('hidden');
                 break;
@@ -1811,7 +1824,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 calendarMain.classList.remove('hidden');
                 if (calendarTabBtn) calendarTabBtn.classList.add('active');
                 bottomTabCalendar.classList.add('active');
-                if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Lịch Làm Việc";
+                
+                // (CẬP NHẬT) Hiển thị Header cho Lịch (Sub-tab)
+                if (calendarSubtabHeader) {
+                    calendarSubtabHeader.classList.remove('hidden');
+                }
                 
                 // (MỚI) Khi mở tab Lịch, luôn reset về sub-tab 'work'
                 showCalendarSubTab('work'); 
@@ -1822,7 +1839,12 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'chat':
                 chatMain.classList.remove('hidden');
                 bottomTabChat.classList.add('active');
-                if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Trò chuyện";
+                
+                // (CẬP NHẬT) Hiển thị Header cho Chat
+                if (mobileHeaderTitle) {
+                    mobileHeaderTitle.textContent = "Trò chuyện";
+                    mobileHeaderTitle.classList.remove('hidden');
+                }
                 break;
                 
             case 'settings':
@@ -1832,7 +1854,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (settingsBtn) settingsBtn.classList.add('active');
                 bottomTabSettings.classList.add('active');
-                if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Cài đặt";
+                
+                // (CẬP NHẬT) Hiển thị Header cho Cài đặt
+                if (mobileHeaderTitle) {
+                    mobileHeaderTitle.textContent = "Cài đặt";
+                    mobileHeaderTitle.classList.remove('hidden');
+                }
                 break;
         }
         
@@ -2193,7 +2220,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     showSyncStatus('Tải về (Ghi chú + Nhắc nhở) thành công!', false);
                     
-                    // (MỚI) Tự động tải lại Nhắc nhở
+                    // (CẬP NHẬT) Tự động tải lại Nhắc nhở
                     // (Nếu đang ở sub-tab đó, hoặc khi người dùng click vào)
                     if (currentTab === 'calendar' && currentCalendarSubTab === 'reminders') {
                          await fetchReminders();
