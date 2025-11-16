@@ -2,6 +2,7 @@
 /* FILE: public/app.js                                                 */
 /* MỤC ĐÍCH: Logic JavaScript chính cho toàn bộ ứng dụng Ghichu App.     */
 /* PHIÊN BẢN: Đã tách logic tính toán sang utils.js                     */
+/* CẬP NHẬT: Gộp tab Nhắc Nhở vào tab Lịch (Sub-tab)                    */
 /* =================================================================== */
 
 // ===================================================================
@@ -46,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===================================================================
-    // (MỚI) PHẦN 0: KHAI BÁO BIẾN (DOM ELEMENTS)
+    // (CẬP NHẬT) PHẦN 0: KHAI BÁO BIẾN (DOM ELEMENTS)
     // ===================================================================
     
     // --- Biến Phần 1 (Tin Tức) ---
@@ -100,19 +101,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Biến Phần 3 (Trò chuyện) ---
     const chatMain = document.getElementById('chat-main');
 
-    // --- (CẬP NHẬT) Biến Phần 3.5 (Hẹn giờ/Nhắc nhở) ---
-    const scheduleMain = document.getElementById('schedule-main');
+    // --- (CẬP NHẬT) Biến Phần 3.5 (Lịch / Nhắc nhở) ---
+    
+    // (MỚI) Biến cho Sub-tab
+    const calSubtabWork = document.getElementById('cal-subtab-work');
+    const calSubtabReminders = document.getElementById('cal-subtab-reminders');
+    const calendarWorkContent = document.getElementById('calendar-work-content');
+    const calendarRemindersContent = document.getElementById('calendar-reminders-content');
+
+    // (MỚI) Biến cho Nhắc nhở (vẫn giữ nguyên, vì DOM ID không đổi)
     const newReminderForm = document.getElementById('new-reminder-form');
-    // (SỬA) Đổi tên 'text' -> 'title' và thêm 'content'
     const newReminderTitle = document.getElementById('new-reminder-title'); 
     const newReminderContent = document.getElementById('new-reminder-content');
     const newReminderStatus = document.getElementById('new-reminder-status');
     const reminderListContainer = document.getElementById('reminder-list-container');
     const reminderListLoading = document.getElementById('reminder-list-loading');
-    const reminderWarning = document.getElementById('reminder-warning'); // (MỚI)
-    const settingsPushWarning = document.getElementById('settings-push-warning'); // (MỚI)
+    const reminderWarning = document.getElementById('reminder-warning'); 
+    const settingsPushWarning = document.getElementById('settings-push-warning'); 
     
-    // (MỚI) Biến cho Modal Edit
+    // (MỚI) Biến cho Modal Edit (vẫn giữ nguyên)
     const reminderEditModal = document.getElementById('reminder-edit-modal');
     const closeReminderEditModalBtn = document.getElementById('close-reminder-edit-modal');
     const editReminderForm = document.getElementById('edit-reminder-form');
@@ -132,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
     const bottomTabNews = document.getElementById('bottom-tab-news');
     const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
-    const bottomTabSchedule = document.getElementById('bottom-tab-schedule'); // (MỚI)
+    // (ĐÃ XÓA) bottomTabSchedule
     const bottomTabChat = document.getElementById('bottom-tab-chat');
     const bottomTabSettings = document.getElementById('bottom-tab-settings');
     const bottomNav = document.getElementById('bottom-nav'); 
@@ -158,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminNoteViewerContent = document.getElementById('admin-note-viewer-content');
     
     // --- Biến Trạng thái (State) ---
+    let currentCalendarSubTab = 'work'; // (MỚI) 'work' hoặc 'reminders'
     let summaryViewMode = 'byDate'; // 'byDate' hoặc 'byNote'
     let currentAdminCreds = null; // Lưu trữ thông tin đăng nhập Admin
     let currentEditingDateStr = null; // Ngày đang sửa trong modal
@@ -179,6 +187,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     // PHẦN 1: LOGIC TIN TỨC (RSS, TÓM TẮT, CHAT)
     // ===================================================================
+    
+    // ... (Toàn bộ PHẦN 1 giữ nguyên, không thay đổi) ...
     
     // --- Các hằng số cho icon toast ---
     const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
@@ -628,6 +638,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     // PHẦN 2: LOGIC LỊCH (CALENDAR, NOTES, SETTINGS, PUSH, SYNC)
     // ===================================================================
+
+    // ... (Các hàm helper: showSyncStatus, saveNoteData, saveSettings, loadSettings giữ nguyên) ...
 
     /**
      * Hiển thị thông báo trạng thái đồng bộ (Sync).
@@ -1251,6 +1263,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // (CẬP NHẬT) PHẦN 2.5: LOGIC NHẮC NHỞ (REMINDERS)
     // ===================================================================
 
+    // ... (Các hàm formatISODateForInput, getCurrentDateTimeLocal giữ nguyên) ...
+
     /**
      * (CẬP NHẬT) Helper: Chuyển đổi chuỗi ISO (hoặc Date object) thành định dạng cho input datetime-local.
      * @param {string | Date} isoString - Chuỗi ISO 8601 (UTC) hoặc Date object.
@@ -1562,6 +1576,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // PHẦN 3: LOGIC ADMIN (ĐĂNG NHẬP, XEM, XÓA)
     // ===================================================================
     
+    // ... (Toàn bộ PHẦN 3 giữ nguyên, không thay đổi) ...
+
     /**
      * Tải bảng điều khiển Admin (lấy danh sách user) sau khi đăng nhập thành công.
      */
@@ -1699,14 +1715,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===================================================================
-    // PHẦN 4: LOGIC ĐIỀU HƯỚNG (TAB)
+    // (CẬP NHẬT) PHẦN 4: LOGIC ĐIỀU HƯỚNG (TAB)
     // ===================================================================
     
     let currentTab = 'news'; // Theo dõi tab hiện tại
     
     /**
+     * (MỚI) Chuyển đổi Sub-Tab bên trong trang Lịch.
+     * @param {'work' | 'reminders'} subTabName - Tên sub-tab.
+     */
+    async function showCalendarSubTab(subTabName) {
+        if (subTabName === currentCalendarSubTab) return; // Không làm gì
+        currentCalendarSubTab = subTabName;
+        
+        if (subTabName === 'reminders') {
+            // --- Chuyển sang Nhắc Nhở ---
+            calendarWorkContent.classList.add('hidden');
+            calendarRemindersContent.classList.remove('hidden');
+            calSubtabWork.classList.remove('active');
+            calSubtabReminders.classList.add('active');
+            
+            // (MỚI) Chạy logic của tab Nhắc nhở cũ
+            await checkNotificationStatus(); 
+            await fetchReminders(); 
+
+        } else {
+            // --- Chuyển sang Lịch Làm Việc (mặc định) ---
+            calendarWorkContent.classList.remove('hidden');
+            calendarRemindersContent.classList.add('hidden');
+            calSubtabWork.classList.add('active');
+            calSubtabReminders.classList.remove('active');
+            
+            // (MỚI) Cần vẽ lại lịch và tổng kết
+            renderCalendar(currentViewDate);
+        }
+    }
+
+    /**
      * Chuyển đổi giữa các tab (Trang) của ứng dụng.
-     * @param {'news' | 'calendar' | 'schedule' | 'chat' | 'settings'} tabName - Tên tab cần chuyển đến.
+     * @param {'news' | 'calendar' | 'chat' | 'settings'} tabName - Tên tab cần chuyển đến.
      */
     async function showTab(tabName) { // (SỬA) Chuyển thành async
         if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
@@ -1722,15 +1769,12 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTab = tabName;
         
         // ===== (SỬA LỖI BỐ CỤC) Xử lý padding cho thanh Navibar dưới =====
-        // =================================================================
-        // TẤT CẢ các tab bây giờ đều cần 80px đệm ở dưới
-        // để chừa chỗ cho thanh Navibar.
         document.body.style.paddingBottom = '80px';
 
         // 1. Ẩn tất cả các trang
         newsMain.classList.add('hidden');
         calendarMain.classList.add('hidden');
-        scheduleMain.classList.add('hidden'); // (MỚI)
+        // (ĐÃ XÓA) scheduleMain
         chatMain.classList.add('hidden');
         settingsMain.classList.add('hidden');
         
@@ -1740,7 +1784,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settingsBtn) settingsBtn.classList.remove('active');
         bottomTabNews.classList.remove('active');
         bottomTabCalendar.classList.remove('active');
-        bottomTabSchedule.classList.remove('active'); // (MỚI)
+        // (ĐÃ XÓA) bottomTabSchedule
         bottomTabChat.classList.remove('active');
         bottomTabSettings.classList.remove('active');
         
@@ -1768,18 +1812,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (calendarTabBtn) calendarTabBtn.classList.add('active');
                 bottomTabCalendar.classList.add('active');
                 if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Lịch Làm Việc";
+                
+                // (MỚI) Khi mở tab Lịch, luôn reset về sub-tab 'work'
+                showCalendarSubTab('work'); 
                 break;
             
-            // ==========================================================
-            // ===== (BẮT ĐẦU SỬA) CẬP NHẬT TAB SCHEDULE & SETTINGS =====
-            // ==========================================================
-            case 'schedule': // (MỚI)
-                scheduleMain.classList.remove('hidden');
-                bottomTabSchedule.classList.add('active');
-                if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Nhắc nhở";
-                await checkNotificationStatus(); // (MỚI) Kiểm tra quyền
-                await fetchReminders(); // Tải danh sách
-                break;
+            // (ĐÃ XÓA) case 'schedule'
                 
             case 'chat':
                 chatMain.classList.remove('hidden');
@@ -1796,9 +1834,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 bottomTabSettings.classList.add('active');
                 if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Cài đặt";
                 break;
-            // ==========================================================
-            // ===== (KẾT THÚC SỬA) =====================================
-            // ==========================================================
         }
         
         // 7. Luôn đóng menu RSS khi chuyển tab
@@ -1807,7 +1842,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ===================================================================
-    // PHẦN 5: GẮN SỰ KIỆN (EVENT LISTENERS) & KHỞI ĐỘNG
+    // (CẬP NHẬT) PHẦN 5: GẮN SỰ KIỆN (EVENT LISTENERS) & KHỞI ĐỘNG
     // ===================================================================
     
     // ----- KHỐI SỰ KIỆN 1: TAB VÀ ĐIỀU HƯỚNG -----
@@ -1821,7 +1856,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mobile (Bottom Nav)
     bottomTabNews.addEventListener('click', () => showTab('news'));
     bottomTabCalendar.addEventListener('click', () => showTab('calendar'));
-    bottomTabSchedule.addEventListener('click', () => showTab('schedule')); // (MỚI)
+    // (ĐÃ XÓA) bottomTabSchedule
     bottomTabChat.addEventListener('click', () => showTab('chat'));
     bottomTabSettings.addEventListener('click', () => showTab('settings'));
     
@@ -1844,6 +1879,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // ----- KHỐI SỰ KIỆN 2: TIN TỨC & CHAT (KHỞI ĐỘNG) -----
     (async () => {
+        // ... (Giữ nguyên toàn bộ khối sự kiện 2) ...
         // Feed (Desktop & Mobile)
         feedNav.addEventListener('click', handleFeedButtonClick);
         rssMobileMenu.addEventListener('click', handleFeedButtonClick); 
@@ -1891,7 +1927,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
     })();
     
-    // ----- KHỐI SỰ KIỆN 3: LỊCH, CÀI ĐẶT, SYNC, ADMIN (KHỞI ĐỘNG) -----
+    // ----- (CẬP NHẬT) KHỐI SỰ KIỆN 3: LỊCH, CÀI ĐẶT, SYNC, ADMIN (KHỞI ĐỘNG) -----
     (async () => {
         // Khởi động Lịch
         renderCalendar(currentViewDate);
@@ -1935,6 +1971,10 @@ document.addEventListener('DOMContentLoaded', () => {
             saveSettings();
         });
         notifyButton.addEventListener('click', handleSubscribeClick);
+
+        // --- (MỚI) Lịch (Sub-tab) ---
+        calSubtabWork.addEventListener('click', () => showCalendarSubTab('work'));
+        calSubtabReminders.addEventListener('click', () => showCalendarSubTab('reminders'));
 
         // --- Lịch (Tháng) (Không đổi) ---
         prevMonthBtn.addEventListener('click', () => {
@@ -2057,7 +2097,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // ==========================================================
-        // ===== (BẮT ĐẦU SỬA) CẬP NHẬT LISTENER SYNC-UP ===========
+        // ===== (SỬA) CẬP NHẬT LISTENER SYNC-UP (Không đổi) ======
         // ==========================================================
         if (syncUpBtn) {
             syncUpBtn.addEventListener('click', async () => {
@@ -2102,12 +2142,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-        // ==========================================================
-        // ===== (KẾT THÚC SỬA) CẬP NHẬT LISTENER SYNC-UP ===========
-        // ==========================================================
         
         // ==========================================================
-        // ===== (BẮT ĐẦU SỬA) CẬP NHẬT LISTENER SYNC-DOWN =========
+        // ===== (SỬA) CẬP NHẬT LISTENER SYNC-DOWN (Cần sửa) ======
         // ==========================================================
         if (syncDownBtn) {
             syncDownBtn.addEventListener('click', async () => {
@@ -2156,9 +2193,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     showSyncStatus('Tải về (Ghi chú + Nhắc nhở) thành công!', false);
                     
-                    // (MỚI) Tự động chuyển sang tab Nhắc nhở để tải lại
-                    // (Hoặc nếu đang ở tab đó thì tải lại)
-                    if (currentTab === 'schedule') {
+                    // (MỚI) Tự động tải lại Nhắc nhở
+                    // (Nếu đang ở sub-tab đó, hoặc khi người dùng click vào)
+                    if (currentTab === 'calendar' && currentCalendarSubTab === 'reminders') {
                          await fetchReminders();
                     }
                     
@@ -2171,9 +2208,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-        // ==========================================================
-        // ===== (KẾT THÚC SỬA) CẬP NHẬT LISTENER SYNC-DOWN =========
-        // ==========================================================
         
         // --- Admin (Không đổi) ---
         if (adminLoginBtn) {
@@ -2246,7 +2280,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // ==========================================================
-        // ===== (CẬP NHẬT) KHỐI SỰ KIỆN CHO TAB NHẮC NHỞ (SCHEDULE) =====
+        // ===== (CẬP NHẬT) KHỐI SỰ KIỆN CHO NHẮC NHỞ (Không đổi) =====
+        // (DOM ID vẫn giữ nguyên nên các listener này vẫn hoạt động)
         // ==========================================================
 
         // --- (CẬP NHẬT) 1. Thêm nhắc nhở mới ---
