@@ -109,6 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const newReminderStatus = document.getElementById('new-reminder-status');
     const reminderListContainer = document.getElementById('reminder-list-container');
     const reminderListLoading = document.getElementById('reminder-list-loading');
+    const reminderWarning = document.getElementById('reminder-warning'); // (MỚI)
+    const settingsPushWarning = document.getElementById('settings-push-warning'); // (MỚI)
     
     // (MỚI) Biến cho Modal Edit
     const reminderEditModal = document.getElementById('reminder-edit-modal');
@@ -1032,9 +1034,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // ==========================================================
-    // ===== (BẮT ĐẦU SỬA) THÊM HÀM HELPER getEndpoint() ========
-    // ==========================================================
     /**
      * (MỚI) Helper: Lấy endpoint hiện tại (nếu có)
      */
@@ -1051,9 +1050,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return null;
         }
     }
-    // ==========================================================
-    // ===== (KẾT THÚC SỬA) THÊM HÀM HELPER getEndpoint() =======
-    // ==========================================================
     
     /**
      * Kiểm tra trạng thái đăng ký Push (đã bật hay tắt) và cập nhật nút.
@@ -1069,11 +1065,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (subscription) {
             console.log("Người dùng đã đăng ký.");
             notifyButton.textContent = "Tắt Thông Báo";
-            notifyButton.classList.add('subscribed'); // Thêm class 'subscribed' (màu đỏ)
+            notifyButton.classList.add('subscribed'); 
+            
+            // (MỚI) Ẩn cảnh báo
+            if (reminderWarning) reminderWarning.classList.add('hidden');
+            if (settingsPushWarning) settingsPushWarning.classList.add('hidden');
+            
         } else {
             console.log("Người dùng chưa đăng ký.");
             notifyButton.textContent = "Bật Thông Báo";
-            notifyButton.classList.remove('subscribed'); // Xóa class 'subscribed'
+            notifyButton.classList.remove('subscribed'); 
+            
+            // (MỚI) Hiển thị cảnh báo
+            if (reminderWarning) reminderWarning.classList.remove('hidden');
+            if (settingsPushWarning) settingsPushWarning.classList.remove('hidden');
         }
     }
 
@@ -1293,9 +1298,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error("Service Worker hoặc PushManager chưa sẵn sàng.");
             }
             const subscription = await swRegistration.pushManager.getSubscription();
+            
+            // ==========================================================
+            // ===== (BẮT ĐẦU SỬA) BỎ LỖI, CHỈ DỪNG LẠI ================
+            // ==========================================================
             if (!subscription) {
-                throw new Error("Vui lòng 'Bật Thông Báo' trong Cài đặt để dùng tính năng này.");
+                // (SỬA) Không ném lỗi, chỉ hiển thị cảnh báo (đã được checkNotificationStatus xử lý)
+                // và ẩn spinner
+                reminderListLoading.classList.add('hidden');
+                // (MỚI) Vô hiệu hóa form thêm
+                if (newReminderForm) newReminderForm.querySelector('button[type="submit"]').disabled = true;
+                return; // Dừng hàm
             }
+            
+            // (MỚI) Nếu subscription OK, bật lại form
+            if (newReminderForm) newReminderForm.querySelector('button[type="submit"]').disabled = false;
+            // ==========================================================
+            // ===== (KẾT THÚC SỬA) =====================================
+            // ==========================================================
             
             // 2. Gọi API
             const response = await fetch('/api/get-reminders', {
@@ -1414,13 +1434,7 @@ document.addEventListener('DOMContentLoaded', () => {
             items.forEach(item => {
                 const li = document.createElement('li');
                 
-                // ==========================================================
-                // ===== (BẮT ĐẦU SỬA) THAY ĐỔI 1: THAY ĐỔI CLASS CỦA LI =====
-                // ==========================================================
                 li.className = "reminder-item flex items-start space-x-2";
-                // ==========================================================
-                // ===== (KẾT THÚC SỬA) THAY ĐỔI 1 ===========================
-                // ==========================================================
                 
                 li.dataset.id = item.id;
                 // (MỚI) Lưu trữ toàn bộ dữ liệu vào dataset
@@ -1438,9 +1452,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     contentPreview = contentPreview.substring(0, 50) + '...';
                 }
 
-                // ==========================================================
-                // ===== (BẮT ĐẦU SỬA) THAY ĐỔI 2: THAY ĐỔI innerHTML =======
-                // ==========================================================
                 li.innerHTML = `
                     <div class="reminder-content-clickable bg-gray-700 p-3 rounded-lg flex flex-col space-y-3 cursor-pointer flex-grow overflow-hidden min-w-0">
                         
@@ -1472,9 +1483,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         </button>
                     </div>
                 `;
-                // ==========================================================
-                // ===== (KẾT THÚC SỬA) THAY ĐỔI 2 ===========================
-                // ==========================================================
                 
                 listElement.appendChild(li);
             });
@@ -1772,12 +1780,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 bottomTabCalendar.classList.add('active');
                 if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Lịch Làm Việc";
                 break;
-                
+            
+            // ==========================================================
+            // ===== (BẮT ĐẦU SỬA) CẬP NHẬT TAB SCHEDULE & SETTINGS =====
+            // ==========================================================
             case 'schedule': // (MỚI)
                 scheduleMain.classList.remove('hidden');
                 bottomTabSchedule.classList.add('active');
                 if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Nhắc nhở";
-                await fetchReminders(); // Tải danh sách khi mở tab
+                await checkNotificationStatus(); // (MỚI) Kiểm tra quyền
+                await fetchReminders(); // Tải danh sách
                 break;
                 
             case 'chat':
@@ -1788,12 +1800,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 
             case 'settings':
                 settingsMain.classList.remove('hidden');
+                await checkNotificationStatus(); // (MỚI) Kiểm tra quyền
                 syncNotesToServer(); // Ép đồng bộ khi mở tab Cài đặt
                 
                 if (settingsBtn) settingsBtn.classList.add('active');
                 bottomTabSettings.classList.add('active');
                 if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Cài đặt";
                 break;
+            // ==========================================================
+            // ===== (KẾT THÚC SỬA) =====================================
+            // ==========================================================
         }
         
         // 7. Luôn đóng menu RSS khi chuyển tab
@@ -2063,12 +2079,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 
-                // (MỚI) Lấy endpoint
+                // (MỚI) Lấy endpoint (nếu có)
                 const endpoint = await getEndpoint();
-                if (!endpoint) {
-                    showSyncStatus('Vui lòng Bật Thông Báo trước khi đồng bộ.', true);
-                    return;
-                }
+                // (SỬA) Không còn bắt buộc
                 
                 showSyncStatus('Đang tải lên...', false);
                 syncUpBtn.disabled = true;
@@ -2083,7 +2096,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             username: username, 
                             password: password, 
                             noteData: noteData,
-                            endpoint: endpoint // (MỚI) Gửi endpoint
+                            endpoint: endpoint // (MỚI) Gửi endpoint (có thể là null)
                         })
                     });
                     const result = await response.json();
@@ -2116,14 +2129,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 
-                // (MỚI) Lấy endpoint của máy MỚI này
+                // (MỚI) Lấy endpoint của máy MỚI này (nếu có)
                 const endpoint = await getEndpoint();
-                if (!endpoint) {
-                    showSyncStatus('Vui lòng Bật Thông Báo trước khi đồng bộ.', true);
-                    return;
-                }
+                // (SỬA) Không còn bắt buộc
 
-                if (!confirm('HÀNH ĐỘNG NGUY HIỂM!\n\nViệc này sẽ GHI ĐÈ toàn bộ ghi chú hiện tại VÀ chuyển toàn bộ NHẮC NHỞ trên server về máy này.\n\nĐại ca có chắc chắn muốn tải về?')) {
+                // (SỬA) Cập nhật lại câu hỏi confirm
+                if (!confirm('HÀNH ĐỘNG NGUY HIỂM!\n\nViệc này sẽ GHI ĐÈ toàn bộ ghi chú hiện tại trên máy này.\n\n(Nhắc nhở sẽ chỉ được đồng bộ nếu Đại ca đã Bật Thông Báo)\n\nĐại ca có chắc chắn muốn tải về?')) {
                     return;
                 }
 
@@ -2139,7 +2150,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify({ 
                             username: username, 
                             password: password,
-                            endpoint: endpoint // (MỚI) Gửi endpoint của máy mới
+                            endpoint: endpoint // (MỚI) Gửi endpoint của máy mới (có thể là null)
                         })
                     });
                     
@@ -2348,10 +2359,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     return; // Dừng
                 }
                 
-                // ==========================================================
-                // ===== (BẮT ĐẦU SỬA) THAY ĐỔI 3: LOGIC MỞ MODAL ===========
-                // ==========================================================
-                
                 // --- (SỬA) Xử lý Mở Modal Edit ---
                 // (SỬA) Chỉ mở modal nếu click vào box nội dung
                 const contentBoxClick = e.target.closest('.reminder-content-clickable');
@@ -2375,10 +2382,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 // Nếu không click vào contentBox (mà click vào toggle, delete, or empty space)
                 // thì không làm gì cả (click handler sẽ tự kết thúc).
-
-                // ==========================================================
-                // ===== (KẾT THÚC SỬA) THAY ĐỔI 3 ===========================
-                // ==========================================================
             });
             
             // --- (CẬP NHẬT) 3. Xử lý Bật/Tắt (Event Delegation) ---
