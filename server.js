@@ -254,7 +254,7 @@ app.get('/summarize-stream', async (req, res) => {
 
     try {
         const model = genAI.getGenerativeModel({
-             model: "gemini-2.5-flash", 
+             model: "gemini-1.5-flash-latest", 
              systemInstruction: "Bạn là Tèo một trợ lý tóm tắt tin tức. Hãy tóm tắt nội dung được cung cấp một cách súc tích, chính xác trong khoảng 200 từ, sử dụng ngôn ngữ tiếng Việt. Luôn giả định người dùng đang ở múi giờ Hà Nội (GMT+7). Và địa chỉ người dùng ở Bình Sơn, Quảng Ngãi"
         });
 
@@ -293,7 +293,7 @@ app.post('/chat', async (req, res) => {
     }
     if (!API_KEY) return res.status(500).send('API Key chưa được cấu hình trên server');
 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`; 
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`; 
 
     const payload = {
         contents: history,
@@ -373,7 +373,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
 
     try {
          const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.5-flash", 
+            model: "gemini-1.5-flash-latest", 
             generationConfig: {
                 responseMimeType: "application/json" 
             }
@@ -666,48 +666,7 @@ app.post('/api/admin/delete-user', checkAdmin, async (req, res) => {
         client.release();
     }
 });
-// ==========================================================
-// ===== (MỚI) ENDPOINT CHO GOOGLE DRIVE (TOOL TAB) =====
-// ==========================================================
-app.get('/api/get-drive-files', async (req, res) => {
-    const FOLDER_ID = process.env.DRIVE_FOLDER_ID;
-    const API_KEY = process.env.GEMINI_API_KEY; // Dùng chung API Key
 
-    if (!FOLDER_ID || !API_KEY) {
-        console.error("Thiếu FOLDER_ID hoặc API_KEY cho Google Drive");
-        return res.status(500).json({ error: 'Server chưa được cấu hình cho Drive.' });
-    }
-
-    // (Lưu ý) 'q' dùng để tìm kiếm: chỉ các file trong thư mục cha (FOLDER_ID)
-    // 'fields' dùng để lọc kết quả: chỉ lấy tên, link tải, và kích thước
-    const G_DRIVE_API_URL = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents&fields=files(id,name,webContentLink,size)&key=${API_KEY}`;
-
-    try {
-        const response = await fetch(G_DRIVE_API_URL);
-        if (!response.ok) {
-            const errorBody = await response.json();
-            console.error("Lỗi khi gọi Google Drive API:", errorBody);
-            throw new Error(errorBody.error.message || 'Lỗi Google Drive API');
-        }
-
-        const data = await response.json();
-        
-        // Sắp xếp file theo tên (A-Z)
-        const sortedFiles = data.files.sort((a, b) => 
-            a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' })
-        );
-
-        res.status(200).json({ files: sortedFiles });
-
-    } catch (error) {
-        console.error("Lỗi khi fetch Google Drive files:", error);
-        res.status(500).json({ error: 'Không thể lấy danh sách file: ' + error.message });
-    }
-});
-
-
-// ----- CÁC ENDPOINT CHO NHẮC NHỞ (REMINDERS) -----
-// ... (Phần còn lại của file giữ nguyên) ...
 
 // ==========================================================
 // ===== CÁC ENDPOINT CHO NHẮC NHỞ (REMINDERS) (Không đổi) =====
