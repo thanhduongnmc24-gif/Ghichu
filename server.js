@@ -666,7 +666,48 @@ app.post('/api/admin/delete-user', checkAdmin, async (req, res) => {
         client.release();
     }
 });
+// ==========================================================
+// ===== (MỚI) ENDPOINT CHO GOOGLE DRIVE (TOOL TAB) =====
+// ==========================================================
+app.get('/api/get-drive-files', async (req, res) => {
+    const FOLDER_ID = process.env.DRIVE_FOLDER_ID;
+    const API_KEY = process.env.GEMINI_API_KEY; // Dùng chung API Key
 
+    if (!FOLDER_ID || !API_KEY) {
+        console.error("Thiếu FOLDER_ID hoặc API_KEY cho Google Drive");
+        return res.status(500).json({ error: 'Server chưa được cấu hình cho Drive.' });
+    }
+
+    // (Lưu ý) 'q' dùng để tìm kiếm: chỉ các file trong thư mục cha (FOLDER_ID)
+    // 'fields' dùng để lọc kết quả: chỉ lấy tên, link tải, và kích thước
+    const G_DRIVE_API_URL = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents&fields=files(id,name,webContentLink,size)&key=${API_KEY}`;
+
+    try {
+        const response = await fetch(G_DRIVE_API_URL);
+        if (!response.ok) {
+            const errorBody = await response.json();
+            console.error("Lỗi khi gọi Google Drive API:", errorBody);
+            throw new Error(errorBody.error.message || 'Lỗi Google Drive API');
+        }
+
+        const data = await response.json();
+        
+        // Sắp xếp file theo tên (A-Z)
+        const sortedFiles = data.files.sort((a, b) => 
+            a.name.localeCompare(b.name, 'vi', { sensitivity: 'base' })
+        );
+
+        res.status(200).json({ files: sortedFiles });
+
+    } catch (error) {
+        console.error("Lỗi khi fetch Google Drive files:", error);
+        res.status(500).json({ error: 'Không thể lấy danh sách file: ' + error.message });
+    }
+});
+
+
+// ----- CÁC ENDPOINT CHO NHẮC NHỞ (REMINDERS) -----
+// ... (Phần còn lại của file giữ nguyên) ...
 
 // ==========================================================
 // ===== CÁC ENDPOINT CHO NHẮC NHỞ (REMINDERS) (Không đổi) =====
