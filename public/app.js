@@ -99,7 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Biến Phần 3 (Trò chuyện) ---
     const chatMain = document.getElementById('chat-main');
-
+    // (MỚI) Biến Phần 3.2 (Công cụ)
+    const toolMain = document.getElementById('tool-main');
+    const toolListContainer = document.getElementById('tool-list-container');
+    const toolLoading = document.getElementById('tool-loading');
     // --- (CẬP NHẬT) Biến Phần 3.5 (Hẹn giờ/Nhắc nhở) ---
     const scheduleMain = document.getElementById('schedule-main');
     const newReminderForm = document.getElementById('new-reminder-form');
@@ -133,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bottomTabNews = document.getElementById('bottom-tab-news');
     const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
     const bottomTabSchedule = document.getElementById('bottom-tab-schedule'); // (MỚI)
+    const bottomTabTool = document.getElementById('bottom-tab-tool');
     const bottomTabChat = document.getElementById('bottom-tab-chat');
     const bottomTabSettings = document.getElementById('bottom-tab-settings');
     const bottomNav = document.getElementById('bottom-nav'); 
@@ -1743,6 +1747,7 @@ document.addEventListener('DOMContentLoaded', () => {
         calendarMain.classList.add('hidden');
         scheduleMain.classList.add('hidden'); // (MỚI)
         chatMain.classList.add('hidden');
+        toolMain.classList.add('hidden'); // (MỚI)
         settingsMain.classList.add('hidden');
         
         // 2. Tắt active tất cả các nút (Desktop & Mobile)
@@ -1753,6 +1758,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bottomTabCalendar.classList.remove('active');
         bottomTabSchedule.classList.remove('active'); // (MỚI)
         bottomTabChat.classList.remove('active');
+        bottomTabTool.classList.remove('active'); // (MỚI)
         bottomTabSettings.classList.remove('active');
         
         // 3. Ẩn các nút header mobile
@@ -1791,7 +1797,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 await checkNotificationStatus(); // (MỚI) Kiểm tra quyền
                 await fetchReminders(); // Tải danh sách
                 break;
-                
+            case 'tool': 
+                toolMain.classList.remove('hidden'); 
+                bottomTabTool.classList.add('active'); 
+                if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Công cụ"; 
+                await fetchDriveFiles(); // (MỚI) Gọi hàm tải file break;
             case 'chat':
                 chatMain.classList.remove('hidden');
                 bottomTabChat.classList.add('active');
