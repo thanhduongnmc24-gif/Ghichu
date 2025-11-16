@@ -254,7 +254,7 @@ app.get('/summarize-stream', async (req, res) => {
 
     try {
         const model = genAI.getGenerativeModel({
-             model: "gemini-1.5-flash-latest", // (Sửa nhỏ) Dùng 1.5 flash
+             model: "gemini-1.5-flash-latest", 
              systemInstruction: "Bạn là Tèo một trợ lý tóm tắt tin tức. Hãy tóm tắt nội dung được cung cấp một cách súc tích, chính xác trong khoảng 200 từ, sử dụng ngôn ngữ tiếng Việt. Luôn giả định người dùng đang ở múi giờ Hà Nội (GMT+7). Và địa chỉ người dùng ở Bình Sơn, Quảng Ngãi"
         });
 
@@ -293,7 +293,7 @@ app.post('/chat', async (req, res) => {
     }
     if (!API_KEY) return res.status(500).send('API Key chưa được cấu hình trên server');
 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`; // (Sửa nhỏ) Dùng 1.5 flash
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`; 
 
     const payload = {
         contents: history,
@@ -373,7 +373,7 @@ app.post('/api/calendar-ai-parse', async (req, res) => {
 
     try {
          const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash-latest", // (Sửa nhỏ) Dùng 1.5 flash
+            model: "gemini-1.5-flash-latest", 
             generationConfig: {
                 responseMimeType: "application/json" 
             }
@@ -532,8 +532,9 @@ app.post('/api/sync/down', async (req, res) => {
     if (!username || !password) {
         return res.status(400).json({ error: 'Thiếu Tên hoặc Mật khẩu.' });
     }
+    // (SỬA) Không còn bắt buộc
     if (!new_endpoint) {
-        return res.status(400).json({ error: 'Thiếu endpoint của thiết bị này. Vui lòng bật thông báo.' });
+        console.warn(`[Sync Down] ${username} đang tải về mà không có endpoint. Sẽ bỏ qua đồng bộ nhắc nhở.`);
     }
 
     const client = await pool.connect();
@@ -555,7 +556,8 @@ app.post('/api/sync/down', async (req, res) => {
         const old_endpoint = user.endpoint;
 
         // (MỚI) Thực hiện chuyển đổi reminders
-        if (old_endpoint && old_endpoint !== new_endpoint) {
+        // (SỬA) Chỉ chạy nếu CÓ new_endpoint
+        if (old_endpoint && new_endpoint && old_endpoint !== new_endpoint) { 
             console.log(`[Sync Down] Chuyển reminders từ ${old_endpoint} SANG ${new_endpoint}`);
             
             // 1. Chuyển reminders
@@ -575,14 +577,16 @@ app.post('/api/sync/down', async (req, res) => {
             await client.query("DELETE FROM subscriptions WHERE endpoint = $1", [old_endpoint]);
 
         } else {
-             console.log(`[Sync Down] Không cần chuyển reminders (endpoint mới hoặc giống nhau).`);
+             console.log(`[Sync Down] Không cần chuyển reminders (endpoint mới hoặc giống nhau, hoặc thiếu endpoint).`); // (SỬA)
         }
 
         // (MỚI) Cập nhật endpoint mới vào user_notes
-        await client.query(
-            "UPDATE user_notes SET endpoint = $1 WHERE username = $2",
-            [new_endpoint, username]
-        );
+        if (new_endpoint) { // (SỬA) Chỉ cập nhật nếu có
+            await client.query(
+                "UPDATE user_notes SET endpoint = $1 WHERE username = $2",
+                [new_endpoint, username]
+            );
+        }
 
         res.status(200).json(user.notes || {}); // Trả về data (như cũ)
 
