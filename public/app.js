@@ -2344,11 +2344,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             body: JSON.stringify({ id: id, endpoint: endpoint })
                         });
                         const result = await response.json();
-                        if (!response.ok) throw new Error(result.error);
-                        
-                        item.remove();
-                        const list = item.closest('.reminder-list');
-                        if (list.children.length === 0) {
+                            if (!response.ok) throw new Error(result.error);
+                            const list = item.closest('.reminder-list'); // 1. TÌM CHA TRƯỚC (list = hợp lệ)
+                            item.remove(); // 2. XÓA SAU
+                        // 3. Kiểm tra (Thêm 'list &&' để đảm bảo an toàn)
+                            if (list && list.children.length === 0) { 
                             list.closest('.reminder-month-group').remove();
                         }
                         
