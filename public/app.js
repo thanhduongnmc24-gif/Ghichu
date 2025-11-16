@@ -99,10 +99,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Biến Phần 3 (Trò chuyện) ---
     const chatMain = document.getElementById('chat-main');
+
     // (MỚI) Biến Phần 3.2 (Công cụ)
     const toolMain = document.getElementById('tool-main');
     const toolListContainer = document.getElementById('tool-list-container');
     const toolLoading = document.getElementById('tool-loading');
+
     // --- (CẬP NHẬT) Biến Phần 3.5 (Hẹn giờ/Nhắc nhở) ---
     const scheduleMain = document.getElementById('schedule-main');
     const newReminderForm = document.getElementById('new-reminder-form');
@@ -136,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bottomTabNews = document.getElementById('bottom-tab-news');
     const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
     const bottomTabSchedule = document.getElementById('bottom-tab-schedule'); // (MỚI)
-    const bottomTabTool = document.getElementById('bottom-tab-tool');
+    const bottomTabTool = document.getElementById('bottom-tab-tool'); // (MỚI)
     const bottomTabChat = document.getElementById('bottom-tab-chat');
     const bottomTabSettings = document.getElementById('bottom-tab-settings');
     const bottomNav = document.getElementById('bottom-nav'); 
@@ -171,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let completedSummary = { title: '', text: '' }; // Tóm tắt đã hoàn thành
     let toastTimeoutId = null; // ID của setTimeout cho toast
     const clientRssCache = new Map(); // Cache RSS phía client
+    let driveFilesCache = null; // (MỚI) Cache cho Google Drive
     
     // Đọc dữ liệu từ LocalStorage khi khởi động
     let noteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
@@ -1303,9 +1306,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const subscription = await swRegistration.pushManager.getSubscription();
             
-            // ==========================================================
-            // ===== (BẮT ĐẦU SỬA) BỎ LỖI, CHỈ DỪNG LẠI ================
-            // ==========================================================
+            // (SỬA) Bỏ lỗi, chỉ dừng lại và vô hiệu hóa
             if (!subscription) {
                 // (SỬA) Không ném lỗi, chỉ hiển thị cảnh báo (đã được checkNotificationStatus xử lý)
                 // và ẩn spinner
@@ -1317,9 +1318,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // (MỚI) Nếu subscription OK, bật lại form
             if (newReminderForm) newReminderForm.querySelector('button[type="submit"]').disabled = false;
-            // ==========================================================
-            // ===== (KẾT THÚC SỬA) =====================================
-            // ==========================================================
             
             // 2. Gọi API
             const response = await fetch('/api/get-reminders', {
@@ -1714,6 +1712,94 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===================================================================
+    // (MỚI) PHẦN 3.5: LOGIC TAB CÔNG CỤ (GOOGLE DRIVE)
+    // ===================================================================
+
+    /**
+     * (MỚI) Chuyển đổi byte sang đơn vị dễ đọc (KB, MB, GB)
+     */
+    function formatFileSize(bytes) {
+        if (!+bytes) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+    }
+
+    /**
+     * (MỚI) Vẽ danh sách file từ Google Drive
+     */
+    function renderDriveFiles(files) {
+        toolListContainer.innerHTML = ''; // Xóa sạch
+        if (!files || files.length === 0) {
+            toolListContainer.innerHTML = `<p class="text-gray-400 italic">Không tìm thấy file nào trong thư mục.</p>`;
+            return;
+        }
+
+        files.forEach(file => {
+            const fileSize = file.size ? formatFileSize(file.size) : 'Không rõ';
+            
+            const fileCard = document.createElement('a');
+            fileCard.className = "bg-gray-800 rounded-lg shadow-lg p-4 flex items-center justify-between transition-colors hover:bg-gray-700";
+            
+            // (Rất quan trọng) Dùng webContentLink để tải trực tiếp
+            // Thêm thuộc tính 'download' để trình duyệt tải về thay vì mở
+            fileCard.href = file.webContentLink;
+            fileCard.setAttribute('download', file.name); 
+            
+            fileCard.innerHTML = `
+                <div class="flex items-center min-w-0">
+                    <svg class="w-8 h-8 text-blue-400 flex-shrink-0 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    
+                    <div class="overflow-hidden">
+                        <p class="text-white font-semibold truncate">${file.name}</p>
+                        <p class="text-gray-400 text-sm">${fileSize}</p>
+                    </div>
+                </div>
+                
+                <div class="text-gray-500 flex-shrink-0 ml-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                </div>
+            `;
+            toolListContainer.appendChild(fileCard);
+        });
+    }
+
+    /**
+     * (MỚI) Gọi API lấy danh sách file từ server
+     */
+    async function fetchDriveFiles() {
+        // Nếu đã có cache, không tải lại
+        if (driveFilesCache) {
+            renderDriveFiles(driveFilesCache);
+            toolLoading.classList.add('hidden');
+            return;
+        }
+
+        toolLoading.classList.remove('hidden');
+        toolListContainer.innerHTML = '';
+
+        try {
+            const response = await fetch('/api/get-drive-files');
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Lỗi không xác định');
+            }
+
+            driveFilesCache = data.files; // Lưu vào cache
+            renderDriveFiles(driveFilesCache);
+
+        } catch (err) {
+            console.error("Lỗi khi tải Drive files:", err);
+            toolListContainer.innerHTML = `<p class="text-red-400 text-center">Lỗi: ${err.message}</p>`;
+        } finally {
+            toolLoading.classList.add('hidden');
+        }
+    }
+
+
+    // ===================================================================
     // PHẦN 4: LOGIC ĐIỀU HƯỚNG (TAB)
     // ===================================================================
     
@@ -1721,7 +1807,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     /**
      * Chuyển đổi giữa các tab (Trang) của ứng dụng.
-     * @param {'news' | 'calendar' | 'schedule' | 'chat' | 'settings'} tabName - Tên tab cần chuyển đến.
+     * @param {'news' | 'calendar' | 'schedule' | 'tool' | 'chat' | 'settings'} tabName - Tên tab cần chuyển đến.
      */
     async function showTab(tabName) { // (SỬA) Chuyển thành async
         if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
@@ -1746,8 +1832,8 @@ document.addEventListener('DOMContentLoaded', () => {
         newsMain.classList.add('hidden');
         calendarMain.classList.add('hidden');
         scheduleMain.classList.add('hidden'); // (MỚI)
-        chatMain.classList.add('hidden');
         toolMain.classList.add('hidden'); // (MỚI)
+        chatMain.classList.add('hidden');
         settingsMain.classList.add('hidden');
         
         // 2. Tắt active tất cả các nút (Desktop & Mobile)
@@ -1757,8 +1843,8 @@ document.addEventListener('DOMContentLoaded', () => {
         bottomTabNews.classList.remove('active');
         bottomTabCalendar.classList.remove('active');
         bottomTabSchedule.classList.remove('active'); // (MỚI)
-        bottomTabChat.classList.remove('active');
         bottomTabTool.classList.remove('active'); // (MỚI)
+        bottomTabChat.classList.remove('active');
         bottomTabSettings.classList.remove('active');
         
         // 3. Ẩn các nút header mobile
@@ -1797,11 +1883,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 await checkNotificationStatus(); // (MỚI) Kiểm tra quyền
                 await fetchReminders(); // Tải danh sách
                 break;
-            case 'tool': 
-                toolMain.classList.remove('hidden'); 
-                bottomTabTool.classList.add('active'); 
-                if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Công cụ"; 
-                await fetchDriveFiles(); // (MỚI) Gọi hàm tải file break;
+            
+            // (MỚI) Xử lý tab Tool
+            case 'tool':
+                toolMain.classList.remove('hidden');
+                bottomTabTool.classList.add('active');
+                if (mobileHeaderTitle) mobileHeaderTitle.textContent = "Công cụ";
+                await fetchDriveFiles(); // (MỚI) Gọi hàm tải file
+                break;
+                
             case 'chat':
                 chatMain.classList.remove('hidden');
                 bottomTabChat.classList.add('active');
@@ -1843,6 +1933,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bottomTabNews.addEventListener('click', () => showTab('news'));
     bottomTabCalendar.addEventListener('click', () => showTab('calendar'));
     bottomTabSchedule.addEventListener('click', () => showTab('schedule')); // (MỚI)
+    bottomTabTool.addEventListener('click', () => showTab('tool')); // (MỚI)
     bottomTabChat.addEventListener('click', () => showTab('chat'));
     bottomTabSettings.addEventListener('click', () => showTab('settings'));
     
@@ -2354,13 +2445,21 @@ document.addEventListener('DOMContentLoaded', () => {
                             body: JSON.stringify({ id: id, endpoint: endpoint })
                         });
                         const result = await response.json();
-                            if (!response.ok) throw new Error(result.error);
-                            const list = item.closest('.reminder-list'); // 1. TÌM CHA TRƯỚC (list = hợp lệ)
-                            item.remove(); // 2. XÓA SAU
+                        if (!response.ok) throw new Error(result.error);
+                        
+                        // ==========================================================
+                        // ===== (BẮT ĐẦU SỬA) SỬA LỖI LOGIC XÓA =====================
+                        // ==========================================================
+                        const list = item.closest('.reminder-list'); // 1. TÌM CHA TRƯỚC
+                        item.remove(); // 2. XÓA SAU
+                        
                         // 3. Kiểm tra (Thêm 'list &&' để đảm bảo an toàn)
-                            if (list && list.children.length === 0) { 
+                        if (list && list.children.length === 0) { 
                             list.closest('.reminder-month-group').remove();
                         }
+                        // ==========================================================
+                        // ===== (KẾT THÚC SỬA) =====================================
+                        // ==========================================================
                         
                     } catch (err) {
                         alert(`Lỗi khi xóa: ${err.message}`);
