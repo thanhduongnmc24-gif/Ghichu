@@ -19,7 +19,63 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
+    
+    <style>
+        .ios-toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px; /* Chiều rộng */
+            height: 28px; /* Chiều cao */
+        }
+        .ios-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #4B5563; /* Màu xám (tắt) */
+            transition: .4s;
+            border-radius: 28px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px; /* Kích thước chấm tròn */
+            width: 22px;
+            left: 3px; /* Vị trí ban đầu (tắt) */
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #10B981; /* Màu xanh (bật) */
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px); /* Di chuyển chấm tròn */
+        }
+        
+        /* (SỬA LỖI TRÀN VIỀN IPHONE) */
+        .reminder-datetime-input {
+            background-color: #4B5563; /* bg-gray-600 */
+            color: white;
+            padding: 0.5rem; /* p-2 */
+            border-radius: 0.25rem; /* rounded */
+            border: 1px solid #6B7280; /* border-gray-500 */
+            
+            /* (SỬA) Tăng chiều rộng */
+            max-width: 200px; 
+            font-size: 0.875rem; /* text-sm */
+            line-height: 1.25rem;
+        }
+    </style>
+    </head>
 <body class="bg-gray-900 text-gray-100 antialiased">
 
     <header class="bg-gray-800 shadow-md sticky top-0 z-30">
@@ -39,7 +95,7 @@
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://thethao247.vn/bong-da.rss" data-source="Thể Thao 247">Thể Thao 247</button>
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
                          <button id="refresh-feed-button" class="refresh-button" title="Tải lại tin tức">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l-1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                         </button>
                     </div>
                  </div>
@@ -50,7 +106,7 @@
                  
                  <div class="flex items-center space-x-2">
                      <button id="refresh-feed-button-mobile" class="refresh-button" title="Tải lại tin tức">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l-1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
                      </button>
                      <button id="rss-menu-btn" class="text-gray-300 hover:text-white focus:outline-none focus:text-white p-2">
                           <span class="sr-only">Mở menu RSS</span>
@@ -67,7 +123,7 @@
                      <button class="feed-button" data-rss="https://dantri.com.vn/rss/home.rss" data-source="Dân Trí">Dân Trí</button>
                      <button class="feed-button" data-rss="https://vtv.vn/rss/home.rss" data-source="VTV">VTV</button>
                      <button class="feed-button" data-rss="https://thethao247.vn/bong-da.rss" data-source="Thể Thao 247">Thể Thao 247</button>
-                     <button class="feed-button" data-rss="httpsG://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
+                     <button class="feed-button" data-rss="https://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
                  </div>
              </div>
         </nav>
@@ -117,7 +173,13 @@
         </section>
         
         <section id="monthly-note-summary" class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mt-6">
-            <h2 class="text-xl font-bold text-white mb-4">Tổng kết Ghi chú Tháng</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-white">Tổng kết Ghi chú Tháng</h2>
+                <button id="toggle-summary-view-btn" class="summary-toggle-btn">
+                    Xem theo: Ghi chú
+                </button>
+            </div>
+        
             <div id="monthly-note-list" class="space-y-3">
                 <p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>
             </div>
@@ -125,23 +187,50 @@
 
     </main>
     
-    <main id="chat-main" class="container mx-auto p-4 sm:p-8 hidden">
-        <div id="chat-main-wrapper">
-             <div class="flex justify-between items-center mb-4 p-6 pb-0">
+   <main id="chat-main" class="hidden flex flex-col">
+          <div class="flex justify-between items-center mb-4 px-4 sm:px-8 pt-2">
                  <h2 class="text-2xl font-bold text-white">Em là Tèo biết tuốt</h2>
                  </div>
-             <div id="chat-display" class="min-h-[200px] bg-gray-900 p-4 rounded-lg mb-4 overflow-y-auto flex-grow flex flex-col mx-6">
+             <div id="chat-display" class="min-h-[200px] bg-gray-900 p-4 rounded-lg mb-4 overflow-y-auto flex-grow flex flex-col px-4 sm:px-8">
                  <div class="model-bubble">Chào đại ca, Tèo xin trả lời bất kỳ câu hỏi nào của đại ca?</div>
              </div>
-             <form id="chat-form" class="flex space-x-2 p-6 pt-0">
+            <form id="chat-form" class="flex space-x-2 p-6 pt-0 px-4 sm:px-8">
                  <input type="text" id="chat-input" placeholder="Hôm nay đại ca thấy thế nào..." class="flex-grow p-3 rounded-lg focus:outline-none">
                  <button type="submit" id="send-chat-button" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" /></svg>
                  </button>
              </form>
-        </div>
+        
     </main>
 
+    <main id="schedule-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
+        
+        <div id="reminder-warning" class="hidden bg-red-800 border border-red-600 text-red-100 px-4 py-3 rounded-lg shadow-lg mb-6" role="alert">
+            <strong class="font-bold">Chưa bật thông báo!</strong>
+            <span class="block sm:inline">Vui lòng vào tab "Cài đặt" để bật thông báo thì mới dùng được Nhắc nhở.</span>
+        </div>
+
+        <section class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mb-6">
+            <h2 class="text-xl font-bold text-white mb-4">Thêm Nhắc nhở mới</h2>
+            <form id="new-reminder-form" class="space-y-3">
+                <input type="text" id="new-reminder-title" placeholder="Tiêu đề nhắc nhở..." class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                <textarea id="new-reminder-content" placeholder="Nội dung (không bắt buộc)..." rows="2" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"></textarea>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg transition-colors flex-shrink-0 w-full">
+                    Thêm
+                </button>
+            </form>
+            <p id="new-reminder-status" class="text-sm text-gray-400 mt-3 text-center hidden"></p>
+        </section>
+
+        <section>
+            <h2 class="text-xl font-bold text-white mb-4">Danh sách Nhắc nhở</h2>
+            
+            <div id="reminder-list-container" class="space-y-6">
+                </div>
+
+            <p id="reminder-list-loading" class="text-gray-400 italic text-center p-4 bg-gray-800 rounded-lg shadow-lg">Đang tải danh sách...</p>
+        </section>
+    </main>
     <main id="settings-main" class="container mx-auto p-4 sm:p-8 hidden">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full mx-auto">
             <div class="flex justify-between items-center mb-6">
@@ -150,6 +239,11 @@
             
             <fieldset class="border border-gray-600 p-4 rounded-lg">
                 <legend class="text-lg font-semibold text-white px-2">Thông báo Push</legend>
+                
+                <p id="settings-push-warning" class="hidden text-sm text-red-400 mb-3 text-center font-semibold">
+                    Thông báo đang bị TẮT.
+                </p>
+
                 <button id="notify-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
                     Bật Thông Báo
                 </button>
@@ -231,23 +325,6 @@
             </div>
     </main>
 
-    <main id="reminders-main" class="container mx-auto p-4 sm:p-8 hidden">
-        <div class="max-w-md w-full mx-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-white">Nhắc nhở</h2>
-                <button id="add-reminder-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors flex items-center space-x-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span>Thêm</span>
-                </button>
-            </div>
-            
-            <div id="reminder-list-container" class="space-y-4">
-                <p id="reminders-loading-msg" class="text-gray-400 italic text-center">Đang tải nhắc nhở...</p>
-            </div>
-        </div>
-    </main>
     <div id="admin-note-viewer-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[60] transition-opacity duration-300">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
             <div class="flex justify-between items-center mb-4">
@@ -315,6 +392,43 @@
         </div>
     </div>
 
+    <div id="reminder-edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col">
+            <span id="close-reminder-edit-modal" class="absolute top-3 right-4 text-gray-400 hover:text-white text-3xl cursor-pointer">&times;</span>
+            <h2 class="text-2xl font-bold text-white mb-4">Chỉnh sửa Nhắc nhở</h2>
+            
+            <form id="edit-reminder-form" class="space-y-4">
+                <input type="hidden" id="edit-reminder-id">
+                
+                <div>
+                    <label for="edit-reminder-title" class="block text-sm font-medium text-gray-300 mb-1">Tiêu đề:</label>
+                    <input type="text" id="edit-reminder-title" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="edit-reminder-content" class="block text-sm font-medium text-gray-300 mb-1">Nội dung:</label>
+                    <textarea id="edit-reminder-content" rows="4" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500"></textarea>
+                </div>
+
+                <div class="flex items-center justify-between bg-gray-700 p-3 rounded-lg">
+                    <label for="edit-reminder-datetime" class="text-sm font-medium text-gray-300">Hẹn lúc:</label>
+                    <input type="datetime-local" id="edit-reminder-datetime" class="reminder-datetime-input" style="max-width: 200px;">
+                </div>
+                
+                <div class="flex items-center justify-between bg-gray-700 p-3 rounded-lg">
+                    <span class="text-sm font-medium text-gray-300">Trạng thái (Bật/Tắt):</span>
+                    <label class="ios-toggle">
+                        <input type="checkbox" id="edit-reminder-active" class="reminder-toggle-check">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <button type="submit" id="save-reminder-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                    Lưu thay đổi
+                </button>
+            </form>
+        </div>
+    </div>
     <nav id="bottom-nav" class="sm:hidden">
         <button id="bottom-tab-news" class="bottom-nav-btn active">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
@@ -324,13 +438,13 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25m10.5-2.25v2.25M6.75 21H3.375c-.621 0-1.125-.504-1.125-1.125V7.5c0-.621.504-1.125 1.125-1.125h13.5c.621 0 1.125.504 1.125 1.125v12.375c0 .621-.504 1.125-1.125 1.125H6.75zM16.5 7.5h-9v9h9v-9z" /></svg>
             <span>Lịch</span>
         </button>
+        <button id="bottom-tab-schedule" class="bottom-nav-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.58 1.055 5.454 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+            <span>Nhắc nhở</span>
+        </button>
         <button id="bottom-tab-chat" class="bottom-nav-btn">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
             <span>Trò chuyện</span>
-        </button>
-        <button id="bottom-tab-reminders" class="bottom-nav-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
-            <span>Nhắc nhở</span>
         </button>
         <button id="bottom-tab-settings" class="bottom-nav-btn">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h3.75" /></svg>
