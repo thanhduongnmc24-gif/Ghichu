@@ -477,7 +477,7 @@ app.post('/update-notes', async (req, res) => {
 // ==========================================================
 app.post('/api/sync/up', async (req, res) => {
     // (SỬA) Nhận thêm endpoint
-    const { username, password, noteData, endpoint } = req.body; 
+    const { username, password, noteData, endpoint } = req.body; // (noteData bây giờ là appData)
     
     if (!username || !password || !noteData) {
         return res.status(400).json({ error: 'Thiếu Tên, Mật khẩu, hoặc Dữ liệu Ghi chú.' });
@@ -503,7 +503,7 @@ app.post('/api/sync/up', async (req, res) => {
             // (SỬA) Cập nhật cả notes VÀ endpoint
             await client.query(
                 "UPDATE user_notes SET notes = $1, endpoint = $2 WHERE username = $3", 
-                [noteData, endpoint, username]
+                [noteData, endpoint, username] // (noteData bây giờ là appData)
             );
             res.status(200).json({ success: true, message: 'Đã cập nhật dữ liệu (và endpoint) thành công.' });
 
@@ -513,7 +513,7 @@ app.post('/api/sync/up', async (req, res) => {
             // (SỬA) Thêm endpoint khi tạo mới
             await client.query(
                 "INSERT INTO user_notes (username, password_hash, salt, notes, endpoint) VALUES ($1, $2, $3, $4, $5)",
-                [username, hash, salt, noteData, endpoint]
+                [username, hash, salt, noteData, endpoint] // (noteData bây giờ là appData)
             );
             res.status(201).json({ success: true, message: 'Đã tạo tài khoản (và endpoint) và lưu dữ liệu thành công.' });
         }
@@ -793,7 +793,7 @@ app.post('/api/delete-reminder', async (req, res) => {
 
 
 // ==========================================================
-// ===== LOGIC GỬI THÔNG BÁO (Không thay đổi) =====
+// ===== (CẬP NHẬT) LOGIC GỬI THÔNG BÁO =====
 // ==========================================================
 
 // Logic tính ca
@@ -923,7 +923,7 @@ async function checkAndSendNotifications() {
     console.log(`[Notify Check] ${timeStr} | Ca hôm nay: ${todayShift} | Subs: ${subscriptions.length}`);
 
     const sendPromises = subscriptions.map(sub => {
-        const { endpoint, keys, settings, notes } = sub;
+        const { endpoint, keys, settings, notes } = sub; // 'notes' ở đây là 'appData'
         
         let timeToAlert = null;
         if (todayShift === 'ngày') timeToAlert = settings.notifyTimeNgay;
@@ -933,8 +933,16 @@ async function checkAndSendNotifications() {
         if (timeToAlert && timeStr === timeToAlert) {
             console.log(`Đang gửi thông báo ${todayShift} đến:`, endpoint);
             
-            // ... (toàn bộ logic tạo title, body, payload, gửi... giữ nguyên) ...
-            const notesForToday = (notes && notes[dateStr]) ? notes[dateStr] : [];
+            // ==========================================================
+            // ===== (BẮT ĐẦU SỬA LỖI QUAN TRỌNG) =====
+            // ==========================================================
+            // 'notes' bây giờ là { calendar: {...}, links: [...] }
+            // Chúng ta phải đọc từ 'notes.calendar'
+            const notesForToday = (notes && notes.calendar && notes.calendar[dateStr]) ? notes.calendar[dateStr] : [];
+            // ==========================================================
+            // ===== (KẾT THÚC SỬA LỖI) =====
+            // ==========================================================
+            
             let bodyContent = ""; 
             if (notesForToday.length > 0) {
                 bodyContent = "Ghi chú:\n" + notesForToday.join('\n');
