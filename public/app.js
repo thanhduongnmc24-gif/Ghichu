@@ -1694,7 +1694,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function adminDeleteUser(targetUser) {
         if (!currentAdminCreds) return;
 
-        if (!confirm(`ĐẠI CA ADMIN!\n\NĐại ca có chắc chắn muốn XÓA VĨNH VIỄN người dùng "${targetUser}" không?\n\nHành động này không thể hoàn tác.`)) {
+        if (!confirm(`ĐẠI CA ADMIN!\n\nĐại ca có chắc chắn muốn XÓA VĨNH VIỄN người dùng "${targetUser}" không?\n\nHành động này không thể hoàn tác.`)) {
             return;
         }
 
@@ -1796,6 +1796,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bottomTabSettings.classList.remove('active');
         
         // 3. (CẬP NHẬT) Ẩn/Hiện các thành phần Header Mobile
+        // Ẩn tất cả theo mặc định
         if (rssMenuBtn) rssMenuBtn.classList.add('hidden');
         if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.add('hidden');
         if (mobileHeaderTitle) mobileHeaderTitle.classList.add('hidden');
