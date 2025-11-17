@@ -2,7 +2,7 @@
 /* FILE: public/app.js                                                 */
 /* MỤC ĐÍCH: Logic JavaScript chính cho toàn bộ ứng dụng Ghichu App.     */
 /* PHIÊN BẢN: Đã tách logic tính toán sang utils.js                     */
-/* CẬP NHẬT: Chuyển Sub-tab Lịch/Nhắc nhở lên Header Mobile             */
+/* CẬP NHẬT: Thêm tab Lưu Trữ (Links) đồng bộ online                    */
 /* =================================================================== */
 
 // ===================================================================
@@ -100,6 +100,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Biến Phần 3 (Trò chuyện) ---
     const chatMain = document.getElementById('chat-main');
+    
+    // (MỚI) --- Biến Phần 3.2 (Lưu Trữ Link) ---
+    const linksMain = document.getElementById('links-main');
+    const newLinkForm = document.getElementById('new-link-form');
+    const newLinkUrl = document.getElementById('new-link-url');
+    const newLinkNote = document.getElementById('new-link-note');
+    const linkListContainer = document.getElementById('link-list-container');
+    const linkStatusMsg = document.getElementById('link-status-msg');
+
 
     // --- (CẬP NHẬT) Biến Phần 3.5 (Lịch / Nhắc nhở) ---
     
@@ -140,14 +149,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // (CẬP NHẬT) Biến Header Mobile
     const mobileHeaderTitle = document.getElementById('mobile-header-title');
-    const mobileHeaderLeft = document.getElementById('mobile-header-left'); // (MỚI)
+    // const mobileHeaderLeft = document.getElementById('mobile-header-left'); // (ĐÃ XÓA)
     
     const refreshFeedButton = document.getElementById('refresh-feed-button');
     const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
     const bottomTabNews = document.getElementById('bottom-tab-news');
     const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
-    // (ĐÃ XÓA) bottomTabSchedule
     const bottomTabChat = document.getElementById('bottom-tab-chat');
+    const bottomTabLinks = document.getElementById('bottom-tab-links'); // (MỚI)
     const bottomTabSettings = document.getElementById('bottom-tab-settings');
     const bottomNav = document.getElementById('bottom-nav'); 
 
@@ -183,8 +192,36 @@ document.addEventListener('DOMContentLoaded', () => {
     let toastTimeoutId = null; // ID của setTimeout cho toast
     const clientRssCache = new Map(); // Cache RSS phía client
     
-    // Đọc dữ liệu từ LocalStorage khi khởi động
-    let noteData = JSON.parse(localStorage.getItem('myScheduleNotes')) || {};
+    // (CẬP NHẬT) Đọc dữ liệu từ LocalStorage khi khởi động
+    
+    /**
+     * (MỚI) Chuẩn hóa dữ liệu ứng dụng.
+     * Xử lý cả dữ liệu cũ (chỉ noteData) và dữ liệu mới (appData).
+     * @param {object} data - Dữ liệu tải từ localStorage hoặc server.
+     * @returns {{calendar: object, links: Array}}
+     */
+    function normalizeAppData(data) {
+        if (!data) {
+            return { calendar: {}, links: [] };
+        }
+        // Nếu data có 'calendar' và 'links' -> đây là cấu trúc mới
+        if (data.calendar || data.links) {
+            return {
+                calendar: data.calendar || {},
+                links: data.links || []
+            };
+        }
+        // Nếu không -> đây là cấu trúc cũ (chỉ có noteData)
+        // Ta giả định toàn bộ đối tượng là `noteData` cũ
+        return {
+            calendar: data, // Dữ liệu cũ chính là 'calendar'
+            links: []       // Tạo mảng 'links' rỗng
+        };
+    }
+
+    const rawData = JSON.parse(localStorage.getItem('myAppData')) || {}; // (SỬA) Đổi tên key
+    let appData = normalizeAppData(rawData); // (SỬA)
+    
     let appSettings = JSON.parse(localStorage.getItem('myScheduleSettings')) || {
         notifyTimeNgay: "06:00",
         notifyTimeDem: "20:00",
@@ -646,8 +683,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // PHẦN 2: LOGIC LỊCH (CALENDAR, NOTES, SETTINGS, PUSH, SYNC)
     // ===================================================================
 
-    // ... (Các hàm helper: showSyncStatus, saveNoteData, saveSettings, loadSettings giữ nguyên) ...
-
     /**
      * Hiển thị thông báo trạng thái đồng bộ (Sync).
      * @param {string} message - Nội dung thông báo.
@@ -670,22 +705,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Lưu dữ liệu ghi chú (noteData) vào LocalStorage.
+     * (CẬP NHẬT) Lưu dữ liệu (appData) vào LocalStorage.
      * Đồng thời, lọc bỏ các ngày không có ghi chú (dọn rác).
-     * Cũng gọi hàm syncNotesToServer() để đồng bộ với máy chủ thông báo.
+     * Cũng gọi hàm syncAppDataToServer() để đồng bộ với máy chủ thông báo.
      */
-    function saveNoteData() {
+    function saveAppData() { // (SỬA) Đổi tên
         const cleanData = {};
         // Lọc bỏ các ngày rỗng
-        for (const date in noteData) {
-            if (Array.isArray(noteData[date]) && noteData[date].length > 0) {
-                cleanData[date] = noteData[date];
+        for (const date in appData.calendar) { // (SỬA) Dùng appData.calendar
+            if (Array.isArray(appData.calendar[date]) && appData.calendar[date].length > 0) {
+                cleanData[date] = appData.calendar[date];
             }
         }
-        localStorage.setItem('myScheduleNotes', JSON.stringify(cleanData));
+        appData.calendar = cleanData; // (SỬA) Gán lại
+        
+        // (SỬA) Đảm bảo links là một mảng
+        if (!Array.isArray(appData.links)) {
+            appData.links = [];
+        }
+
+        localStorage.setItem('myAppData', JSON.stringify(appData)); // (SỬA) Đổi tên key và data
         
         // Đồng bộ lên server (nếu đã đăng ký push)
-        syncNotesToServer().catch(err => console.error('Lỗi đồng bộ ghi chú:', err));
+        syncAppDataToServer().catch(err => console.error('Lỗi đồng bộ ghi chú:', err)); // (SỬA)
     }
 
     /**
@@ -780,7 +822,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Ô thuộc tháng hiện tại
                 // (ĐÃ CẬP NHẬT) Sử dụng hàm import
                 const shift = getShiftForDate(dateStr);
-                const notes = noteData[dateStr] || []; 
+                const notes = appData.calendar[dateStr] || []; // (SỬA) Dùng appData.calendar
 
                 // Hiển thị ca
                 if (shift === 'giãn ca') {
@@ -875,7 +917,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let day = 1; day <= daysInMonth; day++) {
             const currentDate = new Date(year, month, day);
             const dateStr = getLocalDateString(currentDate); 
-            const notes = noteData[dateStr] || []; 
+            const notes = appData.calendar[dateStr] || []; // (SỬA) Dùng appData.calendar
 
             if (notes.length > 0) {
                 const dayName = daysOfWeek[currentDate.getDay()]; 
@@ -944,7 +986,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = getLocalDateString(new Date(year, month, day)); 
-            const notes = noteData[dateStr] || []; 
+            const notes = appData.calendar[dateStr] || []; // (SỬA) Dùng appData.calendar
 
             notes.forEach(noteText => {
                 // Chuẩn hóa tên (viết hoa, viết thường như nhau)
@@ -1018,7 +1060,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function renderNoteList(dateStr) {
         noteList.innerHTML = ''; 
-        const notes = noteData[dateStr] || [];
+        const notes = appData.calendar[dateStr] || []; // (SỬA) Dùng appData.calendar
         
         if (notes.length === 0) {
             noteList.innerHTML = `<li class="text-gray-400 text-sm italic">Không có ghi chú.</li>`;
@@ -1162,9 +1204,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     notifyTimeOff: notifyTimeOff.value
                 };
                 
-                // Lấy ghi chú hiện tại
-                const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
-                const noteData = JSON.parse(noteDataStr);
+                // (SỬA) Lấy dữ liệu (bao gồm cả links)
+                const noteData = appData; // (SỬA)
                 
                 // Gửi subscription, settings, và notes lên server
                 await fetch('/subscribe', {
@@ -1173,11 +1214,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ 
                         subscription: subscription, 
                         settings: settings,
-                        noteData: noteData 
+                        noteData: noteData // (SỬA) Gửi toàn bộ appData
                     })
                 });
                 
-                console.log("Đã đăng ký và gửi (cả ghi chú) lên server.");
+                console.log("Đã đăng ký và gửi (cả ghi chú và links) lên server.");
                 alert("Đã bật thông báo thành công!");
 
             } catch (err) {
@@ -1212,8 +1253,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 notifyTimeOff: notifyTimeOff.value
             };
 
-            const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
-            const noteData = JSON.parse(noteDataStr);
+            const noteData = appData; // (SỬA) Gửi toàn bộ appData
             
             // Gửi lại yêu cầu 'subscribe' (API server sẽ tự xử lý ON CONFLICT)
             await fetch('/subscribe', { 
@@ -1222,21 +1262,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ 
                     subscription: subscription, 
                     settings: settings,
-                    noteData: noteData 
+                    noteData: noteData // (SỬA)
                 })
             });
-            console.log("Đã cập nhật settings (và ghi chú) trên server.");
+            console.log("Đã cập nhật settings (và appData) trên server.");
         } catch (err) {
             console.error("Lỗi khi cập nhật settings:", err);
         }
     }
 
     /**
-     * Đồng bộ GHI CHÚ lên server (cho máy chủ Push Notification).
+     * (CẬP NHẬT) Đồng bộ DỮ LIỆU (AppData) lên server (cho máy chủ Push Notification).
      * Được gọi khi lưu ghi chú, hoặc khi mở tab Cài đặt.
      * Chỉ hoạt động nếu đã đăng ký push.
      */
-    async function syncNotesToServer() {
+    async function syncAppDataToServer() { // (SỬA) Đổi tên
         // (SỬA) Thêm kiểm tra pushManager
         if (!swRegistration || !swRegistration.pushManager) return;
         const subscription = await swRegistration.pushManager.getSubscription();
@@ -1245,10 +1285,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return; // Nếu chưa đăng ký thông báo thì không làm gì
         }
         
-        console.log("Đang đồng bộ ghi chú (vì có thay đổi) lên server...");
+        console.log("Đang đồng bộ appData (vì có thay đổi) lên server...");
         try {
-            const noteDataStr = localStorage.getItem('myScheduleNotes') || '{}';
-            const noteData = JSON.parse(noteDataStr);
+            const noteData = appData; // (SỬA) Gửi toàn bộ appData
             
             // Chỉ gửi ghi chú (nhanh hơn)
             await fetch('/update-notes', {
@@ -1256,12 +1295,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     endpoint: subscription.endpoint, 
-                    noteData: noteData
+                    noteData: noteData // (SỬA)
                 })
             });
-            console.log("Đồng bộ ghi chú (cho Push) thành công.");
+            console.log("Đồng bộ appData (cho Push) thành công.");
         } catch (err) {
-            console.error("Lỗi khi đồng bộ ghi chú (cho Push):", err);
+            console.error("Lỗi khi đồng bộ appData (cho Push):", err);
         }
     }
 
@@ -1270,7 +1309,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // (CẬP NHẬT) PHẦN 2.5: LOGIC NHẮC NHỞ (REMINDERS)
     // ===================================================================
 
-    // ... (Các hàm formatISODateForInput, getCurrentDateTimeLocal giữ nguyên) ...
+    // ... (Toàn bộ PHẦN 2.5 giữ nguyên, không thay đổi) ...
 
     /**
      * (CẬP NHẬT) Helper: Chuyển đổi chuỗi ISO (hoặc Date object) thành định dạng cho input datetime-local.
@@ -1580,6 +1619,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ===================================================================
+    // (MỚI) PHẦN 2.6: LOGIC LƯU TRỮ LINKS
+    // ===================================================================
+
+    /**
+     * (MỚI) Hiển thị thông báo trạng thái cho form thêm link
+     */
+    function showLinkStatus(message, isError = false) {
+        if (!linkStatusMsg) return;
+        linkStatusMsg.textContent = message;
+        linkStatusMsg.className = isError 
+            ? 'text-sm text-red-400 mt-3 text-center' 
+            : 'text-sm text-green-400 mt-3 text-center';
+        linkStatusMsg.classList.remove('hidden');
+
+        setTimeout(() => {
+            if (linkStatusMsg.textContent === message) {
+                linkStatusMsg.classList.add('hidden');
+            }
+        }, 4000);
+    }
+    
+    /**
+     * (MỚI) Vẽ danh sách các link đã lưu
+     */
+    function renderLinkList() {
+        if (!linkListContainer) return;
+        
+        const links = appData.links || [];
+        
+        if (links.length === 0) {
+            linkListContainer.innerHTML = `<p class="text-gray-400 italic text-center p-4 bg-gray-800 rounded-lg shadow-lg">Chưa có link nào được lưu.</p>`;
+            return;
+        }
+        
+        linkListContainer.innerHTML = ''; // Xóa
+        
+        // Sắp xếp link mới nhất lên đầu
+        [...links].reverse().forEach((link, index) => {
+            const originalIndex = links.length - 1 - index; // Tìm index gốc
+            
+            const li = document.createElement('div');
+            li.className = "bg-gray-800 rounded-lg shadow-lg p-4 flex items-center justify-between space-x-3";
+            
+            li.innerHTML = `
+                <div class="flex-grow min-w-0">
+                    <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="block text-blue-400 font-semibold truncate hover:underline">
+                        ${link.url}
+                    </a>
+                    <p class="text-gray-300 text-sm mt-1 truncate">
+                        ${link.note || '(Không có ghi chú)'}
+                    </p>
+                </div>
+                <div class="flex-shrink-0">
+                    <button data-index="${originalIndex}" class="delete-link text-gray-400 hover:text-red-400 p-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+            `;
+            linkListContainer.appendChild(li);
+        });
+    }
+
+
+    // ===================================================================
     // PHẦN 3: LOGIC ADMIN (ĐĂNG NHẬP, XEM, XÓA)
     // ===================================================================
     
@@ -1760,7 +1863,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Chuyển đổi giữa các tab (Trang) của ứng dụng.
-     * @param {'news' | 'calendar' | 'chat' | 'settings'} tabName - Tên tab cần chuyển đến.
+     * @param {'news' | 'calendar' | 'chat' | 'links' | 'settings'} tabName - Tên tab cần chuyển đến.
      */
     async function showTab(tabName) { // (SỬA) Chuyển thành async
         if (tabName === currentTab) return; // Không làm gì nếu đã ở tab đó
@@ -1781,8 +1884,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Ẩn tất cả các trang
         newsMain.classList.add('hidden');
         calendarMain.classList.add('hidden');
-        // (ĐÃ XÓA) scheduleMain
         chatMain.classList.add('hidden');
+        linksMain.classList.add('hidden'); // (MỚI)
         settingsMain.classList.add('hidden');
         
         // 2. Tắt active tất cả các nút (Desktop & Mobile)
@@ -1791,8 +1894,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settingsBtn) settingsBtn.classList.remove('active');
         bottomTabNews.classList.remove('active');
         bottomTabCalendar.classList.remove('active');
-        // (ĐÃ XÓA) bottomTabSchedule
         bottomTabChat.classList.remove('active');
+        bottomTabLinks.classList.remove('active'); // (MỚI)
         bottomTabSettings.classList.remove('active');
         
         // 3. (CẬP NHẬT) Ẩn/Hiện các thành phần Header Mobile
@@ -1826,17 +1929,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (calendarTabBtn) calendarTabBtn.classList.add('active');
                 bottomTabCalendar.classList.add('active');
                 
-                // (CẬP NHẬT) Hiển thị Header cho Lịch (Sub-tab)
-                if (calendarSubtabHeader) {
-                    calendarSubtabHeader.classList.remove('hidden');
+                // (CẬP NHẬT) Hiển thị Header cho Lịch (Tiêu đề)
+                // (SỬA) Bản web không có thanh sub-tab nên phải hiện tiêu đề
+                 if (mobileHeaderTitle) {
+                    mobileHeaderTitle.textContent = "Lịch & Nhắc Nhở";
+                    mobileHeaderTitle.classList.remove('hidden');
                 }
+                // (SỬA) Chỉ hiển thị sub-tab bên trong main, không tác động header
                 
                 // (MỚI) Khi mở tab Lịch, luôn reset về sub-tab 'work'
                 showCalendarSubTab('work'); 
                 break;
             
-            // (ĐÃ XÓA) case 'schedule'
-                
             case 'chat':
                 chatMain.classList.remove('hidden');
                 bottomTabChat.classList.add('active');
@@ -1847,11 +1951,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     mobileHeaderTitle.classList.remove('hidden');
                 }
                 break;
+            
+            // (MỚI) THÊM CASE CHO LƯU TRỮ
+            case 'links':
+                linksMain.classList.remove('hidden');
+                bottomTabLinks.classList.add('active');
+                
+                // Hiển thị Header
+                if (mobileHeaderTitle) {
+                    mobileHeaderTitle.textContent = "Lưu Trữ";
+                    mobileHeaderTitle.classList.remove('hidden');
+                }
+                renderLinkList(); // (MỚI) Vẽ danh sách link khi mở tab
+                break;
+            // KẾT THÚC CASE LƯU TRỮ
                 
             case 'settings':
                 settingsMain.classList.remove('hidden');
                 await checkNotificationStatus(); // (MỚI) Kiểm tra quyền
-                syncNotesToServer(); // Ép đồng bộ khi mở tab Cài đặt
+                await syncAppDataToServer(); // (SỬA) Ép đồng bộ khi mở tab Cài đặt
                 
                 if (settingsBtn) settingsBtn.classList.add('active');
                 bottomTabSettings.classList.add('active');
@@ -1884,8 +2002,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mobile (Bottom Nav)
     bottomTabNews.addEventListener('click', () => showTab('news'));
     bottomTabCalendar.addEventListener('click', () => showTab('calendar'));
-    // (ĐÃ XÓA) bottomTabSchedule
     bottomTabChat.addEventListener('click', () => showTab('chat'));
+    bottomTabLinks.addEventListener('click', () => showTab('links')); // (MỚI)
     bottomTabSettings.addEventListener('click', () => showTab('settings'));
     
     // Mobile (Top Header)
@@ -2024,7 +2142,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderMonthlyNoteSummary(currentViewDate);
          });
          
-        // --- Lịch (Modal Ghi chú) (Không đổi) ---
+        // --- Lịch (Modal Ghi chú) (CẬP NHẬT) ---
         closeNoteModalBtn.addEventListener('click', () => {
             noteModal.style.display = 'none';
             currentEditingDateStr = null; 
@@ -2041,12 +2159,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const noteText = newNoteInput.value.trim();
             if (!noteText || !currentEditingDateStr) return;
             
-            if (!Array.isArray(noteData[currentEditingDateStr])) {
-                noteData[currentEditingDateStr] = [];
+            if (!Array.isArray(appData.calendar[currentEditingDateStr])) { // (SỬA)
+                appData.calendar[currentEditingDateStr] = []; // (SỬA)
             }
-            noteData[currentEditingDateStr].push(noteText);
+            appData.calendar[currentEditingDateStr].push(noteText); // (SỬA)
             
-            saveNoteData(); 
+            saveAppData(); // (SỬA)
             renderNoteList(currentEditingDateStr); 
             renderCalendar(currentViewDate); 
             newNoteInput.value = ''; 
@@ -2057,29 +2175,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const index = target.dataset.index;
             if (!currentEditingDateStr || index === undefined) return;
             
-            const notes = noteData[currentEditingDateStr] || [];
+            const notes = appData.calendar[currentEditingDateStr] || []; // (SỬA)
             
             if (target.classList.contains('edit-note')) {
                 const oldText = notes[index];
                 const newText = prompt("Sửa ghi chú:", oldText); 
                 if (newText !== null && newText.trim() !== "") {
-                    noteData[currentEditingDateStr][index] = newText.trim();
-                    saveNoteData(); 
+                    appData.calendar[currentEditingDateStr][index] = newText.trim(); // (SỬA)
+                    saveAppData(); // (SỬA)
                     renderNoteList(currentEditingDateStr);
                     renderCalendar(currentViewDate);
                 }
             }
             if (target.classList.contains('delete-note')) {
                 if (confirm(`Bạn có chắc muốn xóa ghi chú: "${notes[index]}"?`)) {
-                    noteData[currentEditingDateStr].splice(index, 1);
-                    saveNoteData(); 
+                    appData.calendar[currentEditingDateStr].splice(index, 1); // (SỬA)
+                    saveAppData(); // (SỬA)
                     renderNoteList(currentEditingDateStr);
                     renderCalendar(currentViewDate);
                 }
             }
         });
         
-        // --- Lịch (AI) (Không đổi) ---
+        // --- Lịch (AI) (CẬP NHẬT) ---
         cal_aiForm.addEventListener('submit', async (e) => {
             e.preventDefault(); 
             const text = cal_aiInput.value.trim();
@@ -2102,13 +2220,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         const dateStr = update.date;
                         const noteText = update.note;
                         if (dateStr && noteText) {
-                            if (!Array.isArray(noteData[dateStr])) {
-                                noteData[dateStr] = []; 
+                            if (!Array.isArray(appData.calendar[dateStr])) { // (SỬA)
+                                appData.calendar[dateStr] = []; // (SỬA)
                             }
-                            noteData[dateStr].push(noteText); 
+                            appData.calendar[dateStr].push(noteText); // (SỬA)
                         }
                     });
-                    saveNoteData(); 
+                    saveAppData(); // (SỬA)
                     renderCalendar(currentViewDate); 
                     cal_aiInput.value = ''; 
                 } else {
@@ -2125,7 +2243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // ==========================================================
-        // ===== (SỬA) CẬP NHẬT LISTENER SYNC-UP (Không đổi) ======
+        // ===== (CẬP NHẬT) LISTENER SYNC-UP (Gửi AppData) =========
         // ==========================================================
         if (syncUpBtn) {
             syncUpBtn.addEventListener('click', async () => {
@@ -2136,9 +2254,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 
-                // (MỚI) Lấy endpoint (nếu có)
                 const endpoint = await getEndpoint();
-                // (SỬA) Không còn bắt buộc
                 
                 showSyncStatus('Đang tải lên...', false);
                 syncUpBtn.disabled = true;
@@ -2152,8 +2268,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify({ 
                             username: username, 
                             password: password, 
-                            noteData: noteData,
-                            endpoint: endpoint // (MỚI) Gửi endpoint (có thể là null)
+                            noteData: appData, // (SỬA) Gửi toàn bộ appData
+                            endpoint: endpoint 
                         })
                     });
                     const result = await response.json();
@@ -2172,7 +2288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // ==========================================================
-        // ===== (SỬA) CẬP NHẬT LISTENER SYNC-DOWN (Cần sửa) ======
+        // ===== (CẬP NHẬT) LISTENER SYNC-DOWN (Nhận AppData) ======
         // ==========================================================
         if (syncDownBtn) {
             syncDownBtn.addEventListener('click', async () => {
@@ -2183,12 +2299,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 
-                // (MỚI) Lấy endpoint của máy MỚI này (nếu có)
                 const endpoint = await getEndpoint();
-                // (SỬA) Không còn bắt buộc
 
-                // (SỬA) Cập nhật lại câu hỏi confirm
-                if (!confirm('HÀNH ĐỘNG NGUY HIỂM!\n\nViệc này sẽ GHI ĐÈ toàn bộ ghi chú hiện tại trên máy này.\n\n(Nhắc nhở sẽ chỉ được đồng bộ nếu Đại ca đã Bật Thông Báo)\n\nĐại ca có chắc chắn muốn tải về?')) {
+                if (!confirm('HÀNH ĐỘNG NGUY HIỂM!\n\nViệc này sẽ GHI ĐÈ toàn bộ dữ liệu (Lịch + Links) hiện tại trên máy này.\n\n(Nhắc nhở sẽ chỉ được đồng bộ nếu Đại ca đã Bật Thông Báo)\n\nĐại ca có chắc chắn muốn tải về?')) {
                     return;
                 }
 
@@ -2204,7 +2317,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         body: JSON.stringify({ 
                             username: username, 
                             password: password,
-                            endpoint: endpoint // (MỚI) Gửi endpoint của máy mới (có thể là null)
+                            endpoint: endpoint 
                         })
                     });
                     
@@ -2213,19 +2326,25 @@ document.addEventListener('DOMContentLoaded', () => {
                         throw new Error(result.error || 'Lỗi không xác định');
                     }
 
-                    const downloadedNotes = await response.json();
+                    const downloadedData = await response.json();
                     
-                    noteData = downloadedNotes || {};
-                    saveNoteData(); 
+                    // (SỬA) Chuẩn hóa dữ liệu tải về
+                    appData = normalizeAppData(downloadedData); 
+                    
+                    saveAppData(); // (SỬA)
                     renderCalendar(currentViewDate); // Tải lại lịch
                     
-                    showSyncStatus('Tải về (Ghi chú + Nhắc nhở) thành công!', false);
-                    
-                    // (CẬP NHẬT) Tự động tải lại Nhắc nhở
-                    // (Nếu đang ở sub-tab đó, hoặc khi người dùng click vào)
-                    if (currentTab === 'calendar' && currentCalendarSubTab === 'reminders') {
-                         await fetchReminders();
+                    // (SỬA) Tải lại tab hiện tại nếu là 'links' hoặc 'calendar'
+                    if (currentTab === 'calendar') {
+                        // Tải lại sub-tab hiện tại
+                        const subTabToReload = currentCalendarSubTab;
+                        currentCalendarSubTab = null; // Buộc tải lại
+                        showCalendarSubTab(subTabToReload);
+                    } else if (currentTab === 'links') {
+                        renderLinkList(); // Tải lại danh sách link
                     }
+                    
+                    showSyncStatus('Tải về (Lịch + Links) thành công!', false);
                     
                 } catch (err) {
                     showSyncStatus(err.message, true);
@@ -2572,6 +2691,52 @@ document.addEventListener('DOMContentLoaded', () => {
                     await fetchReminders(); // Tải lại toàn bộ
                 } else {
                     alert("Lưu thất bại! Vui lòng thử lại.");
+                }
+            });
+        }
+        
+        // ==========================================================
+        // ===== (MỚI) KHỐI SỰ KIỆN CHO TAB LƯU TRỮ (LINKS) =====
+        // ==========================================================
+        
+        // --- Thêm Link mới ---
+        if (newLinkForm) {
+            newLinkForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const url = newLinkUrl.value.trim();
+                const note = newLinkNote.value.trim();
+                
+                if (!url) {
+                    showLinkStatus('Vui lòng nhập đường dẫn URL.', true);
+                    return;
+                }
+                
+                // Thêm vào đầu mảng (hoặc cuối mảng)
+                appData.links.push({ url, note });
+                
+                saveAppData(); // Lưu
+                renderLinkList(); // Vẽ lại
+                
+                newLinkUrl.value = '';
+                newLinkNote.value = '';
+                showLinkStatus('Đã lưu link thành công!', false);
+            });
+        }
+        
+        // --- Xóa Link ---
+        if (linkListContainer) {
+            linkListContainer.addEventListener('click', (e) => {
+                const deleteButton = e.target.closest('.delete-link');
+                if (deleteButton) {
+                    const index = parseInt(deleteButton.dataset.index, 10);
+                    if (isNaN(index)) return;
+                    
+                    const link = appData.links[index];
+                    if (confirm(`Đại ca có chắc muốn xóa link này?\n\n${link.url}`)) {
+                        appData.links.splice(index, 1); // Xóa
+                        saveAppData(); // Lưu
+                        renderLinkList(); // Vẽ lại
+                    }
                 }
             });
         }
