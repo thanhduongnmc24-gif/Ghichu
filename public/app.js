@@ -2,7 +2,7 @@
 /* FILE: public/app.js                                                 */
 /* MỤC ĐÍCH: Logic JavaScript chính cho toàn bộ ứng dụng Ghichu App.     */
 /* PHIÊN BẢN: Đã tách logic tính toán sang utils.js                     */
-/* CẬP NHẬT: Thêm tab Lưu Trữ (Links) đồng bộ online                    */
+/* CẬP NHẬT: Vá lỗi bảo mật XSS (Sử dụng .textContent)                   */
 /* =================================================================== */
 
 // ===================================================================
@@ -232,8 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // PHẦN 1: LOGIC TIN TỨC (RSS, TÓM TẮT, CHAT)
     // ===================================================================
     
-    // ... (Toàn bộ PHẦN 1 giữ nguyên, không thay đổi) ...
-    
     // --- Các hằng số cho icon toast ---
     const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
     const iconCheck = `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
@@ -419,6 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * (CẬP NHẬT - VÁ LỖI XSS)
      * Hiển thị các bài báo (từ RSS) lên giao diện (DOM).
      * @param {Element[]} items - Mảng các phần tử <item> hoặc <entry> từ XML.
      * @param {string} sourceName - Tên nguồn báo.
@@ -447,25 +446,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 descriptionText = descriptionText.substring(title.length).trim();
             }
             
-            // Tạo thẻ Card
+            // (SỬA LỖI XSS) Tạo thẻ Card bằng DOM an toàn
             const card = document.createElement('a');
             card.href = link;
             card.className = "bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-[1.03] hover:shadow-blue-500/20 block";
-            card.innerHTML = `
-                <img src="${imgSrc}" alt="${title}" class="w-full h-48 object-cover" onerror="this.src='https://placehold.co/600x400/374151/9CA3AF?text=Error';">
-                <div class="p-5">
-                    <span class="text-xs font-semibold text-blue-400">${sourceName}</span>
-                    <h3 class="text-lg font-bold text-white mt-2 mb-1 leading-tight line-clamp-2">${title}</h3>
-                    <p class="text-sm text-gray-400 mt-2 mb-3 line-clamp-3">${descriptionText}</p>
-                    <div class="flex justify-between items-center mt-4">
-                        <p class="text-sm text-gray-400">${pubDate ? new Date(pubDate).toLocaleString('vi-VN') : ''}</p>
-                        <button class="summary-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded-full transition-all duration-200 z-10 relative">
-                            Tóm tắt
-                        </button>
-                    </div>
-                </div>
-            `;
             
+            const imgEl = document.createElement('img');
+            imgEl.src = imgSrc;
+            imgEl.alt = title; // Alt text an toàn
+            imgEl.className = "w-full h-48 object-cover";
+            imgEl.onerror = function() { this.src='https://placehold.co/600x400/374151/9CA3AF?text=Error'; };
+            card.appendChild(imgEl);
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = "p-5";
+
+            const sourceSpan = document.createElement('span');
+            sourceSpan.className = "text-xs font-semibold text-blue-400";
+            sourceSpan.textContent = sourceName; // An toàn
+            contentDiv.appendChild(sourceSpan);
+
+            const titleH3 = document.createElement('h3');
+            titleH3.className = "text-lg font-bold text-white mt-2 mb-1 leading-tight line-clamp-2";
+            titleH3.textContent = title; // AN TOÀN (dùng .textContent)
+            contentDiv.appendChild(titleH3);
+
+            const descP = document.createElement('p');
+            descP.className = "text-sm text-gray-400 mt-2 mb-3 line-clamp-3";
+            descP.textContent = descriptionText; // AN TOÀN (dùng .textContent)
+            contentDiv.appendChild(descP);
+
+            const footerDiv = document.createElement('div');
+            footerDiv.className = "flex justify-between items-center mt-4";
+            
+            const dateP = document.createElement('p');
+            dateP.className = "text-sm text-gray-400";
+            dateP.textContent = pubDate ? new Date(pubDate).toLocaleString('vi-VN') : '';
+            footerDiv.appendChild(dateP);
+
+            const summaryButton = document.createElement('button');
+            summaryButton.className = "summary-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded-full transition-all duration-200 z-10 relative";
+            summaryButton.textContent = "Tóm tắt";
+            footerDiv.appendChild(summaryButton);
+            
+            contentDiv.appendChild(footerDiv);
+            card.appendChild(contentDiv);
+
             // Ngăn thẻ <a> điều hướng khi bấm nút "Tóm tắt"
              card.addEventListener('click', (e) => {
                  if (e.target.closest('.summary-btn')) {
@@ -475,7 +501,6 @@ document.addEventListener('DOMContentLoaded', () => {
              });
             
             // Gắn sự kiện cho nút "Tóm tắt"
-            const summaryButton = card.querySelector('.summary-btn');
             summaryButton.addEventListener('click', (e) => {
                 e.preventDefault(); // Ngăn thẻ <a>
                 e.stopPropagation(); // Ngăn sự kiện nổi bọt
@@ -1055,6 +1080,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * (CẬP NHẬT - VÁ LỖI XSS)
      * Vẽ danh sách ghi chú bên trong Modal.
      * @param {string} dateStr - Chuỗi "YYYY-MM-DD" của ngày đang sửa.
      */
@@ -1070,13 +1096,22 @@ document.addEventListener('DOMContentLoaded', () => {
         notes.forEach((noteText, index) => {
             const li = document.createElement('li');
             li.className = 'flex justify-between items-center bg-gray-700 p-2 rounded';
-            li.innerHTML = `
-                <span class="text-gray-100">${noteText}</span>
-                <div class="flex-shrink-0 ml-2">
-                    <button data-index="${index}" class="edit-note text-blue-400 hover:text-blue-300 text-xs font-medium mr-2">Sửa</button>
-                    <button data-index="${index}" class="delete-note text-red-400 hover:text-red-300 text-xs font-medium">Xóa</button>
-                </div>
+            
+            // (SỬA LỖI XSS) Dùng .textContent
+            const span = document.createElement('span');
+            span.className = 'text-gray-100';
+            span.textContent = noteText; // AN TOÀN
+            li.appendChild(span);
+
+            // (SỬA LỖI XSS) HTML tĩnh (an toàn vì index là số)
+            const divButtons = document.createElement('div');
+            divButtons.className = 'flex-shrink-0 ml-2';
+            divButtons.innerHTML = `
+                <button data-index="${index}" class="edit-note text-blue-400 hover:text-blue-300 text-xs font-medium mr-2">Sửa</button>
+                <button data-index="${index}" class="delete-note text-red-400 hover:text-red-300 text-xs font-medium">Xóa</button>
             `;
+            li.appendChild(divButtons);
+            
             noteList.appendChild(li);
         });
     }
@@ -1309,8 +1344,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // (CẬP NHẬT) PHẦN 2.5: LOGIC NHẮC NHỞ (REMINDERS)
     // ===================================================================
 
-    // ... (Toàn bộ PHẦN 2.5 giữ nguyên, không thay đổi) ...
-
     /**
      * (CẬP NHẬT) Helper: Chuyển đổi chuỗi ISO (hoặc Date object) thành định dạng cho input datetime-local.
      * @param {string | Date} isoString - Chuỗi ISO 8601 (UTC) hoặc Date object.
@@ -1429,8 +1462,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * (CẬP NHẬT) Vẽ toàn bộ danh sách nhắc nhở (đã phân nhóm)
-     * (SỬA BỐ CỤC MOBILE 17/11/2025)
+     * (CẬP NHẬT - VÁ LỖI XSS)
+     * Vẽ toàn bộ danh sách nhắc nhở (đã phân nhóm)
      */
     function renderReminderList(groupedReminders) {
         if (!reminderListContainer) return;
@@ -1474,15 +1507,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const [year, month] = monthKey.split('-');
                 headerTitle = `Tháng ${month}, ${year}`;
             }
-
-            monthGroup.innerHTML = `
-                <div class="flex justify-between items-center p-4 border-b border-gray-700">
-                    <h3 class="text-lg font-semibold text-white">${headerTitle}</h3>
-                </div>
-                <ul class="reminder-list p-4 space-y-3"></ul>
-            `;
             
-            const listElement = monthGroup.querySelector('.reminder-list');
+            // Dùng .textContent cho tiêu đề an toàn
+            const headerDiv = document.createElement('div');
+            headerDiv.className = "flex justify-between items-center p-4 border-b border-gray-700";
+            const h3 = document.createElement('h3');
+            h3.className = "text-lg font-semibold text-white";
+            h3.textContent = headerTitle;
+            headerDiv.appendChild(h3);
+            monthGroup.appendChild(headerDiv);
+            
+            const listElement = document.createElement('ul');
+            listElement.className = "reminder-list p-4 space-y-3";
+            monthGroup.appendChild(listElement);
             
             // (SỬA BỐ CỤC) Vẽ từng item
             items.forEach(item => {
@@ -1505,32 +1542,43 @@ document.addEventListener('DOMContentLoaded', () => {
                     contentPreview = contentPreview.substring(0, 50) + '...';
                 }
 
-                // (SỬA) Bố cục HTML mới (2 hàng)
-                li.innerHTML = `
-                    <div class="reminder-content-clickable bg-gray-700 p-3 rounded-lg cursor-pointer flex-grow overflow-hidden min-w-0">
-                        <span class="reminder-title ${textClass} font-semibold block truncate">
-                            ${item.title}
-                        </span>
-                        <span class="reminder-preview text-gray-400 text-sm block truncate">
-                            ${contentPreview || '(Không có nội dung)'}
-                        </span>
-                    </div>
+                // (SỬA LỖI XSS) Tạo 2 hàng bằng DOM
+                
+                // --- Hàng 1: Nội dung (Click để Sửa) ---
+                const divContent = document.createElement('div');
+                divContent.className = "reminder-content-clickable bg-gray-700 p-3 rounded-lg cursor-pointer flex-grow overflow-hidden min-w-0";
+                
+                const spanTitle = document.createElement('span');
+                spanTitle.className = `reminder-title ${textClass} font-semibold block truncate`;
+                spanTitle.textContent = item.title; // AN TOÀN
+                divContent.appendChild(spanTitle);
+                
+                const spanPreview = document.createElement('span');
+                spanPreview.className = "reminder-preview text-gray-400 text-sm block truncate";
+                spanPreview.textContent = contentPreview || '(Không có nội dung)'; // AN TOÀN
+                divContent.appendChild(spanPreview);
+                
+                li.appendChild(divContent);
 
-                    <div class="reminder-controls flex items-center justify-between space-x-2 bg-gray-700 p-2 rounded-lg">
-                        
-                        <input type="datetime-local" 
-                               class="reminder-datetime-input flex-grow" 
-                               value="${dateTimeValue}" 
-                               style="max-width: none;"> <label class="ios-toggle flex-shrink-0">
-                            <input type="checkbox" class="reminder-toggle-check" ${item.is_active ? 'checked' : ''}>
-                            <span class="slider"></span>
-                        </label>
+                // --- Hàng 2: Hàng điều khiển (Thời gian, Bật/tắt, Xóa) ---
+                const divControls = document.createElement('div');
+                divControls.className = "reminder-controls flex items-center justify-between space-x-2 bg-gray-700 p-2 rounded-lg";
+                
+                // HTML cho Hàng 2 (an toàn vì value và checked là attributes)
+                divControls.innerHTML = `
+                    <input type="datetime-local" 
+                           class="reminder-datetime-input flex-grow" 
+                           value="${dateTimeValue}" 
+                           style="max-width: none;"> <label class="ios-toggle flex-shrink-0">
+                        <input type="checkbox" class="reminder-toggle-check" ${item.is_active ? 'checked' : ''}>
+                        <span class="slider"></span>
+                    </label>
 
-                        <button class="reminder-delete-btn text-gray-400 hover:text-red-400 p-1 flex-shrink-0">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                    </div>
+                    <button class="reminder-delete-btn text-gray-400 hover:text-red-400 p-1 flex-shrink-0">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
                 `;
+                li.appendChild(divControls);
                 
                 listElement.appendChild(li);
             });
@@ -1641,7 +1689,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     /**
-     * (MỚI) Vẽ danh sách các link đã lưu
+     * (MỚI - VÁ LỖI XSS) Vẽ danh sách các link đã lưu
      */
     function renderLinkList() {
         if (!linkListContainer) return;
@@ -1662,21 +1710,47 @@ document.addEventListener('DOMContentLoaded', () => {
             const li = document.createElement('div');
             li.className = "bg-gray-800 rounded-lg shadow-lg p-4 flex items-center justify-between space-x-3";
             
-            li.innerHTML = `
-                <div class="flex-grow min-w-0">
-                    <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="block text-blue-400 font-semibold truncate hover:underline">
-                        ${link.url}
-                    </a>
-                    <p class="text-gray-300 text-sm mt-1 truncate">
-                        ${link.note || '(Không có ghi chú)'}
-                    </p>
-                </div>
-                <div class="flex-shrink-0">
-                    <button data-index="${originalIndex}" class="delete-link text-gray-400 hover:text-red-400 p-1">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
-                </div>
+            // (SỬA LỖI XSS) Tạo DOM an toàn
+            const divContent = document.createElement('div');
+            divContent.className = "flex-grow min-w-0";
+            
+            const aLink = document.createElement('a');
+            
+            // (SỬA LỖI XSS) Chặn 'javascript:' URLs
+            let safeUrl = link.url;
+            // Tự động thêm https:// nếu thiếu
+            if (!safeUrl.startsWith('http://') && !safeUrl.startsWith('https://') && !safeUrl.startsWith('mailto:') && !safeUrl.startsWith('tel:')) {
+                safeUrl = `https://${safeUrl}`; 
+            }
+            // Kiểm tra lại lần nữa, nếu người dùng cố tình gõ 'javascript:...'
+            if (safeUrl.toLowerCase().startsWith('javascript:')) { 
+                safeUrl = '#'; // Vô hiệu hóa nếu là javascript:
+            }
+            
+            aLink.href = safeUrl;
+            aLink.target = "_blank";
+            aLink.rel = "noopener noreferrer";
+            aLink.className = "block text-blue-400 font-semibold truncate hover:underline";
+            aLink.textContent = link.url; // AN TOÀN
+            divContent.appendChild(aLink);
+            
+            const pNote = document.createElement('p');
+            pNote.className = "text-gray-300 text-sm mt-1 truncate";
+            pNote.textContent = link.note || '(Không có ghi chú)'; // AN TOÀN
+            divContent.appendChild(pNote);
+            
+            li.appendChild(divContent);
+
+            // Nút Xóa (an toàn vì index là số)
+            const divButton = document.createElement('div');
+            divButton.className = "flex-shrink-0";
+            divButton.innerHTML = `
+                <button data-index="${originalIndex}" class="delete-link text-gray-400 hover:text-red-400 p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
             `;
+            li.appendChild(divButton);
+            
             linkListContainer.appendChild(li);
         });
     }
@@ -1930,12 +2004,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 bottomTabCalendar.classList.add('active');
                 
                 // (CẬP NHẬT) Hiển thị Header cho Lịch (Tiêu đề)
-                // (SỬA) Bản web không có thanh sub-tab nên phải hiện tiêu đề
-                 if (mobileHeaderTitle) {
+                if (mobileHeaderTitle) {
                     mobileHeaderTitle.textContent = "Lịch & Nhắc Nhở";
                     mobileHeaderTitle.classList.remove('hidden');
                 }
-                // (SỬA) Chỉ hiển thị sub-tab bên trong main, không tác động header
+                // (SỬA) Thanh sub-tab đã nằm trong 'calendarMain' nên sẽ tự hiển thị
                 
                 // (MỚI) Khi mở tab Lịch, luôn reset về sub-tab 'work'
                 showCalendarSubTab('work'); 
