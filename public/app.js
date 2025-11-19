@@ -385,6 +385,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Nếu không có cache, gọi API
         try {
+            // (MỚI) Thêm timestamp để tránh cache trình duyệt/server
+            const timestamp = new Date().getTime(); 
+            const response = await fetch(`/get-rss?url=${encodeURIComponent(rssUrl)}&t=${timestamp}`);
+            
+            if (!response.ok) throw new Error('Lỗi server (RSS)');
+            
             const response = await fetch(`/get-rss?url=${encodeURIComponent(rssUrl)}`);
             if (!response.ok) throw new Error('Lỗi server (RSS)');
             
