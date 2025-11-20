@@ -2,7 +2,7 @@
 /* FILE: public/app.js                                                 */
 /* MỤC ĐÍCH: Logic JavaScript chính cho toàn bộ ứng dụng Ghichu App.     */
 /* PHIÊN BẢN: Đã tách logic tính toán sang utils.js                     */
-/* CẬP NHẬT: Xóa Chat + Sửa lỗi cuộn trang + Tab Lưu Trữ                */
+/* CẬP NHẬT: Đã XÓA SẠCH code Chat để tránh lỗi NULL                    */
 /* =================================================================== */
 
 // ===================================================================
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const summaryTitleElement = document.getElementById('summary-title');
     const summaryTextElement = document.getElementById('summary-text');
     const feedNav = document.getElementById('feed-nav');
-    // (ĐÃ XÓA) chatFab, chatModal...
+    // (ĐÃ XÓA BIẾN CHAT)
     const rssMenuBtn = document.getElementById('rss-menu-btn'); 
     const rssMobileMenu = document.getElementById('rss-mobile-menu'); 
     const summaryToast = document.getElementById('summary-toast');
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newNoteInput = document.getElementById('new-note-input');
     const toggleSummaryViewBtn = document.getElementById('toggle-summary-view-btn');
 
-    // (ĐÃ XÓA) Biến Phần 3 (Trò chuyện)
+    // (ĐÃ XÓA BIẾN CHAT MAIN)
     
     // --- Biến Phần 3.2 (Lưu Trữ Link) ---
     const linksMain = document.getElementById('links-main');
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
     const bottomTabNews = document.getElementById('bottom-tab-news');
     const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
-    // (ĐÃ XÓA) bottomTabChat
+    // (ĐÃ XÓA BIẾN BOTTOM TAB CHAT)
     const bottomTabLinks = document.getElementById('bottom-tab-links'); 
     const bottomTabSettings = document.getElementById('bottom-tab-settings');
     const bottomNav = document.getElementById('bottom-nav'); 
@@ -172,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentAdminCreds = null; 
     let currentEditingDateStr = null; 
     let currentViewDate = new Date(); 
-    // (ĐÃ XÓA) chatHistory
     let summaryEventSource = null; 
     let completedSummary = { title: '', text: '' }; 
     let toastTimeoutId = null; 
@@ -257,8 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
     }
-
-    // (ĐÃ XÓA) callChatAPI và renderChatHistory
 
     async function fetchRSS(rssUrl, sourceName, { display = true, force = false } = {}) {
         if (display) {
@@ -484,8 +481,6 @@ document.addEventListener('DOMContentLoaded', () => {
               null 
           );
      }
-
-    // (ĐÃ XÓA) handleSendChat và resetChat
 
     function prewarmCache() {
         console.log("[Cache-Warmer] Bắt đầu tải nền các feed khác...");
