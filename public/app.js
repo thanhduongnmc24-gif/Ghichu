@@ -1152,7 +1152,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             items.forEach(item => {
                 const li = document.createElement('li');
-                li.className = "reminder-item flex flex-col space-y-2 swipe-item-container"; // (SỬA) Thêm class swipe
+                // SỬA Ở ĐÂY: Xóa "flex flex-col space-y-2" để khung không bị lệch
+                li.className = "reminder-item swipe-item-container mb-3 shadow-lg"; 
                 
                 li.dataset.id = item.id;
                 li.dataset.title = item.title;
@@ -1175,10 +1176,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // 2. LỚP NỘI DUNG (Content) - Chứa thông tin
                 const contentWrapper = document.createElement('div');
-                contentWrapper.className = 'swipe-content flex flex-col space-y-2 bg-gray-800 p-1';
+                // Chuyển layout flex vào bên trong này
+                contentWrapper.className = 'swipe-content flex flex-col space-y-2 bg-gray-800 p-3 rounded-lg'; 
                 
                 const divContent = document.createElement('div');
-                divContent.className = "reminder-content-clickable bg-gray-700 p-3 rounded-lg cursor-pointer flex-grow overflow-hidden min-w-0";
+                divContent.className = "reminder-content-clickable cursor-pointer flex-grow overflow-hidden min-w-0";
                 
                 const spanTitle = document.createElement('span');
                 spanTitle.className = `reminder-title ${textClass} font-semibold block truncate`;
@@ -1193,6 +1195,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 contentWrapper.appendChild(divContent);
 
                 const divControls = document.createElement('div');
+                // Thêm màu nền nhẹ cho cụm điều khiển để tách biệt
                 divControls.className = "reminder-controls flex items-center justify-between space-x-2 bg-gray-700 p-2 rounded-lg";
                 
                 divControls.innerHTML = `
@@ -1207,11 +1210,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 contentWrapper.appendChild(divControls);
                 
-                li.appendChild(contentWrapper); // Thêm wrapper vào li
+                li.appendChild(contentWrapper); 
+
+                // Gắn sự kiện click để sửa
+                divContent.addEventListener('click', () => {
+                    // Gọi logic mở modal sửa (copy logic cũ)
+                    const contentBoxClick = divContent; 
+                    if (contentBoxClick) { 
+                        const id = item.id; // Lấy trực tiếp từ item
+                        const title = item.title;
+                        const content = item.content;
+                        const dtValue = formatISODateForInput(item.remind_at);
+                        const isActive = item.is_active;
+
+                        editReminderId.value = id;
+                        editReminderTitle.value = title;
+                        editReminderContent.value = content;
+                        editReminderDatetime.value = dtValue;
+                        editReminderActive.checked = isActive;
+                        
+                        reminderEditModal.classList.remove('hidden');
+                    }
+                });
 
                 // Gắn sự kiện Vuốt để Xóa
                 enableSwipeToDelete(contentWrapper, async () => {
-                    // Logic xóa nhắc nhở
                      if (!swRegistration || !swRegistration.pushManager) return;
                      const subscription = await swRegistration.pushManager.getSubscription();
                      if (!subscription) return;
@@ -1222,15 +1245,12 @@ document.addEventListener('DOMContentLoaded', () => {
                              headers: { 'Content-Type': 'application/json' },
                              body: JSON.stringify({ id: item.id, endpoint: subscription.endpoint })
                          });
-                         // Xóa khỏi giao diện
                          li.remove();
-                         // Nếu group trống thì xóa group
                          if (listElement.children.length === 0) {
                              monthGroup.remove();
                          }
                      } catch (err) {
                          console.error("Lỗi xóa nhắc nhở:", err);
-                         // Nếu lỗi thì trả lại vị trí cũ (reset transform)
                          contentWrapper.style.transform = 'translateX(0)';
                      }
                 });
@@ -1241,7 +1261,7 @@ document.addEventListener('DOMContentLoaded', () => {
             reminderListContainer.appendChild(monthGroup);
         });
     }
-
+/////// hết hàm
 
     function showReminderStatus(message, isError = false) {
         if (!newReminderStatus) return;
