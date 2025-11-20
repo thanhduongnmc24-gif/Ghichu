@@ -3,7 +3,6 @@
 /* MỤC ĐÍCH: Logic JavaScript chính cho toàn bộ ứng dụng Ghichu App.     */
 /* =================================================================== */
 
-// Import các hàm tiện ích từ utils.js
 import {
     convertSolarToLunar,
     getLocalDateString,
@@ -11,11 +10,6 @@ import {
     getShiftForDate,
     urlBase64ToUint8Array
 } from './utils.js';
-
-
-// ===================================================================
-// PHẦN CHÍNH: KHỞI ĐỘNG ỨNG DỤNG
-// ===================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -28,9 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(async reg => {
                 console.log('Main Service Worker Registered!', reg);
                 swRegistration = reg; 
-                
                 await getVapidPublicKey();
-                
                 checkNotificationStatus();
             })
             .catch(err => console.error('Main Service Worker registration failed:', err));
@@ -63,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const calendarMain = document.getElementById('calendar-main');
     const settingsMain = document.getElementById('settings-main');
     
-    // (MỚI - MODAL AI)
+    // AI Form & Toggle
     const aiModal = document.getElementById('ai-modal');
     const closeAiModalBtn = document.getElementById('close-ai-modal');
     const fabAiToggle = document.getElementById('fab-ai-toggle');
@@ -89,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Lưu Trữ Link ---
     const linksMain = document.getElementById('links-main');
-    // (MỚI - MODAL LINK ADD)
     const linkAddModal = document.getElementById('link-add-modal');
     const closeLinkAddModalBtn = document.getElementById('close-link-add-modal');
     const fabLinkToggle = document.getElementById('fab-link-toggle');
@@ -100,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const linkListContainer = document.getElementById('link-list-container');
     const linkStatusMsg = document.getElementById('link-status-msg');
 
-    // (MỚI - MODAL LINK EDIT)
+    // Modal Edit Link
     const linkEditModal = document.getElementById('link-edit-modal');
     const closeLinkEditModalBtn = document.getElementById('close-link-edit-modal');
     const editLinkForm = document.getElementById('edit-link-form');
@@ -117,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const calendarRemindersContent = document.getElementById('calendar-reminders-content');
 
     // --- Nhắc nhở Form ---
-    // (MỚI - MODAL REMINDER ADD)
     const reminderAddModal = document.getElementById('reminder-add-modal');
     const closeReminderAddModalBtn = document.getElementById('close-reminder-add-modal');
     const fabReminderToggle = document.getElementById('fab-reminder-toggle');
@@ -214,7 +204,54 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ===================================================================
-    // PHẦN 1: LOGIC TIN TỨC
+    // HÀM TIỆN ÍCH: SWIPE TO DELETE (VUỐT ĐỂ XÓA NGAY)
+    // ===================================================================
+    function enableSwipeToDelete(element, onDeleteCallback) {
+        let startX = 0;
+        let currentX = 0;
+        let isSwiping = false;
+        const threshold = -150; // Vuốt sang trái 150px thì xóa
+
+        element.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isSwiping = true;
+            element.style.transition = 'none'; // Tắt transition để kéo mượt
+        }, { passive: true });
+
+        element.addEventListener('touchmove', (e) => {
+            if (!isSwiping) return;
+            currentX = e.touches[0].clientX;
+            const diff = currentX - startX;
+
+            // Chỉ cho phép kéo sang trái (diff < 0)
+            if (diff < 0) {
+                element.style.transform = `translateX(${diff}px)`;
+            }
+        }, { passive: true });
+
+        element.addEventListener('touchend', () => {
+            if (!isSwiping) return;
+            isSwiping = false;
+            element.style.transition = 'transform 0.2s ease-out';
+
+            const diff = currentX - startX;
+            
+            if (diff < threshold) {
+                // Vuốt đủ xa -> Xóa ngay
+                element.style.transform = `translateX(-100%)`; // Văng ra ngoài
+                setTimeout(() => {
+                    onDeleteCallback(); // Gọi hàm xóa
+                }, 200);
+            } else {
+                // Vuốt chưa đủ -> Trả về vị trí cũ
+                element.style.transform = 'translateX(0)';
+            }
+        });
+    }
+
+
+    // ===================================================================
+    // PHẦN 1: LOGIC TIN TỨC (GIỮ NGUYÊN)
     // ===================================================================
     
     const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
@@ -267,20 +304,14 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    /**
-     * Tải RSS với Timestamp để tránh Cache
-     */
     async function fetchRSS(rssUrl, sourceName, { display = true, force = false } = {}) {
         if (display) {
             loadingSpinner.classList.remove('hidden');
             newsGrid.innerHTML = '';
         }
-        
         if (force) {
             clientRssCache.delete(rssUrl);
-            console.log(`[CACHE] Đã xóa ${rssUrl} do yêu cầu Tải lại.`);
         }
-        
         if (clientRssCache.has(rssUrl)) {
             if (display) {
                 displayArticles(clientRssCache.get(rssUrl), sourceName);
@@ -288,20 +319,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return;
         }
-        
         try {
-            // THÊM TIMESTAMP ĐỂ TRÁNH CACHE
             const timestamp = new Date().getTime();
             const response = await fetch(`/get-rss?url=${encodeURIComponent(rssUrl)}&t=${timestamp}`);
-            
             if (!response.ok) throw new Error('Lỗi server (RSS)');
-            
             const str = await response.text();
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(str, "text/xml");
-            
             if (xmlDoc.getElementsByTagName("parsererror").length) throw new Error("Lỗi phân tích XML");
-            
             let items;
             const itemNodes = xmlDoc.querySelectorAll("item");
             if (itemNodes.length === 0) {
@@ -311,15 +336,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                  items = Array.from(itemNodes);
             }
-            
             clientRssCache.set(rssUrl, items);
-            
             if (display) displayArticles(items, sourceName);
         } catch (error) {
             console.error(`Lỗi tải RSS ${sourceName}:`, error);
             if (display) newsGrid.innerHTML = `<p class="text-red-400 col-span-full text-center">${error.message}</p>`;
         } finally {
-            // LUÔN TẮT SPINNER
             if (display) loadingSpinner.classList.add('hidden');
         }
     }
@@ -334,74 +356,59 @@ document.addEventListener('DOMContentLoaded', () => {
                 link = item.querySelector("link")?.getAttribute("href") || "#"; 
             }
             const pubDate = item.querySelector("pubDate")?.textContent || item.querySelector("updated")?.textContent || "";
-            
             const descParser = new DOMParser();
             const descDoc = descParser.parseFromString(`<!doctype html><body>${description}`, 'text/html');
             const img = descDoc.querySelector("img");
             const imgSrc = img ? img.src : "https://placehold.co/600x400/374151/9CA3AF?text=Tin+Tuc";
             let descriptionText = descDoc.body.textContent.trim() || "Không có mô tả.";
-            
             if (descriptionText.startsWith(title)) {
                 descriptionText = descriptionText.substring(title.length).trim();
             }
-            
             const card = document.createElement('a');
             card.href = link;
             card.className = "bg-gray-800 rounded-lg shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-[1.03] hover:shadow-blue-500/20 block";
-            
             const imgEl = document.createElement('img');
             imgEl.src = imgSrc;
             imgEl.alt = title; 
             imgEl.className = "w-full h-48 object-cover";
             imgEl.onerror = function() { this.src='https://placehold.co/600x400/374151/9CA3AF?text=Error'; };
             card.appendChild(imgEl);
-
             const contentDiv = document.createElement('div');
             contentDiv.className = "p-5";
-
             const sourceSpan = document.createElement('span');
             sourceSpan.className = "text-xs font-semibold text-blue-400";
             sourceSpan.textContent = sourceName; 
             contentDiv.appendChild(sourceSpan);
-
             const titleH3 = document.createElement('h3');
             titleH3.className = "text-lg font-bold text-white mt-2 mb-1 leading-tight line-clamp-2";
             titleH3.textContent = title; 
             contentDiv.appendChild(titleH3);
-
             const descP = document.createElement('p');
             descP.className = "text-sm text-gray-400 mt-2 mb-3 line-clamp-3";
             descP.textContent = descriptionText; 
             contentDiv.appendChild(descP);
-
             const footerDiv = document.createElement('div');
             footerDiv.className = "flex justify-between items-center mt-4";
-            
             const dateP = document.createElement('p');
             dateP.className = "text-sm text-gray-400";
             dateP.textContent = pubDate ? new Date(pubDate).toLocaleString('vi-VN') : '';
             footerDiv.appendChild(dateP);
-
             const summaryButton = document.createElement('button');
             summaryButton.className = "summary-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded-full transition-all duration-200 z-10 relative";
             summaryButton.textContent = "Tóm tắt";
             footerDiv.appendChild(summaryButton);
-            
             contentDiv.appendChild(footerDiv);
             card.appendChild(contentDiv);
-
              card.addEventListener('click', (e) => {
                  if (e.target.closest('.summary-btn')) {
                      return; 
                  }
              });
-            
             summaryButton.addEventListener('click', (e) => {
                 e.preventDefault(); 
                 e.stopPropagation(); 
                 handleSummaryClick(title, descriptionText);
             });
-            
             newsGrid.appendChild(card);
         });
     }
@@ -409,16 +416,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleFeedButtonClick(e) {
          const clickedButton = e.target.closest('.feed-button');
          if (!clickedButton || clickedButton.classList.contains('active')) return;
-         
          const rssUrl = clickedButton.dataset.rss;
          const sourceName = clickedButton.dataset.source;
-         
          document.querySelectorAll('#feed-nav .feed-button, #rss-mobile-menu .feed-button').forEach(btn => btn.classList.remove('active'));
          document.querySelectorAll(`.feed-button[data-rss="${rssUrl}"]`).forEach(btn => btn.classList.add('active'));
-         
          window.scrollTo({ top: 0, behavior: 'smooth' });
          fetchRSS(rssUrl, sourceName);
-         
          rssMobileMenu.classList.add('hidden'); 
     }
 
@@ -427,25 +430,19 @@ document.addEventListener('DOMContentLoaded', () => {
              showToast("Không thể tóm tắt", "Bài viết không có đủ nội dung.", 'error', null, 4000);
             return;
         }
-        
         const prompt = `Tóm tắt nội dung sau đây trong khoảng 200 từ:
         Tiêu đề: ${title}
         Nội dung: ${description}`;
-        
         callGeminiAPIStreaming(prompt, title);
-        
         showToast("Đang tóm tắt...", title.substring(0, 50) + "...", 'loading', null, 5000);
     }
 
      function showToast(mainMessage, detailMessage, state = 'ready', onClickAction, autoHideDelay = null) {
          if (toastTimeoutId) clearTimeout(toastTimeoutId); 
-         
          toastMainMessage.textContent = mainMessage;
          toastTitle.textContent = detailMessage;
-         
          summaryToast.classList.remove('toast-loading', 'bg-blue-600', 'bg-red-600');
          summaryToast.onclick = null; 
-         
          if (state === 'loading') {
              toastIcon.innerHTML = iconSpinner;
              summaryToast.classList.add('toast-loading'); 
@@ -463,10 +460,8 @@ document.addEventListener('DOMContentLoaded', () => {
              summaryToast.style.cursor = 'default';
              toastCta.style.display = 'none';
          }
-         
          summaryToast.classList.remove('hidden');
          setTimeout(() => summaryToast.classList.add('show'), 50); 
-         
          if (autoHideDelay) {
              toastTimeoutId = setTimeout(hideToast, autoHideDelay);
          }
@@ -475,7 +470,6 @@ document.addEventListener('DOMContentLoaded', () => {
      function hideToast() {
           if (toastTimeoutId) clearTimeout(toastTimeoutId);
           toastTimeoutId = null;
-          
           summaryToast.classList.remove('show');
           setTimeout(() => {
               summaryToast.classList.add('hidden');
@@ -1104,11 +1098,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderReminderList(groupedReminders) {
         if (!reminderListContainer) return;
-        
         reminderListContainer.innerHTML = ''; 
 
         const monthKeys = Object.keys(groupedReminders);
-        
         const sortedMonthKeys = monthKeys.sort((a, b) => {
             if (a === "null") return 1; 
             if (b === "null") return -1; 
@@ -1125,7 +1117,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         sortedMonthKeys.forEach(monthKey => { 
             const items = groupedReminders[monthKey];
-            
             if (items.length === 0) return;
 
             items.sort((a, b) => {
@@ -1135,7 +1126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             const monthGroup = document.createElement('div');
-            monthGroup.className = 'reminder-month-group bg-gray-800 rounded-lg shadow-lg';
+            monthGroup.className = 'reminder-month-group bg-gray-800 rounded-lg shadow-lg overflow-hidden mb-6';
             
             let headerTitle = "";
             if (monthKey === "null") {
@@ -1159,8 +1150,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             items.forEach(item => {
                 const li = document.createElement('li');
-                
-                li.className = "reminder-item flex flex-col space-y-2";
+                li.className = "reminder-item flex flex-col space-y-2 swipe-item-container"; // (SỬA) Thêm class swipe
                 
                 li.dataset.id = item.id;
                 li.dataset.title = item.title;
@@ -1170,12 +1160,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 li.dataset.active = item.is_active;
 
                 const textClass = item.is_active ? "text-white" : "text-gray-400";
-                
                 let contentPreview = item.content || '';
                 if (contentPreview.length > 50) {
                     contentPreview = contentPreview.substring(0, 50) + '...';
                 }
 
+                // 1. LỚP NỀN (Background) - Chữ Xóa
+                const bgDiv = document.createElement('div');
+                bgDiv.className = 'swipe-background';
+                bgDiv.textContent = 'Xóa';
+                li.appendChild(bgDiv);
+
+                // 2. LỚP NỘI DUNG (Content) - Chứa thông tin
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'swipe-content flex flex-col space-y-2 bg-gray-800 p-1';
+                
                 const divContent = document.createElement('div');
                 divContent.className = "reminder-content-clickable bg-gray-700 p-3 rounded-lg cursor-pointer flex-grow overflow-hidden min-w-0";
                 
@@ -1189,7 +1188,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 spanPreview.textContent = contentPreview || '(Không có nội dung)'; 
                 divContent.appendChild(spanPreview);
                 
-                li.appendChild(divContent);
+                contentWrapper.appendChild(divContent);
 
                 const divControls = document.createElement('div');
                 divControls.className = "reminder-controls flex items-center justify-between space-x-2 bg-gray-700 p-2 rounded-lg";
@@ -1198,17 +1197,42 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="datetime-local" 
                            class="reminder-datetime-input flex-grow" 
                            value="${dateTimeValue}" 
-                           style="max-width: none;"> <label class="ios-toggle flex-shrink-0">
+                           style="max-width: none;"> 
+                    <label class="ios-toggle flex-shrink-0">
                         <input type="checkbox" class="reminder-toggle-check" ${item.is_active ? 'checked' : ''}>
                         <span class="slider"></span>
                     </label>
-
-                    <button class="reminder-delete-btn text-gray-400 hover:text-red-400 p-1 flex-shrink-0">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
                 `;
-                li.appendChild(divControls);
+                contentWrapper.appendChild(divControls);
                 
+                li.appendChild(contentWrapper); // Thêm wrapper vào li
+
+                // Gắn sự kiện Vuốt để Xóa
+                enableSwipeToDelete(contentWrapper, async () => {
+                    // Logic xóa nhắc nhở
+                     if (!swRegistration || !swRegistration.pushManager) return;
+                     const subscription = await swRegistration.pushManager.getSubscription();
+                     if (!subscription) return;
+                     
+                     try {
+                         await fetch('/api/delete-reminder', {
+                             method: 'POST',
+                             headers: { 'Content-Type': 'application/json' },
+                             body: JSON.stringify({ id: item.id, endpoint: subscription.endpoint })
+                         });
+                         // Xóa khỏi giao diện
+                         li.remove();
+                         // Nếu group trống thì xóa group
+                         if (listElement.children.length === 0) {
+                             monthGroup.remove();
+                         }
+                     } catch (err) {
+                         console.error("Lỗi xóa nhắc nhở:", err);
+                         // Nếu lỗi thì trả lại vị trí cũ (reset transform)
+                         contentWrapper.style.transform = 'translateX(0)';
+                     }
+                });
+
                 listElement.appendChild(li);
             });
             
@@ -1283,7 +1307,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ===================================================================
-    // PHẦN 2.6: LOGIC LƯU TRỮ LINKS (ĐÃ CẬP NHẬT)
+    // PHẦN 2.6: LOGIC LƯU TRỮ LINKS (ĐÃ CẬP NHẬT SWIPE)
     // ===================================================================
 
     function showLinkStatus(message, isError = false) {
@@ -1317,14 +1341,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const originalIndex = links.length - 1 - index; 
             
             const li = document.createElement('div');
-            // (MỚI) Thêm cursor-pointer để người dùng biết là bấm được
-            li.className = "bg-gray-800 rounded-lg shadow-lg p-4 flex items-center justify-between space-x-3 cursor-pointer hover:bg-gray-750 transition-colors";
+            // (SỬA) Class container cho swipe
+            li.className = "swipe-item-container mb-3 shadow-lg"; 
+
+            // 1. LỚP NỀN (Background) - Chữ Xóa
+            const bgDiv = document.createElement('div');
+            bgDiv.className = 'swipe-background';
+            bgDiv.textContent = 'Xóa';
+            li.appendChild(bgDiv);
             
-            const divContent = document.createElement('div');
-            divContent.className = "flex-grow min-w-0";
+            // 2. LỚP NỘI DUNG (Content)
+            const contentDiv = document.createElement('div');
+            contentDiv.className = "swipe-content bg-gray-800 p-4 flex items-center justify-between space-x-3 cursor-pointer hover:bg-gray-750 transition-colors";
+            
+            const textWrapper = document.createElement('div');
+            textWrapper.className = "flex-grow min-w-0";
             
             const aLink = document.createElement('a');
-            
             let safeUrl = link.url;
             if (!safeUrl.startsWith('http://') && !safeUrl.startsWith('https://') && !safeUrl.startsWith('mailto:') && !safeUrl.startsWith('tel:')) {
                 safeUrl = `https://${safeUrl}`; 
@@ -1336,27 +1369,31 @@ document.addEventListener('DOMContentLoaded', () => {
             aLink.href = safeUrl;
             aLink.target = "_blank";
             aLink.rel = "noopener noreferrer";
-            // (MỚI) Thêm class relative và z-index để link nằm trên lớp click của thẻ cha
             aLink.className = "block text-blue-400 font-semibold truncate hover:underline relative z-10";
             aLink.textContent = link.url; 
+            aLink.addEventListener('click', (e) => e.stopPropagation());
             
-            // (MỚI) Ngăn chặn sự kiện click nổi bọt lên thẻ cha khi bấm vào link
-            aLink.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-            
-            divContent.appendChild(aLink);
+            textWrapper.appendChild(aLink);
             
             const pNote = document.createElement('p');
             pNote.className = "text-gray-300 text-sm mt-1 truncate";
             pNote.textContent = link.note || '(Không có ghi chú)'; 
-            divContent.appendChild(pNote);
+            textWrapper.appendChild(pNote);
             
-            li.appendChild(divContent);
+            contentDiv.appendChild(textWrapper);
+            li.appendChild(contentDiv);
 
-            // (MỚI) Sự kiện click vào toàn bộ khung để mở Modal Edit
-            li.addEventListener('click', () => {
+            // Click để sửa
+            contentDiv.addEventListener('click', () => {
                 openEditLinkModal(originalIndex);
+            });
+
+            // Gắn sự kiện Vuốt để Xóa
+            enableSwipeToDelete(contentDiv, () => {
+                // Logic xóa link
+                appData.links.splice(originalIndex, 1);
+                saveAppData();
+                renderLinkList(); // Vẽ lại danh sách
             });
             
             linkListContainer.appendChild(li);
@@ -1559,7 +1596,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mobileHeaderTitle) mobileHeaderTitle.classList.add('hidden');
         if (calendarSubtabHeader) calendarSubtabHeader.classList.add('hidden');
         
-        // (MỚI) Đóng và ẩn tất cả FAB
+        // Đóng và ẩn tất cả FAB
         if(fabAiToggle) fabAiToggle.classList.add('hidden');
         if(fabReminderToggle) fabReminderToggle.classList.add('hidden');
         if(fabLinkToggle) fabLinkToggle.classList.add('hidden');
@@ -1593,6 +1630,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     mobileHeaderTitle.classList.remove('hidden');
                 }
                 
+                // (FIX LỖI) Reset sub-tab về null để ép hàm showCalendarSubTab chạy lại logic hiển thị nút FAB
+                currentCalendarSubTab = null; 
                 showCalendarSubTab('work'); 
                 break;
             
@@ -1644,7 +1683,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (rssMenuBtn) rssMenuBtn.addEventListener('click', () => rssMobileMenu.classList.toggle('hidden'));
 
-    // (MỚI) Event listeners cho các nút FAB (Mở Modal)
+    // Event listeners cho các nút FAB (Mở Modal)
     if (fabAiToggle) {
         fabAiToggle.addEventListener('click', () => {
             aiModal.classList.remove('hidden');
@@ -1690,7 +1729,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // (MỚI) Event listeners cho Link Edit Modal
+    // Event listeners cho Link Edit Modal
     if (closeLinkEditModalBtn) {
         closeLinkEditModalBtn.addEventListener('click', () => {
             linkEditModal.classList.add('hidden');
@@ -2179,46 +2218,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const item = e.target.closest('.reminder-item');
                 if (!item) return;
 
-                const deleteBtn = e.target.closest('.reminder-delete-btn');
-                if (deleteBtn) {
-                    e.stopPropagation(); 
-                    
-                    if (!swRegistration || !swRegistration.pushManager) {
-                        alert("Lỗi PushManager. Không thể xóa.");
-                        return;
-                    }
-                    const subscription = await swRegistration.pushManager.getSubscription();
-                    if (!subscription) {
-                        alert("Không thể xác thực. Vui lòng Bật Thông Báo.");
-                        return;
-                    }
-                    const endpoint = subscription.endpoint;
-                    
-                    const id = item.dataset.id;
-                    if (!confirm("Đại ca có chắc muốn xóa nhắc nhở này?")) return;
-                    
-                    item.style.opacity = '0.5'; 
-                    try {
-                        const response = await fetch('/api/delete-reminder', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ id: id, endpoint: endpoint })
-                        });
-                        const result = await response.json();
-                            if (!response.ok) throw new Error(result.error);
-                            const list = item.closest('.reminder-list'); 
-                            item.remove(); 
-                            if (list && list.children.length === 0) { 
-                            list.closest('.reminder-month-group').remove();
-                        }
-                        
-                    } catch (err) {
-                        alert(`Lỗi khi xóa: ${err.message}`);
-                        item.style.opacity = '1'; 
-                    }
-                    return; 
-                }
-                
                 const contentBoxClick = e.target.closest('.reminder-content-clickable');
                 
                 if (contentBoxClick) { 
