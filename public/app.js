@@ -204,18 +204,20 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ===================================================================
-    // HÀM TIỆN ÍCH: SWIPE TO DELETE (VUỐT ĐỂ XÓA NGAY)
+    // ===================================================================
+    // HÀM TIỆN ÍCH: SWIPE TO DELETE (ĐÃ SỬA LỖI CLICK NHẦM)
     // ===================================================================
     function enableSwipeToDelete(element, onDeleteCallback) {
         let startX = 0;
         let currentX = 0;
         let isSwiping = false;
-        const threshold = -150; // Vuốt sang trái 150px thì xóa
+        const threshold = -100; // Ngưỡng vuốt để xóa
 
         element.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX;
+            currentX = startX; // <--- SỬA LỖI Ở ĐÂY: Đồng bộ vị trí ngay khi chạm
             isSwiping = true;
-            element.style.transition = 'none'; // Tắt transition để kéo mượt
+            element.style.transition = 'none'; 
         }, { passive: true });
 
         element.addEventListener('touchmove', (e) => {
@@ -223,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentX = e.touches[0].clientX;
             const diff = currentX - startX;
 
-            // Chỉ cho phép kéo sang trái (diff < 0)
+            // Chỉ cho phép kéo sang trái
             if (diff < 0) {
                 element.style.transform = `translateX(${diff}px)`;
             }
@@ -236,14 +238,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const diff = currentX - startX;
             
-            if (diff < threshold) {
-                // Vuốt đủ xa -> Xóa ngay
+            // Chỉ xóa nếu người dùng thực sự vuốt (currentX khác startX) và vượt ngưỡng
+            if (currentX !== startX && diff < threshold) {
                 element.style.transform = `translateX(-100%)`; // Văng ra ngoài
                 setTimeout(() => {
-                    onDeleteCallback(); // Gọi hàm xóa
+                    onDeleteCallback(); 
                 }, 200);
             } else {
-                // Vuốt chưa đủ -> Trả về vị trí cũ
+                // Trả về vị trí cũ
                 element.style.transform = 'translateX(0)';
             }
         });
