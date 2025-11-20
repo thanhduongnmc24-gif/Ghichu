@@ -1152,7 +1152,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             items.forEach(item => {
                 const li = document.createElement('li');
-                // SỬA Ở ĐÂY: Xóa "flex flex-col space-y-2" để khung không bị lệch
                 li.className = "reminder-item swipe-item-container mb-3 shadow-lg"; 
                 
                 li.dataset.id = item.id;
@@ -1176,11 +1175,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // 2. LỚP NỘI DUNG (Content) - Chứa thông tin
                 const contentWrapper = document.createElement('div');
-                // Chuyển layout flex vào bên trong này
                 contentWrapper.className = 'swipe-content flex flex-col space-y-2 bg-gray-800 p-3 rounded-lg'; 
                 
+                // --- KHUNG 1: TIÊU ĐỀ & NỘI DUNG ---
                 const divContent = document.createElement('div');
-                divContent.className = "reminder-content-clickable cursor-pointer flex-grow overflow-hidden min-w-0";
+                // (ĐÃ SỬA) Thêm lại bg-gray-700 p-3 rounded-lg để tạo khung riêng biệt
+                divContent.className = "reminder-content-clickable bg-gray-700 p-3 rounded-lg cursor-pointer flex-grow overflow-hidden min-w-0";
                 
                 const spanTitle = document.createElement('span');
                 spanTitle.className = `reminder-title ${textClass} font-semibold block truncate`;
@@ -1194,8 +1194,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 contentWrapper.appendChild(divContent);
 
+                // --- KHUNG 2: ĐIỀU KHIỂN (GIỜ & NÚT) ---
                 const divControls = document.createElement('div');
-                // Thêm màu nền nhẹ cho cụm điều khiển để tách biệt
                 divControls.className = "reminder-controls flex items-center justify-between space-x-2 bg-gray-700 p-2 rounded-lg";
                 
                 divControls.innerHTML = `
@@ -1214,10 +1214,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Gắn sự kiện click để sửa
                 divContent.addEventListener('click', () => {
-                    // Gọi logic mở modal sửa (copy logic cũ)
                     const contentBoxClick = divContent; 
                     if (contentBoxClick) { 
-                        const id = item.id; // Lấy trực tiếp từ item
+                        const id = item.id;
                         const title = item.title;
                         const content = item.content;
                         const dtValue = formatISODateForInput(item.remind_at);
