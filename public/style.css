@@ -278,3 +278,36 @@ body {
         right: auto; 
     }
 }
+/* ... (Các code cũ giữ nguyên) ... */
+
+/* ----- SWIPE TO DELETE (VUỐT ĐỂ XÓA) ----- */
+.swipe-item-container {
+    position: relative;
+    overflow: hidden; /* Giấu phần nền đỏ đi */
+    border-radius: 0.5rem;
+    background-color: #EF4444; /* Màu nền đỏ (lớp dưới) */
+}
+
+.swipe-background {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 1.5rem;
+    color: white;
+    font-weight: bold;
+    font-size: 0.9rem;
+    z-index: 0; /* Nằm dưới */
+}
+
+.swipe-content {
+    position: relative;
+    z-index: 10; /* Nằm trên */
+    background-color: #1F2937; /* Màu nền gốc của item (bg-gray-800) */
+    transition: transform 0.1s linear; /* Hiệu ứng di chuyển mượt */
+    touch-action: pan-y; /* Cho phép cuộn dọc bình thường */
+}
