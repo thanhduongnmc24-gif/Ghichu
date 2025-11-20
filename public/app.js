@@ -63,8 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const calendarMain = document.getElementById('calendar-main');
     const settingsMain = document.getElementById('settings-main');
     
-    // (MỚI) AI Form & Toggle
-    const secAiForm = document.getElementById('sec-ai-form');
+    // (MỚI - MODAL AI)
+    const aiModal = document.getElementById('ai-modal');
+    const closeAiModalBtn = document.getElementById('close-ai-modal');
     const fabAiToggle = document.getElementById('fab-ai-toggle');
     const cal_aiForm = document.getElementById('ai-form');
     const cal_aiInput = document.getElementById('ai-input');
@@ -88,8 +89,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Lưu Trữ Link ---
     const linksMain = document.getElementById('links-main');
-    // (MỚI) Link Form & Toggle
-    const secLinkForm = document.getElementById('sec-link-form');
+    // (MỚI - MODAL LINK ADD)
+    const linkAddModal = document.getElementById('link-add-modal');
+    const closeLinkAddModalBtn = document.getElementById('close-link-add-modal');
     const fabLinkToggle = document.getElementById('fab-link-toggle');
     
     const newLinkForm = document.getElementById('new-link-form');
@@ -98,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const linkListContainer = document.getElementById('link-list-container');
     const linkStatusMsg = document.getElementById('link-status-msg');
 
-    // (MỚI) Modal Edit Link
+    // (MỚI - MODAL LINK EDIT)
     const linkEditModal = document.getElementById('link-edit-modal');
     const closeLinkEditModalBtn = document.getElementById('close-link-edit-modal');
     const editLinkForm = document.getElementById('edit-link-form');
@@ -115,8 +117,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const calendarRemindersContent = document.getElementById('calendar-reminders-content');
 
     // --- Nhắc nhở Form ---
-    // (MỚI) Reminder Form & Toggle
-    const secReminderForm = document.getElementById('sec-reminder-form');
+    // (MỚI - MODAL REMINDER ADD)
+    const reminderAddModal = document.getElementById('reminder-add-modal');
+    const closeReminderAddModalBtn = document.getElementById('close-reminder-add-modal');
     const fabReminderToggle = document.getElementById('fab-reminder-toggle');
     
     const newReminderForm = document.getElementById('new-reminder-form');
@@ -1506,6 +1509,10 @@ document.addEventListener('DOMContentLoaded', () => {
             calSubtabWork.classList.remove('active');
             calSubtabReminders.classList.add('active');
             
+            // Ẩn nút AI, hiện nút Reminder
+            if(fabAiToggle) fabAiToggle.classList.add('hidden');
+            if(fabReminderToggle) fabReminderToggle.classList.remove('hidden');
+
             await checkNotificationStatus(); 
             await fetchReminders(); 
 
@@ -1515,6 +1522,10 @@ document.addEventListener('DOMContentLoaded', () => {
             calSubtabWork.classList.add('active');
             calSubtabReminders.classList.remove('active');
             
+            // Hiện nút AI, ẩn nút Reminder
+            if(fabAiToggle) fabAiToggle.classList.remove('hidden');
+            if(fabReminderToggle) fabReminderToggle.classList.add('hidden');
+
             renderCalendar(currentViewDate);
         }
     }
@@ -1548,10 +1559,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mobileHeaderTitle) mobileHeaderTitle.classList.add('hidden');
         if (calendarSubtabHeader) calendarSubtabHeader.classList.add('hidden');
         
-        // (MỚI) Đóng các form toggle khi chuyển tab
-        secAiForm.classList.add('hidden');
-        secReminderForm.classList.add('hidden');
-        secLinkForm.classList.add('hidden');
+        // (MỚI) Đóng và ẩn tất cả FAB
+        if(fabAiToggle) fabAiToggle.classList.add('hidden');
+        if(fabReminderToggle) fabReminderToggle.classList.add('hidden');
+        if(fabLinkToggle) fabLinkToggle.classList.add('hidden');
+        
+        // Đóng các modal nếu đang mở
+        aiModal.classList.add('hidden');
+        reminderAddModal.classList.add('hidden');
+        linkAddModal.classList.add('hidden');
 
         switch (tabName) {
             case 'news':
@@ -1584,6 +1600,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 linksMain.classList.remove('hidden');
                 bottomTabLinks.classList.add('active');
                 
+                // Hiện nút FAB thêm link
+                if(fabLinkToggle) fabLinkToggle.classList.remove('hidden');
+
                 if (mobileHeaderTitle) {
                     mobileHeaderTitle.textContent = "Lưu Trữ";
                     mobileHeaderTitle.classList.remove('hidden');
@@ -1625,32 +1644,49 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (rssMenuBtn) rssMenuBtn.addEventListener('click', () => rssMobileMenu.classList.toggle('hidden'));
 
-    // (MỚI) Event listeners cho các nút FAB Toggle
+    // (MỚI) Event listeners cho các nút FAB (Mở Modal)
     if (fabAiToggle) {
         fabAiToggle.addEventListener('click', () => {
-            secAiForm.classList.toggle('hidden');
-            // Tự động focus vào input khi mở
-            if (!secAiForm.classList.contains('hidden')) {
-                cal_aiInput.focus();
-            }
+            aiModal.classList.remove('hidden');
+            cal_aiInput.focus();
+        });
+    }
+    if (closeAiModalBtn) {
+        closeAiModalBtn.addEventListener('click', () => aiModal.classList.add('hidden'));
+    }
+    if (aiModal) {
+        aiModal.addEventListener('click', (e) => {
+            if(e.target === aiModal) aiModal.classList.add('hidden');
         });
     }
     
     if (fabReminderToggle) {
         fabReminderToggle.addEventListener('click', () => {
-            secReminderForm.classList.toggle('hidden');
-            if (!secReminderForm.classList.contains('hidden')) {
-                newReminderTitle.focus();
-            }
+            reminderAddModal.classList.remove('hidden');
+            newReminderTitle.focus();
+        });
+    }
+    if (closeReminderAddModalBtn) {
+        closeReminderAddModalBtn.addEventListener('click', () => reminderAddModal.classList.add('hidden'));
+    }
+    if (reminderAddModal) {
+        reminderAddModal.addEventListener('click', (e) => {
+            if(e.target === reminderAddModal) reminderAddModal.classList.add('hidden');
         });
     }
 
     if (fabLinkToggle) {
         fabLinkToggle.addEventListener('click', () => {
-            secLinkForm.classList.toggle('hidden');
-             if (!secLinkForm.classList.contains('hidden')) {
-                newLinkUrl.focus();
-            }
+            linkAddModal.classList.remove('hidden');
+            newLinkUrl.focus();
+        });
+    }
+    if (closeLinkAddModalBtn) {
+        closeLinkAddModalBtn.addEventListener('click', () => linkAddModal.classList.add('hidden'));
+    }
+    if (linkAddModal) {
+        linkAddModal.addEventListener('click', (e) => {
+            if(e.target === linkAddModal) linkAddModal.classList.add('hidden');
         });
     }
 
@@ -1901,7 +1937,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     saveAppData(); 
                     renderCalendar(currentViewDate); 
                     cal_aiInput.value = ''; 
-                    secAiForm.classList.add('hidden'); // Đóng form sau khi xong
+                    aiModal.classList.add('hidden'); // Đóng modal sau khi xong
                 } else {
                     throw new Error("AI không trả về định dạng mảng.");
                 }
@@ -2128,7 +2164,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showReminderStatus('Thêm thành công!', false);
                     newReminderTitle.value = ''; 
                     newReminderContent.value = ''; 
-                    secReminderForm.classList.add('hidden'); // Đóng form sau khi thêm
+                    reminderAddModal.classList.add('hidden'); // Đóng modal sau khi thêm
                     
                     await fetchReminders();
 
@@ -2346,7 +2382,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 newLinkUrl.value = '';
                 newLinkNote.value = '';
                 showLinkStatus('Đã lưu link thành công!', false);
-                secLinkForm.classList.add('hidden'); // Đóng form sau khi lưu
+                linkAddModal.classList.add('hidden'); // Đóng modal sau khi lưu
             });
         }
         
