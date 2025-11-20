@@ -62,8 +62,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Lịch & Cài đặt ---
     const calendarMain = document.getElementById('calendar-main');
     const settingsMain = document.getElementById('settings-main');
+    
+    // (MỚI) AI Form & Toggle
+    const secAiForm = document.getElementById('sec-ai-form');
+    const fabAiToggle = document.getElementById('fab-ai-toggle');
     const cal_aiForm = document.getElementById('ai-form');
     const cal_aiInput = document.getElementById('ai-input');
+    
     const calendarBody = document.getElementById('calendar-body');
     const currentMonthYearEl = document.getElementById('current-month-year');
     const prevMonthBtn = document.getElementById('prev-month-btn');
@@ -83,11 +88,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Lưu Trữ Link ---
     const linksMain = document.getElementById('links-main');
+    // (MỚI) Link Form & Toggle
+    const secLinkForm = document.getElementById('sec-link-form');
+    const fabLinkToggle = document.getElementById('fab-link-toggle');
+    
     const newLinkForm = document.getElementById('new-link-form');
     const newLinkUrl = document.getElementById('new-link-url');
     const newLinkNote = document.getElementById('new-link-note');
     const linkListContainer = document.getElementById('link-list-container');
     const linkStatusMsg = document.getElementById('link-status-msg');
+
+    // (MỚI) Modal Edit Link
+    const linkEditModal = document.getElementById('link-edit-modal');
+    const closeLinkEditModalBtn = document.getElementById('close-link-edit-modal');
+    const editLinkForm = document.getElementById('edit-link-form');
+    const editLinkIndex = document.getElementById('edit-link-index');
+    const editLinkUrl = document.getElementById('edit-link-url');
+    const editLinkNote = document.getElementById('edit-link-note');
+    const deleteLinkBtnModal = document.getElementById('delete-link-btn-modal');
 
     // --- Lịch / Nhắc nhở (Sub-tab) ---
     const calendarSubtabHeader = document.getElementById('calendar-subtab-header');
@@ -97,6 +115,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const calendarRemindersContent = document.getElementById('calendar-reminders-content');
 
     // --- Nhắc nhở Form ---
+    // (MỚI) Reminder Form & Toggle
+    const secReminderForm = document.getElementById('sec-reminder-form');
+    const fabReminderToggle = document.getElementById('fab-reminder-toggle');
+    
     const newReminderForm = document.getElementById('new-reminder-form');
     const newReminderTitle = document.getElementById('new-reminder-title'); 
     const newReminderContent = document.getElementById('new-reminder-content');
@@ -1258,7 +1280,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ===================================================================
-    // PHẦN 2.6: LOGIC LƯU TRỮ LINKS
+    // PHẦN 2.6: LOGIC LƯU TRỮ LINKS (ĐÃ CẬP NHẬT)
     // ===================================================================
 
     function showLinkStatus(message, isError = false) {
@@ -1292,7 +1314,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const originalIndex = links.length - 1 - index; 
             
             const li = document.createElement('div');
-            li.className = "bg-gray-800 rounded-lg shadow-lg p-4 flex items-center justify-between space-x-3";
+            // (MỚI) Thêm cursor-pointer để người dùng biết là bấm được
+            li.className = "bg-gray-800 rounded-lg shadow-lg p-4 flex items-center justify-between space-x-3 cursor-pointer hover:bg-gray-750 transition-colors";
             
             const divContent = document.createElement('div');
             divContent.className = "flex-grow min-w-0";
@@ -1310,8 +1333,15 @@ document.addEventListener('DOMContentLoaded', () => {
             aLink.href = safeUrl;
             aLink.target = "_blank";
             aLink.rel = "noopener noreferrer";
-            aLink.className = "block text-blue-400 font-semibold truncate hover:underline";
+            // (MỚI) Thêm class relative và z-index để link nằm trên lớp click của thẻ cha
+            aLink.className = "block text-blue-400 font-semibold truncate hover:underline relative z-10";
             aLink.textContent = link.url; 
+            
+            // (MỚI) Ngăn chặn sự kiện click nổi bọt lên thẻ cha khi bấm vào link
+            aLink.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+            
             divContent.appendChild(aLink);
             
             const pNote = document.createElement('p');
@@ -1321,17 +1351,24 @@ document.addEventListener('DOMContentLoaded', () => {
             
             li.appendChild(divContent);
 
-            const divButton = document.createElement('div');
-            divButton.className = "flex-shrink-0";
-            divButton.innerHTML = `
-                <button data-index="${originalIndex}" class="delete-link text-gray-400 hover:text-red-400 p-1">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                </button>
-            `;
-            li.appendChild(divButton);
+            // (MỚI) Sự kiện click vào toàn bộ khung để mở Modal Edit
+            li.addEventListener('click', () => {
+                openEditLinkModal(originalIndex);
+            });
             
             linkListContainer.appendChild(li);
         });
+    }
+
+    function openEditLinkModal(index) {
+        const linkData = appData.links[index];
+        if (!linkData) return;
+
+        editLinkIndex.value = index;
+        editLinkUrl.value = linkData.url;
+        editLinkNote.value = linkData.note || '';
+        
+        linkEditModal.classList.remove('hidden');
     }
 
 
@@ -1511,6 +1548,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mobileHeaderTitle) mobileHeaderTitle.classList.add('hidden');
         if (calendarSubtabHeader) calendarSubtabHeader.classList.add('hidden');
         
+        // (MỚI) Đóng các form toggle khi chuyển tab
+        secAiForm.classList.add('hidden');
+        secReminderForm.classList.add('hidden');
+        secLinkForm.classList.add('hidden');
+
         switch (tabName) {
             case 'news':
                 newsMain.classList.remove('hidden');
@@ -1582,6 +1624,91 @@ document.addEventListener('DOMContentLoaded', () => {
     bottomTabSettings.addEventListener('click', () => showTab('settings'));
     
     if (rssMenuBtn) rssMenuBtn.addEventListener('click', () => rssMobileMenu.classList.toggle('hidden'));
+
+    // (MỚI) Event listeners cho các nút FAB Toggle
+    if (fabAiToggle) {
+        fabAiToggle.addEventListener('click', () => {
+            secAiForm.classList.toggle('hidden');
+            // Tự động focus vào input khi mở
+            if (!secAiForm.classList.contains('hidden')) {
+                cal_aiInput.focus();
+            }
+        });
+    }
+    
+    if (fabReminderToggle) {
+        fabReminderToggle.addEventListener('click', () => {
+            secReminderForm.classList.toggle('hidden');
+            if (!secReminderForm.classList.contains('hidden')) {
+                newReminderTitle.focus();
+            }
+        });
+    }
+
+    if (fabLinkToggle) {
+        fabLinkToggle.addEventListener('click', () => {
+            secLinkForm.classList.toggle('hidden');
+             if (!secLinkForm.classList.contains('hidden')) {
+                newLinkUrl.focus();
+            }
+        });
+    }
+
+    // (MỚI) Event listeners cho Link Edit Modal
+    if (closeLinkEditModalBtn) {
+        closeLinkEditModalBtn.addEventListener('click', () => {
+            linkEditModal.classList.add('hidden');
+        });
+    }
+    
+    // Đóng modal khi click ra ngoài
+    if (linkEditModal) {
+        linkEditModal.addEventListener('click', (e) => {
+            if (e.target === linkEditModal) {
+                linkEditModal.classList.add('hidden');
+            }
+        });
+    }
+
+    if (editLinkForm) {
+        editLinkForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const index = parseInt(editLinkIndex.value, 10);
+            const url = editLinkUrl.value.trim();
+            const note = editLinkNote.value.trim();
+
+            if (isNaN(index) || index < 0 || index >= appData.links.length) return;
+            
+            if (!url) {
+                alert("Đường dẫn không được để trống!");
+                return;
+            }
+
+            // Cập nhật dữ liệu
+            appData.links[index] = { url, note };
+            saveAppData();
+            
+            linkEditModal.classList.add('hidden');
+            renderLinkList();
+            showLinkStatus("Đã cập nhật link thành công!", false);
+        });
+    }
+
+    if (deleteLinkBtnModal) {
+        deleteLinkBtnModal.addEventListener('click', () => {
+            const index = parseInt(editLinkIndex.value, 10);
+            if (isNaN(index) || index < 0 || index >= appData.links.length) return;
+
+            if (confirm("Đại ca có chắc chắn muốn xóa link này không?")) {
+                appData.links.splice(index, 1);
+                saveAppData();
+                linkEditModal.classList.add('hidden');
+                renderLinkList();
+                showLinkStatus("Đã xóa link.", false);
+            }
+        });
+    }
+
 
     function handleRefreshClick() {
         console.log("Đang yêu cầu tải lại...");
@@ -1774,6 +1901,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     saveAppData(); 
                     renderCalendar(currentViewDate); 
                     cal_aiInput.value = ''; 
+                    secAiForm.classList.add('hidden'); // Đóng form sau khi xong
                 } else {
                     throw new Error("AI không trả về định dạng mảng.");
                 }
@@ -2000,6 +2128,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showReminderStatus('Thêm thành công!', false);
                     newReminderTitle.value = ''; 
                     newReminderContent.value = ''; 
+                    secReminderForm.classList.add('hidden'); // Đóng form sau khi thêm
                     
                     await fetchReminders();
 
@@ -2217,25 +2346,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 newLinkUrl.value = '';
                 newLinkNote.value = '';
                 showLinkStatus('Đã lưu link thành công!', false);
+                secLinkForm.classList.add('hidden'); // Đóng form sau khi lưu
             });
         }
         
-        if (linkListContainer) {
-            linkListContainer.addEventListener('click', (e) => {
-                const deleteButton = e.target.closest('.delete-link');
-                if (deleteButton) {
-                    const index = parseInt(deleteButton.dataset.index, 10);
-                    if (isNaN(index)) return;
-                    
-                    const link = appData.links[index];
-                    if (confirm(`Đại ca có chắc muốn xóa link này?\n\n${link.url}`)) {
-                        appData.links.splice(index, 1); 
-                        saveAppData(); 
-                        renderLinkList(); 
-                    }
-                }
-            });
-        }
+        // (CŨ) - Đã bỏ, giờ logic xóa nằm trong Modal
+        // if (linkListContainer) { ... }
 
     })();
     
