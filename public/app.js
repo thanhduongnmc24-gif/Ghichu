@@ -1,9 +1,14 @@
 /* =================================================================== */
 /* FILE: public/app.js                                                 */
 /* MỤC ĐÍCH: Logic JavaScript chính cho toàn bộ ứng dụng Ghichu App.     */
+/* PHIÊN BẢN: Đã tách logic tính toán sang utils.js                     */
+/* CẬP NHẬT: Xóa Chat + Sửa lỗi cuộn trang + Tab Lưu Trữ                */
 /* =================================================================== */
 
-// Import các hàm tiện ích từ utils.js
+// ===================================================================
+// PHẦN 0: IMPORT CÁC HÀM TIỆN ÍCH
+// ===================================================================
+
 import {
     convertSolarToLunar,
     getLocalDateString,
@@ -37,10 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===================================================================
-    // KHAI BÁO BIẾN (DOM ELEMENTS)
+    // PHẦN 0: KHAI BÁO BIẾN (DOM ELEMENTS)
     // ===================================================================
     
-    // --- Tin Tức ---
+    // --- Biến Phần 1 (Tin Tức) ---
     const newsMain = document.getElementById('news-main');
     const newsGrid = document.getElementById('news-grid');
     const loadingSpinner = document.getElementById('loading-spinner');
@@ -49,10 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const summaryTitleElement = document.getElementById('summary-title');
     const summaryTextElement = document.getElementById('summary-text');
     const feedNav = document.getElementById('feed-nav');
-    const chatFab = document.getElementById('chat-fab');
-    const chatForm = document.getElementById('chat-form');
-    const chatInput = document.getElementById('chat-input');
-    const chatDisplay = document.getElementById('chat-display');
+    // (ĐÃ XÓA) chatFab, chatModal...
     const rssMenuBtn = document.getElementById('rss-menu-btn'); 
     const rssMobileMenu = document.getElementById('rss-mobile-menu'); 
     const summaryToast = document.getElementById('summary-toast');
@@ -62,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toastMainMessage = document.getElementById('toast-main-message');
     const toastCta = document.getElementById('toast-cta');
 
-    // --- Lịch & Cài đặt ---
+    // --- Biến Phần 2 (Lịch & Cài đặt) ---
     const calendarMain = document.getElementById('calendar-main');
     const settingsMain = document.getElementById('settings-main');
     const cal_aiForm = document.getElementById('ai-form');
@@ -71,6 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentMonthYearEl = document.getElementById('current-month-year');
     const prevMonthBtn = document.getElementById('prev-month-btn');
     const nextMonthBtn = document.getElementById('next-month-btn');
+    const settingsModal = document.getElementById('settings-modal'); 
+    const closeModalBtn = document.getElementById('close-modal'); 
     const notifyButton = document.getElementById('notify-button');
     const notifyTimeNgay = document.getElementById('notify-time-ngay');
     const notifyTimeDem = document.getElementById('notify-time-dem');
@@ -84,10 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const newNoteInput = document.getElementById('new-note-input');
     const toggleSummaryViewBtn = document.getElementById('toggle-summary-view-btn');
 
-    // --- Trò chuyện ---
-    const chatMain = document.getElementById('chat-main');
+    // (ĐÃ XÓA) Biến Phần 3 (Trò chuyện)
     
-    // --- Lưu Trữ Link ---
+    // --- Biến Phần 3.2 (Lưu Trữ Link) ---
     const linksMain = document.getElementById('links-main');
     const newLinkForm = document.getElementById('new-link-form');
     const newLinkUrl = document.getElementById('new-link-url');
@@ -95,14 +98,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const linkListContainer = document.getElementById('link-list-container');
     const linkStatusMsg = document.getElementById('link-status-msg');
 
-    // --- Lịch / Nhắc nhở (Sub-tab) ---
-    const calendarSubtabHeader = document.getElementById('calendar-subtab-header');
+    // --- Biến Phần 3.5 (Lịch / Nhắc nhở) ---
+    
+    // Biến cho Sub-tab (trong Main)
     const calSubtabWork = document.getElementById('cal-subtab-work');
     const calSubtabReminders = document.getElementById('cal-subtab-reminders');
+    
+    // Biến cho nội dung Sub-tab (trong Main)
     const calendarWorkContent = document.getElementById('calendar-work-content');
     const calendarRemindersContent = document.getElementById('calendar-reminders-content');
 
-    // --- Nhắc nhở Form ---
+    // Biến cho Nhắc nhở
     const newReminderForm = document.getElementById('new-reminder-form');
     const newReminderTitle = document.getElementById('new-reminder-title'); 
     const newReminderContent = document.getElementById('new-reminder-content');
@@ -112,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const reminderWarning = document.getElementById('reminder-warning'); 
     const settingsPushWarning = document.getElementById('settings-push-warning'); 
     
-    // --- Modal Edit Nhắc nhở ---
+    // Biến cho Modal Edit Nhắc nhở
     const reminderEditModal = document.getElementById('reminder-edit-modal');
     const closeReminderEditModalBtn = document.getElementById('close-reminder-edit-modal');
     const editReminderForm = document.getElementById('edit-reminder-form');
@@ -123,29 +129,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const editReminderActive = document.getElementById('edit-reminder-active');
     const saveReminderBtn = document.getElementById('save-reminder-btn');
     
-    // --- Điều khiển Tab ---
+    // --- Biến Phần 4 (Điều khiển Tab) ---
     const newsTabBtn = document.getElementById('news-tab-btn');
-    const calendarTabBtn = document.getElementById('calendar-tab-btn');
-    const settingsBtn = document.getElementById('settings-btn');
+    const calendarTabBtn = document.getElementById('calendar-tab-btn'); 
+    const settingsBtn = document.getElementById('settings-btn'); 
+    
+    // Biến Header Mobile
     const mobileHeaderTitle = document.getElementById('mobile-header-title');
     
     const refreshFeedButton = document.getElementById('refresh-feed-button');
     const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
     const bottomTabNews = document.getElementById('bottom-tab-news');
     const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
-    const bottomTabChat = document.getElementById('bottom-tab-chat');
-    const bottomTabLinks = document.getElementById('bottom-tab-links');
+    // (ĐÃ XÓA) bottomTabChat
+    const bottomTabLinks = document.getElementById('bottom-tab-links'); 
     const bottomTabSettings = document.getElementById('bottom-tab-settings');
     const bottomNav = document.getElementById('bottom-nav'); 
 
-    // --- Đồng bộ Online ---
+    // --- Biến Phần 5 (Đồng bộ Online) ---
     const syncUsernameInput = document.getElementById('sync-username');
     const syncPasswordInput = document.getElementById('sync-password');
     const syncUpBtn = document.getElementById('sync-up-btn');
     const syncDownBtn = document.getElementById('sync-down-btn');
     const syncStatusMsg = document.getElementById('sync-status-msg');
 
-    // --- Admin ---
+    // --- Biến Phần 6 (Admin) ---
     const adminLoginBtn = document.getElementById('admin-login-btn');
     const adminPanel = document.getElementById('admin-panel');
     const adminLogoutBtn = document.getElementById('admin-logout-btn');
@@ -164,13 +172,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentAdminCreds = null; 
     let currentEditingDateStr = null; 
     let currentViewDate = new Date(); 
-    let chatHistory = []; 
+    // (ĐÃ XÓA) chatHistory
     let summaryEventSource = null; 
     let completedSummary = { title: '', text: '' }; 
     let toastTimeoutId = null; 
     const clientRssCache = new Map(); 
     
-    // --- Xử lý dữ liệu LocalStorage ---
+    // Chuẩn hóa dữ liệu ứng dụng
     function normalizeAppData(data) {
         if (!data) {
             return { calendar: {}, links: [] };
@@ -183,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return {
             calendar: data, 
-            links: []       
+            links: []      
         };
     }
 
@@ -197,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ===================================================================
-    // PHẦN 1: LOGIC TIN TỨC
+    // PHẦN 1: LOGIC TIN TỨC (RSS, TÓM TẮT) - (ĐÃ XÓA CHAT)
     // ===================================================================
     
     const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
@@ -206,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function callGeminiAPIStreaming(prompt, title) {
         if (summaryEventSource) {
-            summaryEventSource.close(); 
+            summaryEventSource.close();
         }
         let currentSummaryText = '';
         const encodedPrompt = encodeURIComponent(prompt);
@@ -250,64 +258,8 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    async function callChatAPI() {
-        const loadingBubble = document.createElement('div');
-        loadingBubble.className = 'model-bubble';
-        loadingBubble.innerHTML = `<div class"spinner border-t-white" style="width: 20px; height: 20px;"></div>`;
-        chatDisplay.appendChild(loadingBubble);
-        chatDisplay.scrollTop = chatDisplay.scrollHeight;
-        
-        let endpoint = null;
-        if (swRegistration && swRegistration.pushManager) { 
-            try {
-                const subscription = await swRegistration.pushManager.getSubscription();
-                if (subscription) {
-                    endpoint = subscription.endpoint;
-                }
-            } catch (err) {
-                console.warn("Không thể lấy subscription endpoint:", err);
-            }
-        }
+    // (ĐÃ XÓA) callChatAPI và renderChatHistory
 
-        try {
-            const response = await fetch('/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    history: chatHistory, 
-                    endpoint: endpoint
-                })
-            });
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Lỗi server: ${errorText}`);
-            }
-            
-            const result = await response.json();
-            const answer = result.answer;
-            
-            chatHistory.push({ role: "model", parts: [{ text: answer }] });
-            
-            chatDisplay.removeChild(loadingBubble);
-            renderChatHistory();
-            
-        } catch (error) {
-            console.error("Lỗi khi gọi API chat:", error);
-            chatDisplay.removeChild(loadingBubble);
-            const errorBubble = document.createElement('div');
-            errorBubble.className = 'model-bubble';
-            errorBubble.style.backgroundColor = '#991B1B';
-            errorBubble.textContent = `Lỗi: ${error.message}`;
-            chatDisplay.appendChild(errorBubble);
-        } finally {
-            chatDisplay.scrollTop = chatDisplay.scrollHeight;
-        }
-    }
-
-    /**
-     * Tải RSS với Timestamp để tránh Cache
-     */
     async function fetchRSS(rssUrl, sourceName, { display = true, force = false } = {}) {
         if (display) {
             loadingSpinner.classList.remove('hidden');
@@ -328,10 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         try {
-            // THÊM TIMESTAMP ĐỂ TRÁNH CACHE
-            const timestamp = new Date().getTime();
-            const response = await fetch(`/get-rss?url=${encodeURIComponent(rssUrl)}&t=${timestamp}`);
-            
+            const response = await fetch(`/get-rss?url=${encodeURIComponent(rssUrl)}`);
             if (!response.ok) throw new Error('Lỗi server (RSS)');
             
             const str = await response.text();
@@ -357,7 +306,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(`Lỗi tải RSS ${sourceName}:`, error);
             if (display) newsGrid.innerHTML = `<p class="text-red-400 col-span-full text-center">${error.message}</p>`;
         } finally {
-            // LUÔN TẮT SPINNER
             if (display) loadingSpinner.classList.add('hidden');
         }
     }
@@ -369,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let description = item.querySelector("description")?.textContent || item.querySelector("summary")?.textContent || item.querySelector("content")?.textContent || "";
             let link = item.querySelector("link")?.textContent || "#";
             if (link === "#" && item.querySelector("link")?.hasAttribute("href")) {
-                link = item.querySelector("link")?.getAttribute("href") || "#"; 
+                link = item.querySelector("link")?.getAttribute("href") || "#";
             }
             const pubDate = item.querySelector("pubDate")?.textContent || item.querySelector("updated")?.textContent || "";
             
@@ -399,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const sourceSpan = document.createElement('span');
             sourceSpan.className = "text-xs font-semibold text-blue-400";
-            sourceSpan.textContent = sourceName; 
+            sourceSpan.textContent = sourceName;
             contentDiv.appendChild(sourceSpan);
 
             const titleH3 = document.createElement('h3');
@@ -537,45 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
           );
      }
 
-    function renderChatHistory() {
-        chatDisplay.innerHTML = '';
-        if (chatHistory.length === 0) {
-             chatDisplay.innerHTML = `<div class="model-bubble">Chào đại ca, Tèo xin trả lời bất kỳ câu hỏi nào của đại ca?</div>`;
-             return;
-        }
-        
-        chatHistory.forEach(message => {
-            const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble';
-            if (message.role === 'user') {
-                bubble.classList.add('user-bubble');
-            } else {
-                bubble.classList.add('model-bubble');
-            }
-            bubble.style.whiteSpace = "pre-wrap"; 
-            bubble.textContent = message.parts[0].text;
-            chatDisplay.appendChild(bubble);
-        });
-        
-        chatDisplay.scrollTop = chatDisplay.scrollHeight; 
-    }
-
-    async function handleSendChat(e) {
-        e.preventDefault();
-        const prompt = chatInput.value.trim();
-        if (!prompt) return;
-        
-        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-        renderChatHistory();
-        chatInput.value = '';
-        
-        await callChatAPI();
-    }
-
-    function resetChat() {
-        chatHistory = [];
-        renderChatHistory();
-    }
+    // (ĐÃ XÓA) handleSendChat và resetChat
 
     function prewarmCache() {
         console.log("[Cache-Warmer] Bắt đầu tải nền các feed khác...");
@@ -587,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     
     // ===================================================================
-    // PHẦN 2: LOGIC LỊCH
+    // PHẦN 2: LOGIC LỊCH (CALENDAR, NOTES, SETTINGS, PUSH, SYNC)
     // ===================================================================
 
     function showSyncStatus(message, isError = false) {
@@ -1099,7 +1009,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ===================================================================
-    // PHẦN 2.5: LOGIC NHẮC NHỞ
+    // PHẦN 2.5: LOGIC NHẮC NHỞ (REMINDERS)
     // ===================================================================
 
     function formatISODateForInput(isoString) {
@@ -1114,6 +1024,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const minutes = String(date.getMinutes()).padStart(2, '0');
         
         return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    function getCurrentDateTimeLocal() {
+        return formatISODateForInput(new Date());
     }
 
     async function fetchReminders() {
@@ -1276,7 +1190,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="datetime-local" 
                            class="reminder-datetime-input flex-grow" 
                            value="${dateTimeValue}" 
-                           style="max-width: none;"> <label class="ios-toggle flex-shrink-0">
+                           style="max-width: none;">
+
+                    <label class="ios-toggle flex-shrink-0">
                         <input type="checkbox" class="reminder-toggle-check" ${item.is_active ? 'checked' : ''}>
                         <span class="slider"></span>
                     </label>
@@ -1439,7 +1355,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ===================================================================
-    // PHẦN 3: LOGIC ADMIN
+    // PHẦN 3: LOGIC ADMIN (ĐĂNG NHẬP, XEM, XÓA)
     // ===================================================================
     
     async function loadAdminPanel() {
@@ -1557,7 +1473,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===================================================================
-    // PHẦN 4: LOGIC ĐIỀU HƯỚNG
+    // (CẬP NHẬT) PHẦN 4: LOGIC ĐIỀU HƯỚNG (TAB)
     // ===================================================================
     
     let currentTab = 'news'; 
@@ -1588,9 +1504,10 @@ document.addEventListener('DOMContentLoaded', () => {
     async function showTab(tabName) { 
         if (tabName === currentTab) return; 
         
-        if (currentTab === 'chat') {
-            resetChat(); 
-        }
+        // (MỚI) Sửa lỗi cuộn trang: Reset vị trí cuộn lên đầu mỗi khi chuyển tab
+        window.scrollTo(0, 0);
+        
+        // --- Dọn dẹp tab cũ ---
         if (currentTab === 'settings' && currentAdminCreds) {
             adminLogout(); 
         }
@@ -1601,7 +1518,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         newsMain.classList.add('hidden');
         calendarMain.classList.add('hidden');
-        chatMain.classList.add('hidden');
+        // (ĐÃ XÓA) chatMain
         linksMain.classList.add('hidden'); 
         settingsMain.classList.add('hidden');
         
@@ -1610,7 +1527,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settingsBtn) settingsBtn.classList.remove('active');
         bottomTabNews.classList.remove('active');
         bottomTabCalendar.classList.remove('active');
-        bottomTabChat.classList.remove('active');
+        // (ĐÃ XÓA) bottomTabChat
         bottomTabLinks.classList.remove('active'); 
         bottomTabSettings.classList.remove('active');
         
@@ -1619,7 +1536,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mobileHeaderTitle) mobileHeaderTitle.classList.add('hidden');
         if (calendarSubtabHeader) calendarSubtabHeader.classList.add('hidden');
         
-        chatFab.classList.add('hidden'); 
+        // (ĐÃ XÓA) chatFab
 
         switch (tabName) {
             case 'news':
@@ -1648,15 +1565,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showCalendarSubTab('work'); 
                 break;
             
-            case 'chat':
-                chatMain.classList.remove('hidden');
-                bottomTabChat.classList.add('active');
-                
-                if (mobileHeaderTitle) {
-                    mobileHeaderTitle.textContent = "Trò chuyện";
-                    mobileHeaderTitle.classList.remove('hidden');
-                }
-                break;
+            // (ĐÃ XÓA) case 'chat'
             
             case 'links':
                 linksMain.classList.remove('hidden');
@@ -1689,20 +1598,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ===================================================================
-    // PHẦN 5: GẮN SỰ KIỆN (EVENT LISTENERS)
+    // PHẦN 5: GẮN SỰ KIỆN (EVENT LISTENERS) & KHỞI ĐỘNG
     // ===================================================================
     
+    // Desktop (Header)
     if (newsTabBtn) newsTabBtn.addEventListener('click', () => showTab('news'));
     if (calendarTabBtn) calendarTabBtn.addEventListener('click', () => showTab('calendar'));
     if (settingsBtn) settingsBtn.addEventListener('click', () => showTab('settings'));
-    if (chatFab) chatFab.addEventListener('click', () => showTab('chat')); 
+    // (ĐÃ XÓA) chatFab
     
+    // Mobile (Bottom Nav)
     bottomTabNews.addEventListener('click', () => showTab('news'));
     bottomTabCalendar.addEventListener('click', () => showTab('calendar'));
-    bottomTabChat.addEventListener('click', () => showTab('chat'));
+    // (ĐÃ XÓA) bottomTabChat
     bottomTabLinks.addEventListener('click', () => showTab('links')); 
     bottomTabSettings.addEventListener('click', () => showTab('settings'));
     
+    // Mobile (Top Header)
     if (rssMenuBtn) rssMenuBtn.addEventListener('click', () => rssMobileMenu.classList.toggle('hidden'));
 
     function handleRefreshClick() {
@@ -1716,6 +1628,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rssMobileMenu.classList.add('hidden'); 
     }
     
+    // ----- KHỐI SỰ KIỆN 2: TIN TỨC (KHỞI ĐỘNG) - (ĐÃ XÓA CHAT) -----
     (async () => {
         feedNav.addEventListener('click', handleFeedButtonClick);
         rssMobileMenu.addEventListener('click', handleFeedButtonClick); 
@@ -1751,11 +1664,10 @@ document.addEventListener('DOMContentLoaded', () => {
              hideToast();
          });
          
-        chatForm.addEventListener('submit', handleSendChat);
-
-        
+        // (ĐÃ XÓA) chatForm listener
     })();
     
+    // ----- KHỐI SỰ KIỆN 3: LỊCH, CÀI ĐẶT, SYNC, ADMIN (KHỞI ĐỘNG) -----
     (async () => {
         renderCalendar(currentViewDate);
         loadSettings();
@@ -2086,6 +1998,10 @@ document.addEventListener('DOMContentLoaded', () => {
              });
         }
 
+        // ==========================================================
+        // ===== KHỐI SỰ KIỆN CHO NHẮC NHỞ =====
+        // ==========================================================
+
         if (newReminderForm) {
             newReminderForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -2323,6 +2239,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
+        // ==========================================================
+        // ===== KHỐI SỰ KIỆN CHO TAB LƯU TRỮ (LINKS) =====
+        // ==========================================================
+        
         if (newLinkForm) {
             newLinkForm.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -2363,6 +2283,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
     })();
+    
+    // ----- KHỐI SỰ KIỆN 4: KHỞI ĐỘNG TAB BAN ĐẦU -----
     
     if (window.location.hash === '#calendar') {
         showTab('calendar');
