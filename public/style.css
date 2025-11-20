@@ -283,9 +283,10 @@ body {
 /* ----- SWIPE TO DELETE (VUỐT ĐỂ XÓA) ----- */
 .swipe-item-container {
     position: relative;
-    overflow: hidden; /* Giấu phần nền đỏ đi */
+    overflow: hidden; 
     border-radius: 0.5rem;
-    background-color: #EF4444; /* Màu nền đỏ (lớp dưới) */
+    /* XÓA dòng background-color: #EF4444; ở đây để hết bị lộ viền đỏ */
+    background-color: transparent; 
 }
 
 .swipe-background {
@@ -293,7 +294,8 @@ body {
     top: 0;
     bottom: 0;
     right: 0;
-    width: 100%;
+    left: 0; /* Thêm left: 0 để nó phủ kín */
+    background-color: #EF4444; /* Chuyển màu đỏ vào đây */
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -301,13 +303,15 @@ body {
     color: white;
     font-weight: bold;
     font-size: 0.9rem;
-    z-index: 0; /* Nằm dưới */
+    z-index: 0; 
+    border-radius: 0.5rem; /* Bo góc cho đẹp */
 }
 
 .swipe-content {
     position: relative;
-    z-index: 10; /* Nằm trên */
-    background-color: #1F2937; /* Màu nền gốc của item (bg-gray-800) */
-    transition: transform 0.1s linear; /* Hiệu ứng di chuyển mượt */
-    touch-action: pan-y; /* Cho phép cuộn dọc bình thường */
+    z-index: 10; 
+    background-color: #1F2937; 
+    transition: transform 0.1s linear; 
+    touch-action: pan-y; 
+    height: 100%; /* Đảm bảo che kín lớp dưới */
 }
