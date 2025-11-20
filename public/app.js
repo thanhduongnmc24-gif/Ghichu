@@ -49,10 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const summaryTitleElement = document.getElementById('summary-title');
     const summaryTextElement = document.getElementById('summary-text');
     const feedNav = document.getElementById('feed-nav');
-    const chatFab = document.getElementById('chat-fab');
-    const chatForm = document.getElementById('chat-form');
-    const chatInput = document.getElementById('chat-input');
-    const chatDisplay = document.getElementById('chat-display');
+    
     const rssMenuBtn = document.getElementById('rss-menu-btn'); 
     const rssMobileMenu = document.getElementById('rss-mobile-menu'); 
     const summaryToast = document.getElementById('summary-toast');
@@ -84,9 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const newNoteInput = document.getElementById('new-note-input');
     const toggleSummaryViewBtn = document.getElementById('toggle-summary-view-btn');
 
-    // --- Trò chuyện ---
-    const chatMain = document.getElementById('chat-main');
-    
     // --- Lưu Trữ Link ---
     const linksMain = document.getElementById('links-main');
     const newLinkForm = document.getElementById('new-link-form');
@@ -133,7 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
     const bottomTabNews = document.getElementById('bottom-tab-news');
     const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
-    const bottomTabChat = document.getElementById('bottom-tab-chat');
     const bottomTabLinks = document.getElementById('bottom-tab-links');
     const bottomTabSettings = document.getElementById('bottom-tab-settings');
     const bottomNav = document.getElementById('bottom-nav'); 
@@ -164,7 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentAdminCreds = null; 
     let currentEditingDateStr = null; 
     let currentViewDate = new Date(); 
-    let chatHistory = []; 
     let summaryEventSource = null; 
     let completedSummary = { title: '', text: '' }; 
     let toastTimeoutId = null; 
@@ -248,61 +240,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast("Lỗi tóm tắt", "Dữ liệu trả về không hợp lệ.", 'error', null, 5000);
             }
         };
-    }
-
-    async function callChatAPI() {
-        const loadingBubble = document.createElement('div');
-        loadingBubble.className = 'model-bubble';
-        loadingBubble.innerHTML = `<div class"spinner border-t-white" style="width: 20px; height: 20px;"></div>`;
-        chatDisplay.appendChild(loadingBubble);
-        chatDisplay.scrollTop = chatDisplay.scrollHeight;
-        
-        let endpoint = null;
-        if (swRegistration && swRegistration.pushManager) { 
-            try {
-                const subscription = await swRegistration.pushManager.getSubscription();
-                if (subscription) {
-                    endpoint = subscription.endpoint;
-                }
-            } catch (err) {
-                console.warn("Không thể lấy subscription endpoint:", err);
-            }
-        }
-
-        try {
-            const response = await fetch('/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    history: chatHistory, 
-                    endpoint: endpoint
-                })
-            });
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Lỗi server: ${errorText}`);
-            }
-            
-            const result = await response.json();
-            const answer = result.answer;
-            
-            chatHistory.push({ role: "model", parts: [{ text: answer }] });
-            
-            chatDisplay.removeChild(loadingBubble);
-            renderChatHistory();
-            
-        } catch (error) {
-            console.error("Lỗi khi gọi API chat:", error);
-            chatDisplay.removeChild(loadingBubble);
-            const errorBubble = document.createElement('div');
-            errorBubble.className = 'model-bubble';
-            errorBubble.style.backgroundColor = '#991B1B';
-            errorBubble.textContent = `Lỗi: ${error.message}`;
-            chatDisplay.appendChild(errorBubble);
-        } finally {
-            chatDisplay.scrollTop = chatDisplay.scrollHeight;
-        }
     }
 
     /**
@@ -536,46 +473,6 @@ document.addEventListener('DOMContentLoaded', () => {
               null 
           );
      }
-
-    function renderChatHistory() {
-        chatDisplay.innerHTML = '';
-        if (chatHistory.length === 0) {
-             chatDisplay.innerHTML = `<div class="model-bubble">Chào đại ca, Tèo xin trả lời bất kỳ câu hỏi nào của đại ca?</div>`;
-             return;
-        }
-        
-        chatHistory.forEach(message => {
-            const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble';
-            if (message.role === 'user') {
-                bubble.classList.add('user-bubble');
-            } else {
-                bubble.classList.add('model-bubble');
-            }
-            bubble.style.whiteSpace = "pre-wrap"; 
-            bubble.textContent = message.parts[0].text;
-            chatDisplay.appendChild(bubble);
-        });
-        
-        chatDisplay.scrollTop = chatDisplay.scrollHeight; 
-    }
-
-    async function handleSendChat(e) {
-        e.preventDefault();
-        const prompt = chatInput.value.trim();
-        if (!prompt) return;
-        
-        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-        renderChatHistory();
-        chatInput.value = '';
-        
-        await callChatAPI();
-    }
-
-    function resetChat() {
-        chatHistory = [];
-        renderChatHistory();
-    }
 
     function prewarmCache() {
         console.log("[Cache-Warmer] Bắt đầu tải nền các feed khác...");
@@ -1588,9 +1485,6 @@ document.addEventListener('DOMContentLoaded', () => {
     async function showTab(tabName) { 
         if (tabName === currentTab) return; 
         
-        if (currentTab === 'chat') {
-            resetChat(); 
-        }
         if (currentTab === 'settings' && currentAdminCreds) {
             adminLogout(); 
         }
@@ -1601,7 +1495,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         newsMain.classList.add('hidden');
         calendarMain.classList.add('hidden');
-        chatMain.classList.add('hidden');
         linksMain.classList.add('hidden'); 
         settingsMain.classList.add('hidden');
         
@@ -1610,7 +1503,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (settingsBtn) settingsBtn.classList.remove('active');
         bottomTabNews.classList.remove('active');
         bottomTabCalendar.classList.remove('active');
-        bottomTabChat.classList.remove('active');
         bottomTabLinks.classList.remove('active'); 
         bottomTabSettings.classList.remove('active');
         
@@ -1619,8 +1511,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mobileHeaderTitle) mobileHeaderTitle.classList.add('hidden');
         if (calendarSubtabHeader) calendarSubtabHeader.classList.add('hidden');
         
-        chatFab.classList.add('hidden'); 
-
         switch (tabName) {
             case 'news':
                 newsMain.classList.remove('hidden');
@@ -1646,16 +1536,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 showCalendarSubTab('work'); 
-                break;
-            
-            case 'chat':
-                chatMain.classList.remove('hidden');
-                bottomTabChat.classList.add('active');
-                
-                if (mobileHeaderTitle) {
-                    mobileHeaderTitle.textContent = "Trò chuyện";
-                    mobileHeaderTitle.classList.remove('hidden');
-                }
                 break;
             
             case 'links':
@@ -1695,11 +1575,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (newsTabBtn) newsTabBtn.addEventListener('click', () => showTab('news'));
     if (calendarTabBtn) calendarTabBtn.addEventListener('click', () => showTab('calendar'));
     if (settingsBtn) settingsBtn.addEventListener('click', () => showTab('settings'));
-    if (chatFab) chatFab.addEventListener('click', () => showTab('chat')); 
     
     bottomTabNews.addEventListener('click', () => showTab('news'));
     bottomTabCalendar.addEventListener('click', () => showTab('calendar'));
-    bottomTabChat.addEventListener('click', () => showTab('chat'));
     bottomTabLinks.addEventListener('click', () => showTab('links')); 
     bottomTabSettings.addEventListener('click', () => showTab('settings'));
     
@@ -1750,9 +1628,6 @@ document.addEventListener('DOMContentLoaded', () => {
              e.stopPropagation(); 
              hideToast();
          });
-         
-        chatForm.addEventListener('submit', handleSendChat);
-
         
     })();
     
