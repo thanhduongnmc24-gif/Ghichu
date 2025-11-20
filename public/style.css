@@ -87,54 +87,9 @@ body {
 #mobile-menu .feed-button:hover { background-color: #4B5563; }
 #mobile-menu .feed-button.active { background-color: #6B7280; color: white; }
 
-/* ----- CHAT (TRÒ CHUYỆN) ----- */
-#chat-input { 
-    background-color: #374151; color: white; border: 1px solid #4B5563; 
-}
-#chat-input:focus { 
-    outline: none; border-color: #3B82F6; 
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); 
-}
-.chat-bubble { 
-    max-width: 80%; padding: 10px 16px; border-radius: 16px; 
-    margin-bottom: 8px; line-height: 1.5; 
-}
-.user-bubble { 
-    background-color: #3B82F6; color: white; align-self: flex-end; 
-}
-.model-bubble { 
-    background-color: #4B5563; color: #E5E7EB; align-self: flex-start; 
-}
 
+/* ----- ĐÃ XÓA CSS CHAT Ở ĐÂY ----- */
 
-/* (SỬA LỖI IPAD) CSS cho trang Chat (Mobile-first, ghim) */
-#chat-main {
-    position: fixed; /* Ghim chặt vào màn hình */
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-
-    /* 60px cho header (sticky) ở trên - MOBILE */
-    padding-top: 60px; 
-
-    /* 80px (5rem) cho nav (fixed) ở dưới - MOBILE */
-    padding-bottom: 80px;
-
-    /* Đảm bảo padding không làm tràn chiều cao */
-    box-sizing: border-box; 
-
-    /* Ngăn chính #chat-main cuộn */
-    overflow-y: hidden; 
-}
-
-/* (SỬA LỖI IPAD) Điều chỉnh padding cho Desktop/iPad */
-@media (min-width: 640px) { /* 640px là breakpoint 'sm' của Tailwind */
-    #chat-main {
-        /* Header desktop cao hơn (khoảng 68px) */
-        padding-top: 68px; 
-    }
-}
 
 /* ----- NEWS (TIN TỨC) ----- */
 .line-clamp-3 { 
