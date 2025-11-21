@@ -1,3 +1,4 @@
+
 /* =================================================================== */
 /* FILE: public/app.js                                                 */
 /* MỤC ĐÍCH: Logic JavaScript chính cho toàn bộ ứng dụng Ghichu App.     */
@@ -1614,6 +1615,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (rssMenuBtn) rssMenuBtn.classList.add('hidden');
         if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.add('hidden');
+        
+        // Mặc định ẩn header title để reset
         if (mobileHeaderTitle) mobileHeaderTitle.classList.add('hidden');
         if (calendarSubtabHeader) calendarSubtabHeader.classList.add('hidden');
         
@@ -1646,9 +1649,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (calendarTabBtn) calendarTabBtn.classList.add('active');
                 bottomTabCalendar.classList.add('active');
                 
+                // [THAY ĐỔI] Ẩn tiêu đề mobile để nhường chỗ cho các nút (Đã ẩn ở trên rồi, không cần hiện lại)
                 if (mobileHeaderTitle) {
-                    mobileHeaderTitle.textContent = "Lịch & Nhắc Nhở";
-                    mobileHeaderTitle.classList.remove('hidden');
+                    mobileHeaderTitle.classList.add('hidden'); 
                 }
                 
                 // (FIX LỖI) Reset sub-tab về null để ép hàm showCalendarSubTab chạy lại logic hiển thị nút FAB
