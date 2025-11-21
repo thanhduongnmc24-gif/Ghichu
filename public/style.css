@@ -315,3 +315,60 @@ body {
     touch-action: pan-y; 
     height: 100%; /* Đảm bảo che kín lớp dưới */
 }
+/* Chỉ thêm phần này vào cuối file CSS cũ của đại ca */
+
+/* --- MAGIC EDIT STYLES --- */
+
+/* Nút công cụ bên trái */
+.magic-tool-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #1F2937; /* bg-gray-800 */
+    border: 1px solid #374151; /* border-gray-700 */
+    border-radius: 0.5rem;
+    padding: 1rem;
+    color: #E5E7EB;
+    transition: all 0.2s;
+    height: 100px;
+}
+.magic-tool-btn:hover {
+    background-color: #374151;
+    border-color: #F97316; /* cam */
+    transform: translateY(-2px);
+}
+.magic-tool-btn span {
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
+/* Nút tab trên header */
+#magic-tab-btn.active {
+    color: #F97316; /* Orange-500 */
+    border-bottom: 2px solid #F97316;
+    background: transparent;
+}
+
+/* Bottom nav active state cho nút Magic */
+#bottom-tab-magic.active {
+    color: #F97316;
+}
+
+/* Canvas area */
+#main-canvas-img {
+    max-height: 70vh;
+}
+
+/* Responsive layout cho Magic tab */
+@media (max-width: 640px) {
+    #magic-main {
+        padding-bottom: 6rem; /* Tránh bottom nav che mất */
+        height: auto;
+    }
+    .magic-tool-btn {
+        height: 80px;
+    }
+}
+
