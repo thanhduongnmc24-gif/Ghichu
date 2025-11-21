@@ -3,62 +3,234 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ghichu App & Magic Edit</title> 
+    <title>Ghichu App</title> 
     <link rel="icon" href="/icons/icon-192x192.png" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1F2937">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ghichu App">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
     <link rel="stylesheet" href="/style.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Thêm Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-</head>
+    <style>
+        .ios-toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px; 
+            height: 28px; 
+        }
+        .ios-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #4B5563; 
+            transition: .4s;
+            border-radius: 28px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px; 
+            width: 22px;
+            left: 3px; 
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #10B981; 
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px); 
+        }
+        
+        .reminder-datetime-input {
+            background-color: #4B5563; 
+            color: white; 
+            padding: 0.5rem; 
+            border-radius: 0.25rem; 
+            border: 1px solid #6B7280; 
+            font-size: 0.875rem; 
+            line-height: 1.25rem;
+            text-align: right;
+            color-scheme: dark;
+        }
+
+        .sub-tab-button {
+            flex: 1;
+            padding: 0.75rem 0.5rem; 
+            font-size: 0.875rem; 
+            font-weight: 600;
+            color: #D1D5DB; 
+            border-radius: 0.375rem; 
+            transition: all 0.2s;
+        }
+        .sub-tab-button:hover {
+            background-color: #4B5563; 
+        }
+        .sub-tab-button.active {
+            background-color: #00B2BF; 
+            color: white;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .fab-btn {
+            position: fixed;
+            bottom: 6rem; 
+            right: 1.5rem;
+            width: 3.5rem;
+            height: 3.5rem;
+            background-color: #2563EB; 
+            color: white;
+            border-radius: 9999px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 40;
+            transition: transform 0.2s;
+        }
+        .fab-btn:hover {
+            background-color: #1D4ED8; 
+            transform: scale(1.1);
+        }
+        .fab-btn svg {
+            width: 1.75rem;
+            height: 1.75rem;
+        }
+        
+        /* Style riêng cho Image Editor Tab */
+        .img-tool-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background-color: #1F2937; /* bg-gray-800 */
+            border: 1px solid #374151;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .img-tool-btn:hover {
+            background-color: #374151;
+            border-color: #F97316; /* orange-500 */
+        }
+        .img-tool-icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 0.5rem;
+            color: #F97316;
+        }
+        .img-tool-text {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #D1D5DB;
+            text-align: center;
+        }
+        .img-menu-item {
+            color: #9CA3AF;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding-bottom: 0.5rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .img-menu-item.active {
+            color: #F97316; /* Orange */
+            border-bottom: 2px solid #F97316;
+        }
+    </style>
+    </head>
 <body class="bg-gray-900 text-gray-100 antialiased">
 
     <header class="bg-gray-800 shadow-md sticky top-0 z-30">
         <nav class="container mx-auto px-4 py-4 relative">
-             <!-- DESKTOP HEADER -->
              <div class="hidden sm:flex justify-between items-center">
-                 <div class="flex space-x-2">
-                     <button id="news-tab-btn" class="tab-button active text-xl font-bold !ml-0">Tin Tức</button>
-                     <button id="calendar-tab-btn" class="tab-button text-xl font-bold">Lịch</button>
-                     <button id="magic-tab-btn" class="tab-button text-xl font-bold text-orange-500">Sửa Ảnh AI</button>
+                 <div class="flex items-center space-x-2">
+                     <button id="news-tab-btn" class="tab-button active text-xl font-bold !ml-0">
+                         Tin Tức
+                     </button>
+                     <button id="calendar-tab-btn" class="tab-button text-xl font-bold">
+                         Lịch
+                     </button>
+                     <button id="image-edit-tab-btn" class="tab-button text-xl font-bold">
+                        Sửa Ảnh
+                    </button>
+                     <button id="links-tab-btn" class="tab-button text-xl font-bold">
+                         Lưu Trữ
+                     </button>
                  </div>
                  
-                 <div id="news-controls" class="flex items-center">
-                    <div id="feed-nav" class="flex space-x-2 overflow-x-auto py-1">
+                 <!-- Feed Nav (Chỉ hiện khi ở tab Tin tức) -->
+                 <div id="header-feed-container" class="flex items-center ml-4">
+                    <div id="feed-nav" class="flex space-x-2 overflow-x-auto py-1 max-w-[500px] no-scrollbar">
                          <button class="feed-button active px-4 py-2 rounded-lg" data-rss="https://vnexpress.net/rss/tin-moi-nhat.rss" data-source="VnExpress">VnExpress</button>
+                         <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://tuoitre.vn/rss/tin-moi-nhat.rss" data-source="Tuổi Trẻ">Tuổi Trẻ</button>
+                         <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://thanhnien.vn/rss/home.rss" data-source="Thanh Niên">Thanh Niên</button>
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://dantri.com.vn/rss/home.rss" data-source="Dân Trí">Dân Trí</button>
-                         <button id="refresh-feed-button" class="refresh-button" title="Tải lại"><i data-lucide="rotate-ccw" class="w-5 h-5"></i></button>
+                         <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://vtv.vn/rss/home.rss" data-source="VTV">VTV</button>
+                         <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://thethao247.vn/bong-da.rss" data-source="Thể Thao 247">Thể Thao 247</button>
+                         <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
                     </div>
+                    <button id="refresh-feed-button" class="refresh-button ml-2" title="Tải lại tin tức">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l-1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
+                    </button>
                  </div>
-                 <button id="settings-btn" class="text-gray-400 hover:text-white p-2"><i data-lucide="settings" class="w-6 h-6"></i></button>
+                 
+                 <button id="settings-btn" class="p-2 text-gray-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.11v1.09c0 .55-.397 1.02-.94 1.11l-.893.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.11v-1.09c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                 </button>
              </div>
              
-             <!-- MOBILE HEADER -->
              <div class="sm:hidden flex justify-between items-center"> 
                  <span id="mobile-header-title" class="text-xl font-bold text-white truncate">Tin Tức</span>
                  <div class="flex items-center space-x-2 flex-shrink-0">
-                     <button id="refresh-feed-button-mobile" class="refresh-button"><i data-lucide="rotate-ccw" class="w-5 h-5"></i></button>
-                     <button id="rss-menu-btn" class="text-gray-300 p-2"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                     <button id="refresh-feed-button-mobile" class="refresh-button" title="Tải lại tin tức">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l-1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
+                     </button>
+                     <button id="rss-menu-btn" class="text-gray-300 hover:text-white focus:outline-none focus:text-white p-2">
+                          <span class="sr-only">Mở menu RSS</span>
+                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                     </button>
                  </div>
              </div>
              
-             <!-- MOBILE RSS MENU -->
              <div id="rss-mobile-menu" class="hidden sm:hidden bg-gray-700 absolute top-full left-0 right-0 z-20 shadow-lg mt-1 rounded-b-md">
                  <div class="px-2 pt-2 pb-3 space-y-1">
                      <button class="feed-button active" data-rss="https://vnexpress.net/rss/tin-moi-nhat.rss" data-source="VnExpress">VnExpress</button>
+                     <button class="feed-button" data-rss="https://tuoitre.vn/rss/tin-moi-nhat.rss" data-source="Tuổi Trẻ">Tuổi Trẻ</button>
+                     <button class="feed-button" data-rss="https://thanhnien.vn/rss/home.rss" data-source="Thanh Niên">Thanh Niên</button>
                      <button class="feed-button" data-rss="https://dantri.com.vn/rss/home.rss" data-source="Dân Trí">Dân Trí</button>
-                     <button class="feed-button" data-rss="https://thethao247.vn/bong-da.rss" data-source="Thể Thao 247">Thể Thao</button>
+                     <button class="feed-button" data-rss="https://vtv.vn/rss/home.rss" data-source="VTV">VTV</button>
+                     <button class="feed-button" data-rss="https://thethao247.vn/bong-da.rss" data-source="Thể Thao 247">Thể Thao 247</button>
+                     <button class="feed-button" data-rss="https://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
                  </div>
              </div>
         </nav>
     </header>
 
-    <!-- TAB TIN TỨC -->
+    <!-- === TIN TỨC MAIN === -->
     <main id="news-main" class="container mx-auto p-4 md:p-8">
         <div id="loading-spinner" class="flex justify-center items-center h-64">
             <div class="spinner border-t-blue-500" style="width: 50px; height: 50px;"></div>
@@ -66,165 +238,537 @@
         <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
     </main>
     
-    <!-- TAB LỊCH -->
+    <!-- === LỊCH MAIN === -->
     <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
+
         <div class="mb-4 bg-gray-800 rounded-lg p-1 flex space-x-1">
-            <button id="cal-subtab-work" class="sub-tab-button active">Lịch Làm Việc</button>
-            <button id="cal-subtab-reminders" class="sub-tab-button">Nhắc Nhở</button>
+            <button id="cal-subtab-work" class="sub-tab-button active">
+                Lịch Làm Việc
+            </button>
+            <button id="cal-subtab-reminders" class="sub-tab-button">
+                Nhắc Nhở
+            </button>
         </div>
+
         <div id="calendar-work-content">
+            
             <section id="calendar-container" class="bg-white text-gray-900 rounded-lg shadow-lg p-4 md:p-6">
                 <div id="calendar-header" class="flex justify-between items-center mb-4">
-                    <button id="prev-month-btn" class="p-2"><i data-lucide="chevron-left" class="text-gray-600"></i></button>
-                    <h2 id="current-month-year" class="text-xl font-bold">Tháng -- ----</h2>
-                    <button id="next-month-btn" class="p-2"><i data-lucide="chevron-right" class="text-gray-600"></i></button>
+                    <button id="prev-month-btn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <h2 id="current-month-year" class="text-xl md:text-2xl font-bold text-gray-900">Tháng 10 2025</h2>
+                    <button id="next-month-btn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
                 </div>
-                <div class="overflow-x-auto"><div id="calendar-body" class="grid grid-cols-7 gap-1 md:gap-2"></div></div>
-            </section>
-            <section id="monthly-note-summary" class="bg-gray-800 rounded-lg shadow-lg p-4 mt-6">
-                <div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold text-white">Tổng kết</h2></div>
-                <div id="monthly-note-list" class="space-y-3"></div>
-            </section>
-            <button id="fab-ai-toggle" class="fab-btn"><i data-lucide="sparkles"></i></button>
-        </div>
-        <div id="calendar-reminders-content" class="hidden">
-            <div id="reminder-list-container" class="space-y-6"></div>
-            <button id="fab-reminder-toggle" class="fab-btn"><i data-lucide="plus"></i></button>
-        </div>
-    </main>
-
-    <!-- (MỚI) TAB MAGIC EDIT (SỬA ẢNH) -->
-    <main id="magic-main" class="container mx-auto p-4 md:p-6 hidden h-[calc(100vh-140px)]">
-        <div class="flex flex-col md:flex-row gap-4 h-full">
-            <!-- SIDEBAR CÔNG CỤ -->
-            <aside class="w-full md:w-80 bg-gray-800 rounded-xl p-4 flex flex-col overflow-y-auto">
-                <div class="mb-6">
-                    <h3 class="text-sm font-semibold text-gray-400 mb-3">1. ẢNH GỐC</h3>
-                    <div id="upload-zone" class="border-2 border-dashed border-gray-600 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-700 h-40 relative">
-                        <input type="file" id="image-upload-input" class="hidden" accept="image/*">
-                        <div id="upload-placeholder" class="text-center">
-                            <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto mb-2 text-gray-500"></i>
-                            <p class="text-sm text-gray-300">Nhấn để tải ảnh</p>
+                
+                <div class="overflow-x-auto">
+                    <div> <div id="calendar-weekdays" class="grid grid-cols-7 gap-1 md:gap-2 mb-2">
+                            <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-1 sm:p-3 rounded-lg text-center">T2</div>
+                            <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-1 sm:p-3 rounded-lg text-center">T3</div>
+                            <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-1 sm:p-3 rounded-lg text-center">T4</div>
+                            <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-1 sm:p-3 rounded-lg text-center">T5</div>
+                            <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-1 sm:p-3 rounded-lg text-center">T6</div>
+                            <div class="weekday bg-gray-100 text-gray-600 font-semibold text-sm p-1 sm:p-3 rounded-lg text-center">T7</div>
+                            <div class="weekday sunday bg-gray-100 text-red-600 font-semibold text-sm p-1 sm:p-3 rounded-lg text-center">CN</div>
                         </div>
-                        <img id="preview-img-sidebar" class="absolute inset-0 w-full h-full object-contain rounded-xl hidden bg-black/50">
+                        <div id="calendar-body" class="grid grid-cols-7 gap-1 md:gap-2">
+                            </div>
                     </div>
-                </div>
-
-                <div class="flex-1">
-                    <h3 class="text-sm font-semibold text-gray-400 mb-3">2. CÔNG CỤ AI</h3>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button class="magic-tool-btn" data-prompt="Làm nét ảnh, tăng độ phân giải, khử nhiễu (Upscale & Denoise).">
-                            <i data-lucide="wand-2" class="mb-1 text-orange-500"></i>
-                            <span>Phục hồi</span>
-                        </button>
-                        <button class="magic-tool-btn" data-prompt="Tách nền chủ thể, thay thế bằng nền trắng tinh khiết.">
-                            <i data-lucide="scissors" class="mb-1 text-blue-500"></i>
-                            <span>Tách nền</span>
-                        </button>
-                        <button class="magic-tool-btn" data-prompt="Chuyển thành ảnh thẻ 3x4 phông nền xanh dương chuẩn quốc tế.">
-                            <i data-lucide="camera" class="mb-1 text-green-500"></i>
-                            <span>Ảnh thẻ</span>
-                        </button>
-                        <button class="magic-tool-btn" data-prompt="Xóa text, watermark và các vật thể thừa trên ảnh.">
-                            <i data-lucide="eraser" class="mb-1 text-red-500"></i>
-                            <span>Xóa Vật thể</span>
-                        </button>
-                        <button class="magic-tool-btn" data-prompt="Thay trang phục nhân vật thành bộ Vest công sở chuyên nghiệp.">
-                            <i data-lucide="shirt" class="mb-1 text-purple-500"></i>
-                            <span>Thay Vest</span>
-                        </button>
-                        <button class="magic-tool-btn" data-prompt="Phân tích chi tiết bức ảnh này xem có gì.">
-                            <i data-lucide="scan-eye" class="mb-1 text-yellow-500"></i>
-                            <span>Phân tích</span>
-                        </button>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- KHUNG HIỂN THỊ (CANVAS) -->
-            <section class="flex-1 bg-black/30 rounded-xl border border-gray-700 relative flex items-center justify-center overflow-hidden p-4">
-                <div id="empty-state-canvas" class="text-center text-gray-500">
-                    <i data-lucide="image" class="w-16 h-16 mx-auto mb-2 opacity-50"></i>
-                    <p>Không gian làm việc</p>
-                </div>
-                
-                <img id="main-canvas-img" class="max-w-full max-h-full object-contain shadow-2xl rounded hidden">
-                
-                <!-- Loading Overlay -->
-                <div id="magic-loading" class="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-20 hidden">
-                    <div class="spinner border-t-orange-500 mb-4"></div>
-                    <p class="text-orange-500 animate-pulse">AI đang xử lý...</p>
-                </div>
-
-                <!-- Result Text Overlay (Vì 2.5 Flash trả text là chính) -->
-                <div id="magic-result-text" class="absolute bottom-0 left-0 right-0 bg-gray-900/90 p-4 text-sm text-white max-h-[50%] overflow-y-auto hidden border-t border-orange-500">
-                    <h4 class="font-bold text-orange-400 mb-1">Kết quả AI:</h4>
-                    <p id="magic-result-content"></p>
-                    <button id="close-result-text" class="absolute top-2 right-2 text-gray-400 hover:text-white"><i data-lucide="x"></i></button>
                 </div>
             </section>
+            
+            <section id="monthly-note-summary" class="bg-gray-800 rounded-lg shadow-lg p-4 md:p-6 mt-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-white">Tổng kết Ghi chú Tháng</h2>
+                    <button id="toggle-summary-view-btn" class="summary-toggle-btn">
+                        Xem theo: Ghi chú
+                    </button>
+                </div>
+            
+                <div id="monthly-note-list" class="space-y-3">
+                    <p class="text-gray-400 italic">Không có ghi chú nào cho tháng này.</p>
+                </div>
+            </section>
+
+            <button id="fab-ai-toggle" class="fab-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+            </button>
         </div>
+
+        <div id="calendar-reminders-content" class="hidden">
+            <div id="reminder-warning" class="hidden bg-red-800 border border-red-600 text-red-100 px-4 py-3 rounded-lg shadow-lg mb-6" role="alert">
+                <strong class="font-bold">Chưa bật thông báo!</strong>
+                <span class="block sm:inline">Vui lòng vào tab "Cài đặt" để bật thông báo thì mới dùng được Nhắc nhở.</span>
+            </div>
+            
+            <section>
+                <h2 class="text-xl font-bold text-white mb-4">Danh sách Nhắc nhở</h2>
+                <div id="reminder-list-container" class="space-y-6"></div>
+                <p id="reminder-list-loading" class="text-gray-400 italic text-center p-4 bg-gray-800 rounded-lg shadow-lg">Đang tải danh sách...</p>
+            </section>
+
+            <button id="fab-reminder-toggle" class="fab-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+            </button>
+        </div>
+
     </main>
 
-    <!-- TAB LƯU TRỮ -->
-    <main id="links-main" class="container mx-auto p-4 hidden">
-        <h2 class="text-xl font-bold text-white mb-4">Danh sách đã lưu</h2>
-        <div id="link-list-container" class="space-y-3"></div>
-        <button id="fab-link-toggle" class="fab-btn"><i data-lucide="plus"></i></button>
+    <!-- === CÀI ĐẶT MAIN === -->
+    <main id="settings-main" class="container mx-auto p-4 sm:p-8 hidden">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full mx-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white">Cài đặt</h2>
+                </div>
+            
+            <fieldset class="border border-gray-600 p-4 rounded-lg">
+                <legend class="text-lg font-semibold text-white px-2">Thông báo Push</legend>
+                
+                <p id="settings-push-warning" class="hidden text-sm text-red-400 mb-3 text-center font-semibold">
+                    Thông báo đang bị TẮT.
+                </p>
+
+                <button id="notify-button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                    Bật Thông Báo
+                </button>
+                <p class="text-sm text-gray-400 mt-2 mb-4">Cho phép máy chủ gửi thông báo ngay cả khi đã đóng ứng dụng.</p>
+                
+                <hr class="border-gray-600 my-4">
+                
+                <h3 class="text-md font-semibold text-white mb-3">Giờ báo thức (sẽ gửi lên server):</h3>
+                
+                <label class="time-setting-label">
+                    <span>Báo ca <strong>Ngày</strong> lúc:</span>
+                    <input type="time" id="notify-time-ngay" value="06:00">
+                </label>
+                <label class="time-setting-label">
+                    <span>Báo ca <strong>Đêm</strong> lúc:</span>
+                    <input type="time" id="notify-time-dem" value="20:00">
+                </label>
+                <label class="time-setting-label">
+                    <span>Báo <strong>Giãn Ca</strong> lúc:</span>
+                    <input type="time" id="notify-time-off" value="08:00">
+                </label>
+            </fieldset>
+
+            <fieldset class="border border-gray-600 p-4 rounded-lg mt-6">
+                <legend class="text-lg font-semibold text-white px-2">Đồng bộ Online</legend>
+                
+                <p class="text-sm text-gray-400 mt-2 mb-4">Lưu hoặc tải dữ liệu ghi chú của đại ca bằng tài khoản riêng.</p>
+
+                <div class="space-y-3">
+                    <label class="block">
+                        <span class="text-sm font-medium text-gray-300">Tên đăng nhập:</span>
+                        <input type="text" id="sync-username" placeholder="Tên của đại ca" autocomplete="username" class="w-full mt-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                    </label>
+                    <label class="block">
+                        <span class="text-sm font-medium text-gray-300">Mật khẩu:</span>
+                        <input type="password" id="sync-password" placeholder="Mật khẩu bí mật" autocomplete="current-password" class="w-full mt-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                    </label>
+                </div>
+                
+                <div class="flex space-x-3 mt-4">
+                    <button id="sync-up-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        Tải lên
+                    </button>
+                    <button id="sync-down-btn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        Tải về
+                    </button>
+                </div>
+                
+                <button id="admin-login-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors mt-3">
+                    Đăng nhập Quản trị
+                </button>
+                
+                <p id="sync-status-msg" class="text-sm text-gray-400 mt-3 text-center hidden"></p>
+
+            </fieldset>
+
+            <fieldset id="admin-panel" class="border border-gray-600 p-4 rounded-lg mt-6 hidden">
+                <legend class="text-lg font-semibold text-red-400 px-2">Bảng Quản Trị</legend>
+                
+                <button id="admin-logout-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors mb-4">
+                    Đăng xuất Admin
+                </button>
+
+                <h3 class="text-md font-semibold text-white mb-2">Danh sách Người dùng:</h3>
+                <div id="admin-user-list-wrapper" class="bg-gray-900 p-3 rounded-lg max-h-[300px] overflow-y-auto">
+                    <p id="admin-user-loading" class="text-gray-400 italic">Đang tải...</p>
+                    <table id="admin-user-list" class="min-w-full hidden">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Tên</th>
+                                <th class="px-3 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700" id="admin-user-list-body">
+                            </tbody>
+                    </table>
+                </div>
+            </fieldset>
+            </div>
     </main>
     
-    <!-- TAB CÀI ĐẶT -->
-    <main id="settings-main" class="container mx-auto p-4 hidden">
-        <div class="bg-gray-800 p-6 rounded-lg max-w-md mx-auto">
-            <h2 class="text-2xl font-bold text-white mb-6">Cài đặt</h2>
-            <button id="notify-button" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg mb-4">Bật Thông Báo</button>
-            <div class="space-y-3">
-                <input type="text" id="sync-username" placeholder="Tên đồng bộ" class="w-full p-3 rounded bg-gray-700 text-white">
-                <input type="password" id="sync-password" placeholder="Mật khẩu" class="w-full p-3 rounded bg-gray-700 text-white">
-                <div class="flex space-x-2">
-                    <button id="sync-up-btn" class="flex-1 bg-blue-600 py-2 rounded text-white">Tải lên</button>
-                    <button id="sync-down-btn" class="flex-1 bg-green-600 py-2 rounded text-white">Tải về</button>
+    <!-- === LƯU TRỮ LINKS MAIN === -->
+    <main id="links-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
+        
+        <section>
+            <h2 class="text-xl font-bold text-white mb-4">Danh sách đã lưu</h2>
+            <div id="link-list-container" class="space-y-3">
+                <p class="text-gray-400 italic text-center p-4 bg-gray-800 rounded-lg shadow-lg">Chưa có link nào được lưu.</p>
+            </div>
+        </section>
+
+        <button id="fab-link-toggle" class="fab-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+        </button>
+    </main>
+
+    <!-- === IMAGE EDIT MAIN (SỬA ẢNH AI) === -->
+    <main id="image-edit-main" class="container mx-auto p-2 md:p-6 w-full h-[calc(100vh-80px)] md:h-screen flex flex-col hidden">
+        
+        <!-- Top Menu Bar (Scrollable) -->
+        <div class="flex items-center space-x-4 overflow-x-auto mb-4 pb-2 border-b border-gray-700 no-scrollbar">
+            <div class="flex items-center space-x-1 text-orange-500 font-bold text-lg whitespace-nowrap mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                </svg>
+                <span>DINO AI Edit</span>
+            </div>
+            <button class="img-menu-item active">🛠 CƠ BẢN</button>
+            <button class="img-menu-item">✨ MAGIC BACKGROUND</button>
+            <button class="img-menu-item">🖌 MAGIC BRUSH</button>
+            <button class="img-menu-item">🎨 SAO CHÉP CONCEPT</button>
+            <button class="img-menu-item">🎞 DARK ROOM</button>
+        </div>
+
+        <div class="flex-grow grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
+            
+            <!-- Left Panel: Upload & Tools -->
+            <div class="lg:col-span-4 flex flex-col space-y-4 overflow-y-auto pr-1">
+                
+                <!-- 1. Ảnh gốc / Upload -->
+                <div class="border border-gray-700 rounded-lg p-4 bg-gray-800/50">
+                    <h3 class="text-orange-500 font-semibold mb-3 text-sm uppercase">1. Ảnh gốc</h3>
+                    <div id="image-upload-area" class="border-2 border-dashed border-gray-600 rounded-lg h-32 flex flex-col items-center justify-center text-gray-400 hover:border-orange-500 hover:text-orange-500 hover:bg-gray-800 transition-all cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mb-2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                        </svg>
+                        <span class="text-xs font-medium">Nhấn để tải lên hoặc kéo thả</span>
+                        <span class="text-[10px] mt-1 opacity-70">PNG, JPG (Tối đa 4 ảnh)</span>
+                        <input type="file" id="image-input" class="hidden" accept="image/*">
+                    </div>
+                </div>
+
+                <!-- 2. Công cụ chỉnh sửa -->
+                <div class="border border-gray-700 rounded-lg p-4 bg-gray-800/50 flex-grow">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-orange-500 font-semibold text-sm uppercase">2. Công cụ chỉnh sửa</h3>
+                        <span class="text-gray-500 text-xs">🛠 CÔNG CỤ</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Tool 1 -->
+                        <button class="img-tool-btn group">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="img-tool-icon">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                            </svg>
+                            <span class="img-tool-text group-hover:text-white">Phục hồi & Tạo...</span>
+                            <span class="text-[10px] text-gray-500 text-center mt-1">Xóa vết rách, tạo màu HD</span>
+                        </button>
+                        
+                        <!-- Tool 2 -->
+                        <button class="img-tool-btn group">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="img-tool-icon">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
+                            </svg>
+                            <span class="img-tool-text group-hover:text-white">Tách nền trắng</span>
+                            <span class="text-[10px] text-gray-500 text-center mt-1">Ảnh nền trắng</span>
+                        </button>
+
+                        <!-- Tool 3 -->
+                        <button class="img-tool-btn group">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="img-tool-icon">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                            </svg>
+                            <span class="img-tool-text group-hover:text-white">Ảnh thẻ</span>
+                            <span class="text-[10px] text-gray-500 text-center mt-1">Tùy chọn phông nền</span>
+                        </button>
+
+                        <!-- Tool 4 -->
+                        <button class="img-tool-btn group">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="img-tool-icon">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
+                            </svg>
+                            <span class="img-tool-text group-hover:text-white">Ảnh thờ (Tự động)</span>
+                            <span class="text-[10px] text-gray-500 text-center mt-1">Tự động thay áo dài</span>
+                        </button>
+
+                        <!-- Tool 5 -->
+                        <button class="img-tool-btn group">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="img-tool-icon">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                            </svg>
+                            <span class="img-tool-text group-hover:text-white">Thay trang phục</span>
+                            <span class="text-[10px] text-gray-500 text-center mt-1">Thử quần áo mới</span>
+                        </button>
+
+                        <!-- Tool 6 -->
+                        <button class="img-tool-btn group">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="img-tool-icon">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9.75L14.25 12m0 0l2.25 2.25M14.25 12l2.25-2.25M14.25 12L12 14.25m-2.58 4.92l-6.375-6.375a1.125 1.125 0 010-1.59L9.42 4.83c.211-.211.498-.33.796-.33H19.5a2.25 2.25 0 012.25 2.25v10.5a2.25 2.25 0 01-2.25 2.25h-9.284c-.298 0-.585-.119-.796-.33z" />
+                            </svg>
+                            <span class="img-tool-text group-hover:text-white">Xóa Watermark</span>
+                            <span class="text-[10px] text-gray-500 text-center mt-1">Xóa chữ/logo</span>
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <!-- Right Panel: Canvas/Darkroom -->
+            <div class="lg:col-span-8 bg-gray-950 border border-gray-700 rounded-lg flex flex-col items-center justify-center relative overflow-hidden min-h-[300px]">
+                <!-- Dotted Grid Background -->
+                <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#4B5563 1px, transparent 1px); background-size: 20px 20px;"></div>
+                
+                <div id="editor-placeholder" class="text-center z-10 p-6">
+                    <div class="w-16 h-16 border-2 border-gray-600 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-gray-600">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        </svg>
+                    </div>
+                    <p class="text-gray-400 font-medium">Tải lên ảnh và nhập yêu cầu</p>
+                    <p class="text-gray-500 text-sm">để xem kết quả tại đây</p>
+                </div>
+
+                <img id="editor-preview-img" class="hidden max-w-full max-h-full object-contain z-20 shadow-2xl" src="" alt="Preview">
+            </div>
+
         </div>
     </main>
 
-    <!-- CÁC MODAL (GIỮ NGUYÊN NHƯ CŨ, CHỈ RÚT GỌN ĐỂ HIỂN THỊ) -->
-    <div id="ai-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-        <div class="bg-gray-800 p-6 rounded-lg w-full max-w-md">
-            <h2 class="text-xl text-white mb-4">Thêm Nhanh AI</h2>
-            <form id="ai-form"><input id="ai-input" class="w-full p-3 bg-gray-700 text-white rounded mb-4" placeholder="Ví dụ: Họp 9h sáng mai..."><button class="w-full bg-blue-600 text-white p-3 rounded">Phân tích</button></form>
-            <button id="close-ai-modal" class="mt-4 text-gray-400 w-full">Đóng</button>
-        </div>
-    </div>
-    
-    <div id="note-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-        <div class="bg-gray-800 p-6 rounded-lg w-full max-w-md">
-             <h2 id="note-modal-title" class="text-xl text-white mb-2">Ghi chú</h2>
-             <p id="modal-shift-info" class="text-gray-400 mb-4"></p>
-             <ul id="note-list" class="mb-4 space-y-2"></ul>
-             <form id="add-note-form" class="flex gap-2"><input id="new-note-input" class="flex-1 bg-gray-700 text-white p-2 rounded"><button class="bg-blue-600 text-white px-4 rounded">Thêm</button></form>
-             <button id="close-note-modal" class="mt-4 w-full text-gray-400">Đóng</button>
+    <!-- === MODALS & OVERLAYS === -->
+    <div id="admin-note-viewer-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[60] transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="admin-note-viewer-title" class="text-2xl font-bold text-white">Ghi chú của...</h2>
+                <button id="admin-close-note-viewer" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+            <div id="admin-note-viewer-content" class="flex-grow overflow-y-auto bg-gray-900 p-4 rounded-lg min-h-[200px]">
+                <p class="text-gray-400">Đang tải ghi chú...</p>
+            </div>
         </div>
     </div>
 
-    <!-- BOTTOM NAVIGATION (MOBILE) -->
+    <div id="summary-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-white">Bản Tóm Tắt AI</h2>
+                <button id="close-summary-modal" class="text-gray-400 hover:text-white text-3xl">&times;</button>
+            </div>
+            <div id="summary-content-wrapper" class="min-h-[200px]">
+                 <div class="text-gray-200 space-y-4">
+                      <h3 id="summary-title" class="text-lg font-semibold text-white"></h3>
+                      <p id="summary-text" class="whitespace-pre-wrap leading-relaxed"></p>
+                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="summary-toast" class="hidden">
+        <button id="toast-close-button">&times;</button>
+        <div class="flex items-center">
+            <div id="toast-icon" class="flex-shrink-0 w-6 h-6">
+                </div>
+            <div class="ml-3">
+                <p id="toast-main-message" class="font-semibold"></p>
+                <p id="toast-title" class="text-sm text-gray-300 line-clamp-2"></p>
+                <p id="toast-cta" class="text-xs mt-2 text-blue-200">Nhấn để xem</p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="note-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col">
+            <span id="close-note-modal" class="absolute top-3 right-4 text-gray-400 hover:text-white text-3xl cursor-pointer">&times;</span>
+            <h2 id="note-modal-title" class="text-2xl font-bold text-white mb-2">Cập nhật (Ngày...)</h2>
+            
+            <p id="modal-shift-info" class="bg-gray-700 p-3 rounded-lg text-gray-200 text-center font-semibold mb-4">
+                Ca tự động: <strong>...</strong>
+            </p>
+            <label class="block text-sm font-medium text-gray-300 mb-2">Ghi chú hiện có:</label>
+            <div id="note-list-wrapper" class="flex-grow overflow-y-auto bg-gray-900 p-3 rounded-lg min-h-[100px] max-h-[200px] mb-4">
+                <ul id="note-list" class="space-y-2">
+                    </ul>
+            </div>
+            <form id="add-note-form">
+                <label for="new-note-input" class="block text-sm font-medium text-gray-300 mb-2">Thêm ghi chú mới:</label>
+                <div class="flex space-x-2">
+                    <input type="text" id="new-note-input" placeholder="Nhập ghi chú mới..." autocomplete="off" class="flex-grow p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">Thêm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="reminder-edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col">
+            <span id="close-reminder-edit-modal" class="absolute top-3 right-4 text-gray-400 hover:text-white text-3xl cursor-pointer">&times;</span>
+            <h2 class="text-2xl font-bold text-white mb-4">Chỉnh sửa Nhắc nhở</h2>
+            
+            <form id="edit-reminder-form" class="space-y-4">
+                <input type="hidden" id="edit-reminder-id">
+                
+                <div>
+                    <label for="edit-reminder-title" class="block text-sm font-medium text-gray-300 mb-1">Tiêu đề:</label>
+                    <input type="text" id="edit-reminder-title" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="edit-reminder-content" class="block text-sm font-medium text-gray-300 mb-1">Nội dung:</label>
+                    <textarea id="edit-reminder-content" rows="4" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500"></textarea>
+                </div>
+
+                <div class="flex items-center justify-between bg-gray-700 p-3 rounded-lg">
+                    <label for="edit-reminder-datetime" class="text-sm font-medium text-gray-300">Hẹn lúc:</label>
+                    <input type="datetime-local" id="edit-reminder-datetime" class="reminder-datetime-input" style="max-width: 200px;">
+                </div>
+                
+                <div class="flex items-center justify-between bg-gray-700 p-3 rounded-lg">
+                    <span class="text-sm font-medium text-gray-300">Trạng thái (Bật/Tắt):</span>
+                    <label class="ios-toggle">
+                        <input type="checkbox" id="edit-reminder-active" class="reminder-toggle-check">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <button type="submit" id="save-reminder-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                    Lưu thay đổi
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="link-edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] flex flex-col relative">
+            <span id="close-link-edit-modal" class="absolute top-3 right-4 text-gray-400 hover:text-white text-3xl cursor-pointer">&times;</span>
+            <h2 class="text-2xl font-bold text-white mb-4">Chỉnh sửa Link</h2>
+            
+            <form id="edit-link-form" class="space-y-4">
+                <input type="hidden" id="edit-link-index">
+                
+                <div>
+                    <label for="edit-link-url" class="block text-sm font-medium text-gray-300 mb-1">URL (Địa chỉ):</label>
+                    <input type="url" id="edit-link-url" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="edit-link-note" class="block text-sm font-medium text-gray-300 mb-1">Ghi chú:</label>
+                    <input type="text" id="edit-link-note" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div class="flex space-x-3 pt-2">
+                    <button type="button" id="delete-link-btn-modal" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        Xóa Link
+                    </button>
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        Lưu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="ai-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full relative">
+            <span id="close-ai-modal" class="absolute top-3 right-4 text-gray-400 hover:text-white text-3xl cursor-pointer">&times;</span>
+            <h2 class="text-2xl font-bold text-white mb-4">Thêm Nhanh (AI)</h2>
+            <form id="ai-form" class="space-y-4">
+                <div>
+                     <label for="ai-input" class="block text-sm font-medium text-gray-300 mb-1">Nhập nội dung:</label>
+                    <input type="text" id="ai-input" placeholder="Ví dụ: Quang 30/10, Họp 15/11..." class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-lg transition-colors">Phân tích</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="reminder-add-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full relative">
+            <span id="close-reminder-add-modal" class="absolute top-3 right-4 text-gray-400 hover:text-white text-3xl cursor-pointer">&times;</span>
+            <h2 class="text-2xl font-bold text-white mb-4">Thêm Nhắc nhở mới</h2>
+            <form id="new-reminder-form" class="space-y-4">
+                <div>
+                    <label for="new-reminder-title" class="block text-sm font-medium text-gray-300 mb-1">Tiêu đề:</label>
+                    <input type="text" id="new-reminder-title" placeholder="Nhắc nhở gì..." class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                     <label for="new-reminder-content" class="block text-sm font-medium text-gray-300 mb-1">Nội dung (Tùy chọn):</label>
+                    <textarea id="new-reminder-content" placeholder="Chi tiết..." rows="2" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg transition-colors">
+                    Thêm
+                </button>
+                <p id="new-reminder-status" class="text-sm text-gray-400 mt-3 text-center hidden"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="link-add-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full relative">
+            <span id="close-link-add-modal" class="absolute top-3 right-4 text-gray-400 hover:text-white text-3xl cursor-pointer">&times;</span>
+            <h2 class="text-2xl font-bold text-white mb-4">Thêm Link mới</h2>
+            <form id="new-link-form" class="space-y-4">
+                <div>
+                     <label for="new-link-url" class="block text-sm font-medium text-gray-300 mb-1">URL:</label>
+                    <input type="url" id="new-link-url" placeholder="https://..." required class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                     <label for="new-link-note" class="block text-sm font-medium text-gray-300 mb-1">Ghi chú:</label>
+                    <input type="text" id="new-link-note" placeholder="Mô tả..." class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-lg transition-colors">
+                    Lưu Link
+                </button>
+                <p id="link-status-msg" class="text-sm text-gray-400 mt-3 text-center hidden"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- === BOTTOM NAVIGATION (MOBILE) === -->
     <nav id="bottom-nav" class="sm:hidden">
-        <button id="bottom-tab-news" class="bottom-nav-btn active"><i data-lucide="newspaper"></i><span>Tin</span></button>
-        <button id="bottom-tab-calendar" class="bottom-nav-btn"><i data-lucide="calendar"></i><span>Lịch</span></button>
-        <!-- NÚT MỚI: MAGIC EDIT MOBILE -->
-        <button id="bottom-tab-magic" class="bottom-nav-btn text-orange-500"><i data-lucide="wand-2"></i><span>Sửa Ảnh</span></button>
-        <button id="bottom-tab-links" class="bottom-nav-btn"><i data-lucide="archive"></i><span>Kho</span></button>
-        <button id="bottom-tab-settings" class="bottom-nav-btn"><i data-lucide="settings"></i><span>Cài đặt</span></button>
+        <button id="bottom-tab-news" class="bottom-nav-btn active">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+            <span>Tin Tức</span>
+        </button>
+        <button id="bottom-tab-calendar" class="bottom-nav-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25m10.5-2.25v2.25M6.75 21H3.375c-.621 0-1.125-.504-1.125-1.125V7.5c0-.621.504-1.125 1.125-1.125h13.5c.621 0 1.125.504 1.125 1.125v12.375c0 .621-.504 1.125-1.125 1.125H6.75zM16.5 7.5h-9v9h9v-9z" /></svg>
+            <span>Lịch</span>
+        </button>
+        
+        <!-- Thêm nút Sửa ảnh ở đây -->
+        <button id="bottom-tab-image-edit" class="bottom-nav-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+            </svg>
+            <span>Sửa ảnh</span>
+        </button>
+
+        <button id="bottom-tab-links" class="bottom-nav-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0111.186 0z" />
+            </svg>
+            <span>Lưu Trữ</span>
+        </button>
+        
+        <button id="bottom-tab-settings" class="bottom-nav-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h3.75" /></svg>
+            <span>Cài đặt</span>
+        </button>
     </nav>
     
     <script type="module" src="/app.js"></script>
-    <script>
-        // Khởi tạo Icons
-        document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
-        });
-    </script>
+
 </body>
 </html>
-
