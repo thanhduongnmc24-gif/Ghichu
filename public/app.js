@@ -100,16 +100,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const editLinkNote = document.getElementById('edit-link-note');
     const deleteLinkBtnModal = document.getElementById('delete-link-btn-modal');
 
-    // --- (MỚI) Sửa Ảnh (Image Edit) ---
-    const imageEditMain = document.getElementById('image-edit-main');
-    const imageEditTabBtn = document.getElementById('image-edit-tab-btn');
-    const imageUploadArea = document.getElementById('image-upload-area');
-    const imageInput = document.getElementById('image-input');
-    const editorPreviewImg = document.getElementById('editor-preview-img');
-    const editorPlaceholder = document.getElementById('editor-placeholder');
-    const imgMenuItems = document.querySelectorAll('.img-menu-item');
-    const imgToolBtns = document.querySelectorAll('.img-tool-btn');
-
     // --- Lịch / Nhắc nhở (Sub-tab) ---
     const calendarSubtabHeader = document.getElementById('calendar-subtab-header');
     const calSubtabWork = document.getElementById('cal-subtab-work');
@@ -145,17 +135,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Điều khiển Tab ---
     const newsTabBtn = document.getElementById('news-tab-btn');
     const calendarTabBtn = document.getElementById('calendar-tab-btn');
-    const linksTabBtn = document.getElementById('links-tab-btn'); // (MỚI) Thêm tab links desktop
     const settingsBtn = document.getElementById('settings-btn');
     const mobileHeaderTitle = document.getElementById('mobile-header-title');
-    const headerFeedContainer = document.getElementById('header-feed-container'); // (MỚI) Container feed nav desktop
     
     const refreshFeedButton = document.getElementById('refresh-feed-button');
     const refreshFeedButtonMobile = document.getElementById('refresh-feed-button-mobile'); 
     const bottomTabNews = document.getElementById('bottom-tab-news');
     const bottomTabCalendar = document.getElementById('bottom-tab-calendar');
     const bottomTabLinks = document.getElementById('bottom-tab-links');
-    const bottomTabImageEdit = document.getElementById('bottom-tab-image-edit'); // (MỚI)
     const bottomTabSettings = document.getElementById('bottom-tab-settings');
     const bottomNav = document.getElementById('bottom-nav'); 
 
@@ -217,7 +204,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ===================================================================
-    // HÀM TIỆN ÍCH: SWIPE TO DELETE
+    // ===================================================================
+    // HÀM TIỆN ÍCH: SWIPE TO DELETE (ĐÃ SỬA LỖI CLICK NHẦM)
     // ===================================================================
     function enableSwipeToDelete(element, onDeleteCallback) {
         let startX = 0;
@@ -227,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         element.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX;
-            currentX = startX; 
+            currentX = startX; // <--- SỬA LỖI Ở ĐÂY: Đồng bộ vị trí ngay khi chạm
             isSwiping = true;
             element.style.transition = 'none'; 
         }, { passive: true });
@@ -237,6 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentX = e.touches[0].clientX;
             const diff = currentX - startX;
 
+            // Chỉ cho phép kéo sang trái
             if (diff < 0) {
                 element.style.transform = `translateX(${diff}px)`;
             }
@@ -249,19 +238,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const diff = currentX - startX;
             
+            // Chỉ xóa nếu người dùng thực sự vuốt (currentX khác startX) và vượt ngưỡng
             if (currentX !== startX && diff < threshold) {
-                element.style.transform = `translateX(-100%)`; 
+                element.style.transform = `translateX(-100%)`; // Văng ra ngoài
                 setTimeout(() => {
                     onDeleteCallback(); 
                 }, 200);
             } else {
+                // Trả về vị trí cũ
                 element.style.transform = 'translateX(0)';
             }
         });
     }
 
+
     // ===================================================================
-    // PHẦN 1: LOGIC TIN TỨC
+    // PHẦN 1: LOGIC TIN TỨC (GIỮ NGUYÊN)
     // ===================================================================
     
     const iconSpinner = `<div class="spinner border-t-white" style="width: 24px; height: 24px;"></div>`;
@@ -1442,32 +1434,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ===================================================================
-    // PHẦN 2.7 (MỚI): LOGIC SỬA ẢNH (DINO AI)
-    // ===================================================================
-    
-    // Xử lý tải ảnh lên (Click hoặc Kéo thả)
-    function handleImageUpload(files) {
-        if (files.length === 0) return;
-        
-        const file = files[0];
-        if (!file.type.startsWith('image/')) {
-            alert("Vui lòng chỉ tải lên file ảnh!");
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            editorPreviewImg.src = e.target.result;
-            editorPreviewImg.classList.remove('hidden');
-            editorPlaceholder.classList.add('hidden');
-            // Reset input để có thể chọn lại ảnh cũ nếu muốn
-            imageInput.value = '';
-        };
-        reader.readAsDataURL(file);
-    }
-
-
-    // ===================================================================
     // PHẦN 3: LOGIC ADMIN
     // ===================================================================
     
@@ -1637,28 +1603,19 @@ document.addEventListener('DOMContentLoaded', () => {
         calendarMain.classList.add('hidden');
         linksMain.classList.add('hidden'); 
         settingsMain.classList.add('hidden');
-        imageEditMain.classList.add('hidden'); // (MỚI)
         
-        // Reset Active States
         if (newsTabBtn) newsTabBtn.classList.remove('active');
         if (calendarTabBtn) calendarTabBtn.classList.remove('active');
-        if (linksTabBtn) linksTabBtn.classList.remove('active'); // (MỚI)
-        if (imageEditTabBtn) imageEditTabBtn.classList.remove('active'); // (MỚI)
-        if (settingsBtn) settingsBtn.classList.remove('text-white'); 
-        if (settingsBtn) settingsBtn.classList.add('text-gray-400');
-
+        if (settingsBtn) settingsBtn.classList.remove('active');
         bottomTabNews.classList.remove('active');
         bottomTabCalendar.classList.remove('active');
         bottomTabLinks.classList.remove('active'); 
-        bottomTabImageEdit.classList.remove('active'); // (MỚI)
         bottomTabSettings.classList.remove('active');
         
-        // Reset header elements visibility
         if (rssMenuBtn) rssMenuBtn.classList.add('hidden');
         if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.add('hidden');
         if (mobileHeaderTitle) mobileHeaderTitle.classList.add('hidden');
         if (calendarSubtabHeader) calendarSubtabHeader.classList.add('hidden');
-        if (headerFeedContainer) headerFeedContainer.classList.add('hidden'); // (MỚI)
         
         // Đóng và ẩn tất cả FAB
         if(fabAiToggle) fabAiToggle.classList.add('hidden');
@@ -1682,7 +1639,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (rssMenuBtn) rssMenuBtn.classList.remove('hidden');
                 if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.remove('hidden');
-                if (headerFeedContainer) headerFeedContainer.classList.remove('hidden'); // Hiện feed nav desktop
                 break;
                 
             case 'calendar':
@@ -1702,7 +1658,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             case 'links':
                 linksMain.classList.remove('hidden');
-                if (linksTabBtn) linksTabBtn.classList.add('active');
                 bottomTabLinks.classList.add('active');
                 
                 // Hiện nút FAB thêm link
@@ -1714,32 +1669,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 renderLinkList(); 
                 break;
-
-            case 'image-edit': // (MỚI)
-                imageEditMain.classList.remove('hidden');
-                if (imageEditTabBtn) imageEditTabBtn.classList.add('active');
-                bottomTabImageEdit.classList.add('active');
-                
-                // Desktop: Tắt padding bottom (vì layout full height)
-                if (window.innerWidth >= 768) {
-                    document.body.style.paddingBottom = '0';
-                }
-
-                if (mobileHeaderTitle) {
-                    mobileHeaderTitle.textContent = "Sửa Ảnh AI";
-                    mobileHeaderTitle.classList.remove('hidden');
-                }
-                break;
                 
             case 'settings':
                 settingsMain.classList.remove('hidden');
                 await checkNotificationStatus(); 
                 await syncAppDataToServer(); 
                 
-                if (settingsBtn) {
-                    settingsBtn.classList.remove('text-gray-400');
-                    settingsBtn.classList.add('text-white');
-                }
+                if (settingsBtn) settingsBtn.classList.add('active');
                 bottomTabSettings.classList.add('active');
                 
                 if (mobileHeaderTitle) {
@@ -1757,18 +1693,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // PHẦN 5: GẮN SỰ KIỆN (EVENT LISTENERS)
     // ===================================================================
     
-    // Desktop Nav
     if (newsTabBtn) newsTabBtn.addEventListener('click', () => showTab('news'));
     if (calendarTabBtn) calendarTabBtn.addEventListener('click', () => showTab('calendar'));
-    if (linksTabBtn) linksTabBtn.addEventListener('click', () => showTab('links')); // (MỚI)
-    if (imageEditTabBtn) imageEditTabBtn.addEventListener('click', () => showTab('image-edit')); // (MỚI)
     if (settingsBtn) settingsBtn.addEventListener('click', () => showTab('settings'));
     
-    // Mobile Nav
     bottomTabNews.addEventListener('click', () => showTab('news'));
     bottomTabCalendar.addEventListener('click', () => showTab('calendar'));
     bottomTabLinks.addEventListener('click', () => showTab('links')); 
-    bottomTabImageEdit.addEventListener('click', () => showTab('image-edit')); // (MỚI)
     bottomTabSettings.addEventListener('click', () => showTab('settings'));
     
     if (rssMenuBtn) rssMenuBtn.addEventListener('click', () => rssMobileMenu.classList.toggle('hidden'));
@@ -1873,53 +1804,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
-    // --- (MỚI) SỰ KIỆN CHO IMAGE EDIT ---
-    if (imageUploadArea && imageInput) {
-        // Click để chọn file
-        imageUploadArea.addEventListener('click', () => imageInput.click());
-        
-        // Xử lý khi chọn file
-        imageInput.addEventListener('change', (e) => {
-            handleImageUpload(e.target.files);
-        });
-        
-        // Kéo thả (Drag & Drop)
-        imageUploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            imageUploadArea.classList.add('border-orange-500', 'bg-gray-800');
-        });
-        
-        imageUploadArea.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            imageUploadArea.classList.remove('border-orange-500', 'bg-gray-800');
-        });
-        
-        imageUploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            imageUploadArea.classList.remove('border-orange-500', 'bg-gray-800');
-            handleImageUpload(e.dataTransfer.files);
-        });
-    }
-
-    // Sự kiện click Menu Item (Cơ bản, Magic Background...)
-    if (imgMenuItems) {
-        imgMenuItems.forEach(item => {
-            item.addEventListener('click', () => {
-                imgMenuItems.forEach(btn => btn.classList.remove('active'));
-                item.classList.add('active');
-            });
-        });
-    }
-    
-    // Sự kiện click Tool Button (Tạm thời chỉ hiện thông báo)
-    if (imgToolBtns) {
-        imgToolBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                alert("Tính năng AI này đang được phát triển! (Backend cần tích hợp API xử lý ảnh)");
-            });
-        });
-    }
 
 
     function handleRefreshClick() {
@@ -1938,7 +1822,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rssMobileMenu.addEventListener('click', handleFeedButtonClick); 
         
         refreshFeedButton.addEventListener('click', handleRefreshClick);
-        if(refreshFeedButtonMobile) refreshFeedButtonMobile.addEventListener('click', handleRefreshClick); 
+        refreshFeedButtonMobile.addEventListener('click', handleRefreshClick); 
 
         const defaultFeed = feedNav.querySelector('.feed-button.active');
         if (defaultFeed) {

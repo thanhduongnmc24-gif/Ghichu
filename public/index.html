@@ -115,48 +115,6 @@
             width: 1.75rem;
             height: 1.75rem;
         }
-        
-        /* Style riêng cho Image Editor Tab */
-        .img-tool-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            background-color: #1F2937; /* bg-gray-800 */
-            border: 1px solid #374151;
-            border-radius: 0.5rem;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .img-tool-btn:hover {
-            background-color: #374151;
-            border-color: #F97316; /* orange-500 */
-        }
-        .img-tool-icon {
-            width: 24px;
-            height: 24px;
-            margin-bottom: 0.5rem;
-            color: #F97316;
-        }
-        .img-tool-text {
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: #D1D5DB;
-            text-align: center;
-        }
-        .img-menu-item {
-            color: #9CA3AF;
-            font-size: 0.875rem;
-            font-weight: 600;
-            padding-bottom: 0.5rem;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .img-menu-item.active {
-            color: #F97316; /* Orange */
-            border-bottom: 2px solid #F97316;
-        }
     </style>
     </head>
 <body class="bg-gray-900 text-gray-100 antialiased">
@@ -164,24 +122,12 @@
     <header class="bg-gray-800 shadow-md sticky top-0 z-30">
         <nav class="container mx-auto px-4 py-4 relative">
              <div class="hidden sm:flex justify-between items-center">
-                 <div class="flex items-center space-x-2">
-                     <button id="news-tab-btn" class="tab-button active text-xl font-bold !ml-0">
-                         Tin Tức
-                     </button>
-                     <button id="calendar-tab-btn" class="tab-button text-xl font-bold">
-                         Lịch
-                     </button>
-                     <button id="image-edit-tab-btn" class="tab-button text-xl font-bold">
-                        Sửa Ảnh
-                    </button>
-                     <button id="links-tab-btn" class="tab-button text-xl font-bold">
-                         Lưu Trữ
-                     </button>
-                 </div>
+                 <button id="news-tab-btn" class="tab-button active text-xl font-bold !ml-0">
+                     Tin Tức
+                 </button>
                  
-                 <!-- Feed Nav (Chỉ hiện khi ở tab Tin tức) -->
-                 <div id="header-feed-container" class="flex items-center ml-4">
-                    <div id="feed-nav" class="flex space-x-2 overflow-x-auto py-1 max-w-[500px] no-scrollbar">
+                 <div class="flex items-center">
+                    <div id="feed-nav" class="flex space-x-2 overflow-x-auto py-1">
                          <button class="feed-button active px-4 py-2 rounded-lg" data-rss="https://vnexpress.net/rss/tin-moi-nhat.rss" data-source="VnExpress">VnExpress</button>
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://tuoitre.vn/rss/tin-moi-nhat.rss" data-source="Tuổi Trẻ">Tuổi Trẻ</button>
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://thanhnien.vn/rss/home.rss" data-source="Thanh Niên">Thanh Niên</button>
@@ -189,18 +135,11 @@
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://vtv.vn/rss/home.rss" data-source="VTV">VTV</button>
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://thethao247.vn/bong-da.rss" data-source="Thể Thao 247">Thể Thao 247</button>
                          <button class="feed-button px-4 py-2 rounded-lg" data-rss="https://cdn.24h.com.vn/upload/rss/trangchu24h.rss" data-source="24h.com.vn">24h</button>
+                         <button id="refresh-feed-button" class="refresh-button" title="Tải lại tin tức">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l-1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
+                        </button>
                     </div>
-                    <button id="refresh-feed-button" class="refresh-button ml-2" title="Tải lại tin tức">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.2 5.068l-1.53.885A7.5 7.5 0 0017.5 12.5h-2.188zM4.688 8.576a5.5 5.5 0 019.2-5.068l-1.53-.885A7.5 7.5 0 002.5 7.5h2.188z" clip-rule="evenodd" /><path d="M16.5 7.5l-3 1.732V3.036L16.5 7.5zm-13 5l3-1.732v5.464L3.5 12.5z" /></svg>
-                    </button>
                  </div>
-                 
-                 <button id="settings-btn" class="p-2 text-gray-400 hover:text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.11v1.09c0 .55-.397 1.02-.94 1.11l-.893.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.11v-1.09c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                 </button>
              </div>
              
              <div class="sm:hidden flex justify-between items-center"> 
@@ -230,7 +169,6 @@
         </nav>
     </header>
 
-    <!-- === TIN TỨC MAIN === -->
     <main id="news-main" class="container mx-auto p-4 md:p-8">
         <div id="loading-spinner" class="flex justify-center items-center h-64">
             <div class="spinner border-t-blue-500" style="width: 50px; height: 50px;"></div>
@@ -238,7 +176,6 @@
         <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
     </main>
     
-    <!-- === LỊCH MAIN === -->
     <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
 
         <div class="mb-4 bg-gray-800 rounded-lg p-1 flex space-x-1">
@@ -316,7 +253,6 @@
 
     </main>
 
-    <!-- === CÀI ĐẶT MAIN === -->
     <main id="settings-main" class="container mx-auto p-4 sm:p-8 hidden">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full mx-auto">
             <div class="flex justify-between items-center mb-6">
@@ -411,7 +347,6 @@
             </div>
     </main>
     
-    <!-- === LƯU TRỮ LINKS MAIN === -->
     <main id="links-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
         
         <section>
@@ -426,129 +361,6 @@
         </button>
     </main>
 
-    <!-- === IMAGE EDIT MAIN (SỬA ẢNH AI) === -->
-    <main id="image-edit-main" class="container mx-auto p-2 md:p-6 w-full h-[calc(100vh-80px)] md:h-screen flex flex-col hidden">
-        
-        <!-- Top Menu Bar (Scrollable) -->
-        <div class="flex items-center space-x-4 overflow-x-auto mb-4 pb-2 border-b border-gray-700 no-scrollbar">
-            <div class="flex items-center space-x-1 text-orange-500 font-bold text-lg whitespace-nowrap mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-                </svg>
-                <span>DINO AI Edit</span>
-            </div>
-            <button class="img-menu-item active">🛠 CƠ BẢN</button>
-            <button class="img-menu-item">✨ MAGIC BACKGROUND</button>
-            <button class="img-menu-item">🖌 MAGIC BRUSH</button>
-            <button class="img-menu-item">🎨 SAO CHÉP CONCEPT</button>
-            <button class="img-menu-item">🎞 DARK ROOM</button>
-        </div>
-
-        <div class="flex-grow grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
-            
-            <!-- Left Panel: Upload & Tools -->
-            <div class="lg:col-span-4 flex flex-col space-y-4 overflow-y-auto pr-1">
-                
-                <!-- 1. Ảnh gốc / Upload -->
-                <div class="border border-gray-700 rounded-lg p-4 bg-gray-800/50">
-                    <h3 class="text-orange-500 font-semibold mb-3 text-sm uppercase">1. Ảnh gốc</h3>
-                    <div id="image-upload-area" class="border-2 border-dashed border-gray-600 rounded-lg h-32 flex flex-col items-center justify-center text-gray-400 hover:border-orange-500 hover:text-orange-500 hover:bg-gray-800 transition-all cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 mb-2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                        </svg>
-                        <span class="text-xs font-medium">Nhấn để tải lên hoặc kéo thả</span>
-                        <span class="text-[10px] mt-1 opacity-70">PNG, JPG (Tối đa 4 ảnh)</span>
-                        <input type="file" id="image-input" class="hidden" accept="image/*">
-                    </div>
-                </div>
-
-                <!-- 2. Công cụ chỉnh sửa -->
-                <div class="border border-gray-700 rounded-lg p-4 bg-gray-800/50 flex-grow">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-orange-500 font-semibold text-sm uppercase">2. Công cụ chỉnh sửa</h3>
-                        <span class="text-gray-500 text-xs">🛠 CÔNG CỤ</span>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <!-- Tool 1 -->
-                        <button class="img-tool-btn group">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="img-tool-icon">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                            </svg>
-                            <span class="img-tool-text group-hover:text-white">Phục hồi & Tạo...</span>
-                            <span class="text-[10px] text-gray-500 text-center mt-1">Xóa vết rách, tạo màu HD</span>
-                        </button>
-                        
-                        <!-- Tool 2 -->
-                        <button class="img-tool-btn group">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="img-tool-icon">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9.75L16.5 12l-2.25 2.25m-4.5 0L7.5 12l2.25-2.25M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z" />
-                            </svg>
-                            <span class="img-tool-text group-hover:text-white">Tách nền trắng</span>
-                            <span class="text-[10px] text-gray-500 text-center mt-1">Ảnh nền trắng</span>
-                        </button>
-
-                        <!-- Tool 3 -->
-                        <button class="img-tool-btn group">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="img-tool-icon">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                            </svg>
-                            <span class="img-tool-text group-hover:text-white">Ảnh thẻ</span>
-                            <span class="text-[10px] text-gray-500 text-center mt-1">Tùy chọn phông nền</span>
-                        </button>
-
-                        <!-- Tool 4 -->
-                        <button class="img-tool-btn group">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="img-tool-icon">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
-                            </svg>
-                            <span class="img-tool-text group-hover:text-white">Ảnh thờ (Tự động)</span>
-                            <span class="text-[10px] text-gray-500 text-center mt-1">Tự động thay áo dài</span>
-                        </button>
-
-                        <!-- Tool 5 -->
-                        <button class="img-tool-btn group">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="img-tool-icon">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-                            </svg>
-                            <span class="img-tool-text group-hover:text-white">Thay trang phục</span>
-                            <span class="text-[10px] text-gray-500 text-center mt-1">Thử quần áo mới</span>
-                        </button>
-
-                        <!-- Tool 6 -->
-                        <button class="img-tool-btn group">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="img-tool-icon">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9.75L14.25 12m0 0l2.25 2.25M14.25 12l2.25-2.25M14.25 12L12 14.25m-2.58 4.92l-6.375-6.375a1.125 1.125 0 010-1.59L9.42 4.83c.211-.211.498-.33.796-.33H19.5a2.25 2.25 0 012.25 2.25v10.5a2.25 2.25 0 01-2.25 2.25h-9.284c-.298 0-.585-.119-.796-.33z" />
-                            </svg>
-                            <span class="img-tool-text group-hover:text-white">Xóa Watermark</span>
-                            <span class="text-[10px] text-gray-500 text-center mt-1">Xóa chữ/logo</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Panel: Canvas/Darkroom -->
-            <div class="lg:col-span-8 bg-gray-950 border border-gray-700 rounded-lg flex flex-col items-center justify-center relative overflow-hidden min-h-[300px]">
-                <!-- Dotted Grid Background -->
-                <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#4B5563 1px, transparent 1px); background-size: 20px 20px;"></div>
-                
-                <div id="editor-placeholder" class="text-center z-10 p-6">
-                    <div class="w-16 h-16 border-2 border-gray-600 rounded-lg mx-auto mb-4 flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-gray-600">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                        </svg>
-                    </div>
-                    <p class="text-gray-400 font-medium">Tải lên ảnh và nhập yêu cầu</p>
-                    <p class="text-gray-500 text-sm">để xem kết quả tại đây</p>
-                </div>
-
-                <img id="editor-preview-img" class="hidden max-w-full max-h-full object-contain z-20 shadow-2xl" src="" alt="Preview">
-            </div>
-
-        </div>
-    </main>
-
-    <!-- === MODALS & OVERLAYS === -->
     <div id="admin-note-viewer-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[60] transition-opacity duration-300">
         <div class="bg-gray-800 p-6 rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col">
             <div class="flex justify-between items-center mb-4">
@@ -736,7 +548,6 @@
         </div>
     </div>
 
-    <!-- === BOTTOM NAVIGATION (MOBILE) === -->
     <nav id="bottom-nav" class="sm:hidden">
         <button id="bottom-tab-news" class="bottom-nav-btn active">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
@@ -747,14 +558,6 @@
             <span>Lịch</span>
         </button>
         
-        <!-- Thêm nút Sửa ảnh ở đây -->
-        <button id="bottom-tab-image-edit" class="bottom-nav-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-            </svg>
-            <span>Sửa ảnh</span>
-        </button>
-
         <button id="bottom-tab-links" class="bottom-nav-btn">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0111.186 0z" />
