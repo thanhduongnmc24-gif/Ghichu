@@ -1649,12 +1649,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (calendarTabBtn) calendarTabBtn.classList.add('active');
                 bottomTabCalendar.classList.add('active');
                 
-                // [THAY ĐỔI] Ẩn tiêu đề mobile để nhường chỗ cho các nút (Đã ẩn ở trên rồi, không cần hiện lại)
+                // [QUAN TRỌNG] Ẩn tiêu đề chữ Mobile để nhường chỗ cho 2 nút Sticky
                 if (mobileHeaderTitle) {
                     mobileHeaderTitle.classList.add('hidden'); 
                 }
                 
-                // (FIX LỖI) Reset sub-tab về null để ép hàm showCalendarSubTab chạy lại logic hiển thị nút FAB
+                // Reset sub-tab và load lại để đảm bảo hiển thị đúng
                 currentCalendarSubTab = null; 
                 showCalendarSubTab('work'); 
                 break;
