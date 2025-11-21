@@ -1,4 +1,3 @@
-
 /* =================================================================== */
 /* FILE: public/app.js                                                 */
 /* MỤC ĐÍCH: Logic JavaScript chính cho toàn bộ ứng dụng Ghichu App.     */
@@ -216,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         element.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX;
-            currentX = startX; // <--- SỬA LỖI Ở ĐÂY: Đồng bộ vị trí ngay khi chạm
+            currentX = startX; 
             isSwiping = true;
             element.style.transition = 'none'; 
         }, { passive: true });
@@ -1553,7 +1552,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===================================================================
-    // PHẦN 4: LOGIC ĐIỀU HƯỚNG
+    // PHẦN 4: LOGIC ĐIỀU HƯỚNG (ĐÃ CẬP NHẬT HEADER)
     // ===================================================================
     
     let currentTab = 'news'; 
@@ -1616,7 +1615,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (rssMenuBtn) rssMenuBtn.classList.add('hidden');
         if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.add('hidden');
         
-        // Mặc định ẩn header title để reset
+        // [MỚI] Reset header: Mặc định ẩn tiêu đề và ẩn sub-tab Lịch
         if (mobileHeaderTitle) mobileHeaderTitle.classList.add('hidden');
         if (calendarSubtabHeader) calendarSubtabHeader.classList.add('hidden');
         
@@ -1638,7 +1637,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (mobileHeaderTitle) {
                     mobileHeaderTitle.textContent = "Tin Tức";
-                    mobileHeaderTitle.classList.remove('hidden');
+                    mobileHeaderTitle.classList.remove('hidden'); // Hiện tiêu đề
                 }
                 if (rssMenuBtn) rssMenuBtn.classList.remove('hidden');
                 if (refreshFeedButtonMobile) refreshFeedButtonMobile.classList.remove('hidden');
@@ -1649,10 +1648,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (calendarTabBtn) calendarTabBtn.classList.add('active');
                 bottomTabCalendar.classList.add('active');
                 
-                // [QUAN TRỌNG] Ẩn tiêu đề chữ Mobile để nhường chỗ cho 2 nút Sticky
-                if (mobileHeaderTitle) {
-                    mobileHeaderTitle.classList.add('hidden'); 
-                }
+                // [QUAN TRỌNG] Ẩn tiêu đề chữ Mobile, HIỆN cụm nút Sub-tab
+                if (mobileHeaderTitle) mobileHeaderTitle.classList.add('hidden'); 
+                if (calendarSubtabHeader) calendarSubtabHeader.classList.remove('hidden'); 
                 
                 // Reset sub-tab và load lại để đảm bảo hiển thị đúng
                 currentCalendarSubTab = null; 
@@ -1668,7 +1666,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (mobileHeaderTitle) {
                     mobileHeaderTitle.textContent = "Lưu Trữ";
-                    mobileHeaderTitle.classList.remove('hidden');
+                    mobileHeaderTitle.classList.remove('hidden'); // Hiện tiêu đề
                 }
                 renderLinkList(); 
                 break;
@@ -1683,7 +1681,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (mobileHeaderTitle) {
                     mobileHeaderTitle.textContent = "Cài đặt";
-                    mobileHeaderTitle.classList.remove('hidden');
+                    mobileHeaderTitle.classList.remove('hidden'); // Hiện tiêu đề
                 }
                 break;
         }
