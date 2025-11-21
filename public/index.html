@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi" class="dark">
 <head>
@@ -75,7 +76,8 @@
 
         .sub-tab-button {
             flex: 1;
-            padding: 0.75rem 0.5rem; 
+            /* [ĐÃ CHỈNH SỬA] Tăng padding lên 1rem để nút cao hơn */
+            padding: 1rem 0.5rem; 
             font-size: 0.875rem; 
             font-weight: 600;
             color: #D1D5DB; 
@@ -176,7 +178,7 @@
         <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
     </main>
     
-    <main id="calendar-main" class="container mx-auto p-4 md:p-6 max-w-4xl hidden">
+    <main id="calendar-main" class="container mx-auto px-4 pb-4 pt-2 md:p-6 max-w-4xl hidden">
 
         <div class="mb-4 bg-gray-800 rounded-lg p-1 flex space-x-1">
             <button id="cal-subtab-work" class="sub-tab-button active">
