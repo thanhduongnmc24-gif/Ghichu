@@ -76,7 +76,7 @@
 
         .sub-tab-button {
             flex: 1;
-            /* [ĐÃ CHỈNH SỬA] Tăng padding lên 1rem để nút cao hơn */
+            /* Giữ padding lớn để nút cao và dễ bấm */
             padding: 1rem 0.5rem; 
             font-size: 0.875rem; 
             font-weight: 600;
@@ -180,13 +180,15 @@
     
     <main id="calendar-main" class="container mx-auto px-4 pb-4 pt-2 md:p-6 max-w-4xl hidden">
 
-        <div class="mb-4 bg-gray-800 rounded-lg p-1 flex space-x-1">
-            <button id="cal-subtab-work" class="sub-tab-button active">
-                Lịch Làm Việc
-            </button>
-            <button id="cal-subtab-reminders" class="sub-tab-button">
-                Nhắc Nhở
-            </button>
+        <div class="sticky top-[60px] z-20 bg-gray-900 pb-2 pt-2 shadow-sm">
+            <div class="bg-gray-800 rounded-lg p-1 flex space-x-1 shadow-lg">
+                <button id="cal-subtab-work" class="sub-tab-button active">
+                    Lịch Làm Việc
+                </button>
+                <button id="cal-subtab-reminders" class="sub-tab-button">
+                    Nhắc Nhở
+                </button>
+            </div>
         </div>
 
         <div id="calendar-work-content">
