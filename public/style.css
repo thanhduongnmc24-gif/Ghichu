@@ -88,9 +88,6 @@ body {
 #mobile-menu .feed-button.active { background-color: #6B7280; color: white; }
 
 
-/* ----- ĐÃ XÓA CSS CHAT Ở ĐÂY ----- */
-
-
 /* ----- NEWS (TIN TỨC) ----- */
 .line-clamp-3 { 
     overflow: hidden; display: -webkit-box; 
@@ -145,7 +142,6 @@ body {
 
 /* (MỚI) Cỡ chữ Lịch Âm - Mobile */
 .day-lunar-date {
-    /* (SỬA) Tăng cỡ chữ Lịch Âm (gốc là 0.75rem) */
     font-size: 0.5em; /* ~13px */
     line-height: 1;
 }
@@ -162,7 +158,6 @@ body {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1; 
     
-    /* (SỬA) Tăng cỡ chữ Ghi chú - Mobile (gốc là 0.6em) */
     font-size: 0.5em; 
     
     font-weight: 500;
@@ -176,7 +171,6 @@ body {
     
     /* (MỚI) Cỡ chữ Lịch Âm - Desktop */
     .day-lunar-date {
-        /* (SỬA) Tăng cỡ chữ Lịch Âm (gốc là 0.75rem) */
         font-size: 0.85rem; /* ~13.6px */
     }
 
@@ -185,13 +179,12 @@ body {
         padding-left: 16px;
     }
     .day-note {
-        /* (SỬA) Tăng cỡ chữ Ghi chú - Desktop (gốc là 0.8em) */
         font-size: 0.9em;
         margin-left: 0;
     }
 }
 
-/* Tổng kết ghi chú hàng tháng (Giữ nguyên) */
+/* Tổng kết ghi chú hàng tháng */
 .day-note-grid-group {
     grid-template-columns: auto 1fr;
 }
@@ -212,6 +205,7 @@ body {
 .summary-toggle-btn:hover {
     background-color: #4B5563; /* bg-gray-600 */
 }
+
 /* ----- SETTINGS (CÀI ĐẶT) ----- */
 .time-setting-label {
     display: flex;
@@ -278,14 +272,12 @@ body {
         right: auto; 
     }
 }
-/* ... (Các code cũ giữ nguyên) ... */
 
 /* ----- SWIPE TO DELETE (VUỐT ĐỂ XÓA) ----- */
 .swipe-item-container {
     position: relative;
     overflow: hidden; 
     border-radius: 0.5rem;
-    /* XÓA dòng background-color: #EF4444; ở đây để hết bị lộ viền đỏ */
     background-color: transparent; 
 }
 
@@ -294,7 +286,7 @@ body {
     top: 0;
     bottom: 0;
     right: 0;
-    left: 0; /* Thêm left: 0 để nó phủ kín */
+    left: 0; 
     background-color: #EF4444; /* Chuyển màu đỏ vào đây */
     display: flex;
     align-items: center;
@@ -313,62 +305,92 @@ body {
     background-color: #1F2937; 
     transition: transform 0.1s linear; 
     touch-action: pan-y; 
-    height: 100%; /* Đảm bảo che kín lớp dưới */
+    height: 100%; 
 }
-/* Chỉ thêm phần này vào cuối file CSS cũ của đại ca */
 
-/* --- MAGIC EDIT STYLES --- */
+/* =================================================================== */
+/* ----- IMAGE EDIT (SỬA ẢNH AI) - STYLE MỚI ----- */
+/* =================================================================== */
 
-/* Nút công cụ bên trái */
-.magic-tool-btn {
+/* Ẩn thanh cuộn nhưng vẫn cuộn được (Cho menu top) */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+/* Nút công cụ trong lưới */
+.img-tool-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 1rem;
     background-color: #1F2937; /* bg-gray-800 */
     border: 1px solid #374151; /* border-gray-700 */
     border-radius: 0.5rem;
-    padding: 1rem;
-    color: #E5E7EB;
-    transition: all 0.2s;
-    height: 100px;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    height: 100%;
 }
-.magic-tool-btn:hover {
-    background-color: #374151;
-    border-color: #F97316; /* cam */
+
+.img-tool-btn:hover {
+    background-color: #374151; /* bg-gray-700 */
+    border-color: #F97316; /* orange-500 */
     transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
-.magic-tool-btn span {
+
+.img-tool-btn:active {
+    transform: scale(0.98);
+}
+
+.img-tool-icon {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 0.5rem;
+    color: #F97316; /* orange-500 */
+    transition: transform 0.3s;
+}
+.img-tool-btn:hover .img-tool-icon {
+    transform: scale(1.1);
+}
+
+.img-tool-text {
     font-size: 0.75rem;
-    margin-top: 0.5rem;
     font-weight: 500;
+    color: #D1D5DB; /* text-gray-300 */
+    text-align: center;
+    transition: color 0.2s;
+}
+.img-tool-btn:hover .img-tool-text {
+    color: white;
 }
 
-/* Nút tab trên header */
-#magic-tab-btn.active {
-    color: #F97316; /* Orange-500 */
+/* Menu Item trên cùng (Cơ bản, Magic Background...) */
+.img-menu-item {
+    color: #9CA3AF; /* text-gray-400 */
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding-bottom: 0.5rem;
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.img-menu-item:hover {
+    color: #D1D5DB;
+}
+
+.img-menu-item.active {
+    color: #F97316; /* Orange */
     border-bottom: 2px solid #F97316;
-    background: transparent;
 }
 
-/* Bottom nav active state cho nút Magic */
-#bottom-tab-magic.active {
-    color: #F97316;
+/* Khu vực Dark Room (Hiệu ứng nền lưới nhẹ) */
+#image-edit-main .bg-gray-950 {
+    background-color: #030712; /* Màu rất tối */
 }
-
-/* Canvas area */
-#main-canvas-img {
-    max-height: 70vh;
-}
-
-/* Responsive layout cho Magic tab */
-@media (max-width: 640px) {
-    #magic-main {
-        padding-bottom: 6rem; /* Tránh bottom nav che mất */
-        height: auto;
-    }
-    .magic-tool-btn {
-        height: 80px;
-    }
-}
-
