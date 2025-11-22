@@ -1557,16 +1557,29 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentTab = 'news'; 
     
-    async function showCalendarSubTab(subTabName) {
+   async function showCalendarSubTab(subTabName) {
         if (subTabName === currentCalendarSubTab) return; 
         currentCalendarSubTab = subTabName;
         
+        // Khai báo biến cho nút Desktop (Mới thêm)
+        const desktopTabWork = document.getElementById('desktop-tab-work');
+        const desktopTabReminders = document.getElementById('desktop-tab-reminders');
+
         if (subTabName === 'reminders') {
+            // --- Logic Giao diện ---
             calendarWorkContent.classList.add('hidden');
             calendarRemindersContent.classList.remove('hidden');
+            
+            // Cập nhật nút Mobile
             calSubtabWork.classList.remove('active');
             calSubtabReminders.classList.add('active');
             
+            // [MỚI] Cập nhật nút Desktop (nếu có)
+            if (desktopTabWork && desktopTabReminders) {
+                desktopTabWork.className = "px-6 py-2 rounded-lg font-bold transition-colors text-gray-400 hover:bg-gray-800 hover:text-white";
+                desktopTabReminders.className = "px-6 py-2 rounded-lg font-bold transition-colors bg-blue-600 text-white shadow-lg";
+            }
+
             // Ẩn nút AI, hiện nút Reminder
             if(fabAiToggle) fabAiToggle.classList.add('hidden');
             if(fabReminderToggle) fabReminderToggle.classList.remove('hidden');
@@ -1575,11 +1588,20 @@ document.addEventListener('DOMContentLoaded', () => {
             await fetchReminders(); 
 
         } else {
+            // --- Logic Giao diện ---
             calendarWorkContent.classList.remove('hidden');
             calendarRemindersContent.classList.add('hidden');
+            
+            // Cập nhật nút Mobile
             calSubtabWork.classList.add('active');
             calSubtabReminders.classList.remove('active');
             
+            // [MỚI] Cập nhật nút Desktop (nếu có)
+            if (desktopTabWork && desktopTabReminders) {
+                desktopTabWork.className = "px-6 py-2 rounded-lg font-bold transition-colors bg-blue-600 text-white shadow-lg";
+                desktopTabReminders.className = "px-6 py-2 rounded-lg font-bold transition-colors text-gray-400 hover:bg-gray-800 hover:text-white";
+            }
+
             // Hiện nút AI, ẩn nút Reminder
             if(fabAiToggle) fabAiToggle.classList.remove('hidden');
             if(fabReminderToggle) fabReminderToggle.classList.add('hidden');
@@ -1893,7 +1915,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         calSubtabWork.addEventListener('click', () => showCalendarSubTab('work'));
         calSubtabReminders.addEventListener('click', () => showCalendarSubTab('reminders'));
-
+        // [MỚI] Sự kiện cho nút Desktop
+        const desktopTabWork = document.getElementById('desktop-tab-work');
+        const desktopTabReminders = document.getElementById('desktop-tab-reminders');
+        if (desktopTabWork) desktopTabWork.addEventListener('click', () => showCalendarSubTab('work'));
+        if (desktopTabReminders) desktopTabReminders.addEventListener('click', () => showCalendarSubTab('reminders'));
+        // [HẾT PHẦN MỚI]
         prevMonthBtn.addEventListener('click', () => {
             currentViewDate.setMonth(currentViewDate.getMonth() - 1);
             renderCalendar(currentViewDate);
