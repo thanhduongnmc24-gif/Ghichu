@@ -1,0 +1,7 @@
+flask
+gunicorn
+selenium
+webdriver-manager
+google-generativeai
+pillow
+requests
