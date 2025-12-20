@@ -4,20 +4,26 @@ set -o errexit
 
 STORAGE_DIR=/opt/render/project/.render
 
-if [[ ! -d $STORAGE_DIR/chrome ]]; then
-  echo "...Downloading Chrome"
-  mkdir -p $STORAGE_DIR/chrome
-  cd $STORAGE_DIR/chrome
-  wget -P ./ https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-  dpkg -x ./google-chrome-stable_current_amd64.deb $STORAGE_DIR/chrome
-  rm ./google-chrome-stable_current_amd64.deb
-  cd $HOME/project/src # Make sure we return to project root
-else
-  echo "...Using Chrome from cache"
-fi
+echo "...Downloading Chrome and Dependencies"
 
-# Add Chrome to path
-export PATH="${PATH}:/opt/render/project/.render/chrome/opt/google/chrome"
+# Tạo thư mục chứa Chrome
+mkdir -p $STORAGE_DIR/chrome
+cd $STORAGE_DIR/chrome
 
-# Install Python dependencies
+# 1. Tải Chrome bản ổn định
+wget -P ./ https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+
+# 2. Giải nén Chrome
+dpkg -x ./google-chrome-stable_current_amd64.deb $STORAGE_DIR/chrome
+
+# 3. Dọn dẹp file deb
+rm ./google-chrome-stable_current_amd64.deb
+
+# 4. Trở về thư mục gốc
+cd $HOME/project/src
+
+# 5. Cài đặt thư viện Python
 pip install -r requirements.txt
+
+# 6. (Mẹo của Tèo) Thêm đường dẫn Chrome vào biến môi trường
+export PATH="${PATH}:/opt/render/project/.render/chrome/opt/google/chrome"
