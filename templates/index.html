@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tèo Scraper - Hút Truyện Ảnh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-4">
+
+    <div class="max-w-3xl mx-auto bg-gray-800 rounded-xl shadow-2xl p-6">
+        <h1 class="text-3xl font-bold text-center text-blue-400 mb-6">🕵️‍♂️ Tèo Scraper</h1>
+        
+        <div class="space-y-4">
+            <div class="bg-gray-700 p-4 rounded-lg">
+                <label class="block text-sm font-bold mb-2">Gemini API Key</label>
+                <input type="password" id="api_key" class="w-full p-2 rounded bg-gray-900 border border-gray-600 focus:border-blue-500 outline-none" placeholder="Dán API Key vào đây...">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-gray-300">Link Đăng Nhập</label>
+                    <input type="text" id="login_url" class="w-full p-2 rounded bg-gray-700 border border-gray-600" placeholder="https://webtruyen.../login">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300">Link Chương Truyện</label>
+                    <input type="text" id="chapter_url" class="w-full p-2 rounded bg-gray-700 border border-gray-600" placeholder="https://webtruyen.../chuong-1">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300">Tài khoản Web</label>
+                    <input type="text" id="username" class="w-full p-2 rounded bg-gray-700 border border-gray-600">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300">Mật khẩu Web</label>
+                    <input type="password" id="password" class="w-full p-2 rounded bg-gray-700 border border-gray-600">
+                </div>
+            </div>
+
+            <button onclick="startScrape()" id="btn-run" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded transition">
+                🚀 Bắt đầu Hút & Dịch
+            </button>
+            
+            <div id="status" class="hidden text-center text-yellow-400 font-mono text-sm mt-2">
+                Đang xử lý... Tèo đang điều khiển Chrome ngầm... (Mất khoảng 1-2 phút)
+            </div>
+        </div>
+
+        <div class="mt-8">
+            <h2 class="text-xl font-bold mb-2">Kết quả Text:</h2>
+            <textarea id="result_area" class="w-full h-96 bg-gray-900 p-4 rounded border border-gray-700 font-mono text-sm" readonly></textarea>
+            <button onclick="copyText()" class="mt-2 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded text-sm">
+                Copy Nội Dung
+            </button>
+        </div>
+    </div>
+
+    <script>
+        async function startScrape() {
+            const btn = document.getElementById('btn-run');
+            const status = document.getElementById('status');
+            const resultArea = document.getElementById('result_area');
+
+            // Lấy dữ liệu
+            const data = {
+                api_key: document.getElementById('api_key').value,
+                login_url: document.getElementById('login_url').value,
+                chapter_url: document.getElementById('chapter_url').value,
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
+
+            if (!data.api_key || !data.chapter_url) {
+                alert("Thiếu API Key hoặc Link chương truyện rồi anh hai ơi!");
+                return;
+            }
+
+            // UI Loading
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            status.classList.remove('hidden');
+            resultArea.value = "Đang chờ Tèo đi lấy tin...";
+
+            try {
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const json = await response.json();
+                
+                if (json.error) {
+                    resultArea.value = "LỖI: " + json.error;
+                } else {
+                    resultArea.value = json.result;
+                }
+            } catch (e) {
+                resultArea.value = "Lỗi kết nối Server: " + e;
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+                status.classList.add('hidden');
+            }
+        }
+
+        function copyText() {
+            const copyText = document.getElementById("result_area");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); 
+            navigator.clipboard.writeText(copyText.value);
+            alert("Đã copy vào bộ nhớ tạm!");
+        }
+    </script>
+</body>
+</html>
