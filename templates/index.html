@@ -3,72 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tèo Scraper - Gemini 2.0</title>
+    <title>Tèo Scraper - Anti Cloudflare</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
-<body class="bg-slate-900 text-white min-h-screen p-4">
+<body class="bg-gray-900 text-white min-h-screen p-4">
 
-    <div class="max-w-4xl mx-auto bg-slate-800 rounded-xl shadow-2xl overflow-hidden">
-        <div class="bg-blue-600 p-6 text-center">
-            <h1 class="text-3xl font-bold text-white">🕵️‍♂️ Tèo Scraper (AI Powered)</h1>
-            <p class="text-blue-100 mt-2">Hỗ trợ Gemini 2.0 Flash • Login Cookie • Auto Scroll</p>
-        </div>
+    <div class="max-w-4xl mx-auto bg-gray-800 rounded-xl shadow-2xl p-6">
+        <h1 class="text-3xl font-bold text-center text-blue-400 mb-6">🕵️‍♂️ Tèo Scraper (Vượt Cloudflare)</h1>
         
-        <div class="p-6 space-y-6">
+        <div class="space-y-6">
             
             <div>
-                <label class="block text-sm font-bold text-blue-400 mb-2">📍 Link Chương Truyện (Bắt buộc)</label>
-                <input type="text" id="chapter_url" class="w-full p-3 rounded bg-slate-700 border border-slate-600 focus:border-blue-500 outline-none text-white" placeholder="https://webtruyen.com/truyen-xyz/chuong-1">
+                <label class="block text-sm font-bold text-blue-400 mb-2">📍 Link Chương Truyện</label>
+                <input type="text" id="chapter_url" class="w-full p-3 rounded bg-gray-700 border border-gray-600 outline-none" placeholder="https://metruyencv.com/...">
             </div>
 
-            <div class="bg-slate-700/50 p-4 rounded-lg border border-slate-600">
-                <h3 class="font-bold text-yellow-400 mb-3 flex items-center">
-                    🔐 Phương thức truy cập (Chọn 1 trong 2)
-                </h3>
+            <div class="bg-gray-700/50 p-4 rounded-lg border border-yellow-600/50">
+                <h3 class="font-bold text-yellow-400 mb-3">🛠 Cấu hình Vượt Tường Lửa (Bắt buộc)</h3>
+                <p class="text-xs text-gray-400 mb-4">Để qua mặt Cloudflare, bạn cần cung cấp cả Cookie và User-Agent từ cùng một trình duyệt.</p>
 
                 <div class="mb-4">
-                    <label class="block text-xs uppercase text-gray-400 font-bold mb-1">Cách 1: Dùng Cookie (Khuyên dùng - Né Captcha)</label>
-                    <textarea id="cookie_str" class="w-full h-20 p-2 rounded bg-slate-900 border border-slate-600 text-xs font-mono text-green-400" placeholder="Mở F12 -> Network -> Copy toàn bộ dòng 'Cookie' dán vào đây..."></textarea>
-                </div>
-
-                <div class="relative flex py-2 items-center">
-                    <div class="flex-grow border-t border-slate-600"></div>
-                    <span class="flex-shrink-0 mx-4 text-gray-500 text-xs">HOẶC</span>
-                    <div class="flex-grow border-t border-slate-600"></div>
+                    <label class="block text-xs uppercase text-gray-300 font-bold mb-1">
+                        Bước 1: User Agent (Dấu vân tay trình duyệt)
+                    </label>
+                    <input type="text" id="user_agent" class="w-full p-2 rounded bg-gray-900 border border-gray-600 text-xs font-mono text-purple-400" placeholder="Paste User-Agent vào đây...">
+                    <div class="mt-1 text-xs text-gray-500">
+                        👉 <b>Cách lấy:</b> Trên tab đang đọc truyện > Nhấn <b>F12</b> > Chọn tab <b>Console</b> > Gõ lệnh <code>navigator.userAgent</code> rồi Enter > Copy chuỗi đó.
+                    </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs uppercase text-gray-400 font-bold mb-2">Cách 2: User/Pass (Dễ lỗi nếu web có Captcha)</label>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <input type="text" id="login_url" class="p-2 rounded bg-slate-900 border border-slate-600 text-sm" placeholder="Link trang Login">
-                        <input type="text" id="username" class="p-2 rounded bg-slate-900 border border-slate-600 text-sm" placeholder="Tên đăng nhập">
-                        <input type="password" id="password" class="p-2 rounded bg-slate-900 border border-slate-600 text-sm" placeholder="Mật khẩu">
+                    <label class="block text-xs uppercase text-gray-300 font-bold mb-1">
+                        Bước 2: Cookie (Chìa khóa đăng nhập)
+                    </label>
+                    <textarea id="cookie_str" class="w-full h-20 p-2 rounded bg-gray-900 border border-gray-600 text-xs font-mono text-green-400" placeholder="Paste toàn bộ dòng Cookie vào đây..."></textarea>
+                    <div class="mt-1 text-xs text-gray-500">
+                        👉 <b>Cách lấy:</b> F12 > Tab <b>Network</b> > F5 > Chọn dòng đầu tiên (tên web) > Copy dòng <b>Cookie</b> bên phải.
                     </div>
                 </div>
             </div>
 
-            <div>
-                <label class="block text-sm text-gray-400 mb-1">Gemini API Key (Tùy chọn)</label>
-                <input type="password" id="api_key" class="w-full p-2 rounded bg-slate-700 border border-slate-600 text-sm text-gray-300" placeholder="Để trống nếu đã cài biến môi trường trên Render">
-            </div>
-
-            <button onclick="startScrape()" id="btn-run" class="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-4 px-4 rounded-lg transition transform hover:scale-[1.01] shadow-lg">
+            <button onclick="startScrape()" id="btn-run" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded-lg transition shadow-lg">
                 🚀 Bắt đầu Hút & Dịch
             </button>
             
-            <div id="status" class="hidden mt-4 p-4 bg-yellow-900/30 text-yellow-200 rounded border border-yellow-700/50 text-center animate-pulse">
-                ⏳ Tèo đang khởi động máy móc... Vui lòng đợi 1-2 phút...
+            <div id="status" class="hidden text-center text-yellow-400 font-mono text-sm mt-2 animate-pulse">
+                ⏳ Đang giả danh & vượt Cloudflare... (Chờ khoảng 2 phút)...
             </div>
         </div>
 
-        <div class="bg-slate-950 p-6 border-t border-slate-700">
-            <div class="flex justify-between items-center mb-2">
-                <h2 class="text-xl font-bold text-white">📄 Kết quả Text</h2>
-                <button onclick="copyText()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">Copy</button>
-            </div>
-            <textarea id="result_area" class="w-full h-96 bg-black p-4 rounded border border-slate-700 font-mono text-sm text-gray-300 leading-relaxed focus:outline-none focus:border-blue-500" readonly placeholder="Nội dung truyện sẽ hiện ra ở đây..."></textarea>
+        <div class="mt-8">
+            <h2 class="text-xl font-bold mb-2">📄 Kết quả:</h2>
+            <textarea id="result_area" class="w-full h-96 bg-black p-4 rounded border border-gray-700 font-mono text-sm text-gray-300" readonly></textarea>
         </div>
     </div>
 
@@ -78,27 +66,21 @@
             const status = document.getElementById('status');
             const resultArea = document.getElementById('result_area');
 
-            // Lấy data
             const data = {
                 chapter_url: document.getElementById('chapter_url').value,
                 cookie_str: document.getElementById('cookie_str').value,
-                login_url: document.getElementById('login_url').value,
-                username: document.getElementById('username').value,
-                password: document.getElementById('password').value,
-                api_key: document.getElementById('api_key').value // Có thể rỗng
+                user_agent: document.getElementById('user_agent').value,
             };
 
-            if (!data.chapter_url) {
-                alert("Anh hai ơi, chưa nhập Link chương truyện kìa!");
+            if (!data.chapter_url || !data.cookie_str || !data.user_agent) {
+                alert("Thiếu thông tin! Phải nhập đủ Link, Cookie và User-Agent để vượt Cloudflare.");
                 return;
             }
 
-            // UI Effect
             btn.disabled = true;
-            btn.innerHTML = "🐢 Đang chạy... (Đừng tắt tab nha)";
             btn.classList.add('opacity-50');
             status.classList.remove('hidden');
-            resultArea.value = "Đang kết nối tới Server...";
+            resultArea.value = "Đang xử lý...";
 
             try {
                 const response = await fetch('/process', {
@@ -106,29 +88,15 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                
                 const json = await response.json();
-                
-                if (json.error) {
-                    resultArea.value = "❌ LỖI: " + json.error;
-                } else {
-                    resultArea.value = json.result;
-                }
+                resultArea.value = json.result || json.error;
             } catch (e) {
-                resultArea.value = "❌ Lỗi kết nối (Timeout hoặc Server sập): " + e;
+                resultArea.value = "Lỗi kết nối: " + e;
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = "🚀 Bắt đầu Hút & Dịch";
                 btn.classList.remove('opacity-50');
                 status.classList.add('hidden');
             }
-        }
-
-        function copyText() {
-            const copyText = document.getElementById("result_area");
-            copyText.select();
-            navigator.clipboard.writeText(copyText.value);
-            alert("Đã copy!");
         }
     </script>
 </body>
