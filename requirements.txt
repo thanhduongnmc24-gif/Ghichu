@@ -6,3 +6,4 @@ google-generativeai
 pillow
 requests
 fake-useragent
+packaging
