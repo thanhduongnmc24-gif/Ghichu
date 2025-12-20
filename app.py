@@ -179,7 +179,7 @@ def login_and_scrape(data):
         
         # SỬ DỤNG GEMINI 2.0 FLASH (EXPERIMENTAL)
         # Nếu model này chưa public cho key của anh, anh đổi lại thành 'gemini-1.5-flash'
-        model_name = 'gemini-2.5-flash-exp' 
+        model_name = 'gemini-2.5-flash' 
         
         try:
             model = genai.GenerativeModel(model_name)
