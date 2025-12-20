@@ -25,5 +25,5 @@ cd $HOME/project/src
 # 5. Cài đặt thư viện Python
 pip install -r requirements.txt
 
-# 6. (Mẹo của Tèo) Thêm đường dẫn Chrome vào biến môi trường
+# 6. Thêm đường dẫn Chrome vào biến môi trường (để chắc chắn)
 export PATH="${PATH}:/opt/render/project/.render/chrome/opt/google/chrome"
