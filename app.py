@@ -4,9 +4,13 @@ import io
 import logging
 import warnings
 
-# --- TẮT CẢNH BÁO GOOGLE AI ---
-warnings.filterwarnings("ignore", category=FutureWarning)
-warnings.filterwarnings("ignore", category=UserWarning)
+# --- 1. TẮT CẢNH BÁO ---
+warnings.filterwarnings("ignore")
+
+# --- 2. ÉP ĐƯỜNG DẪN CHROME VÀO HỆ THỐNG (FIX LỖI PATH) ---
+# Đây là chìa khóa để sửa lỗi của anh hai
+chrome_bin_dir = "/opt/render/project/.render/chrome/opt/google/chrome"
+os.environ["PATH"] += os.pathsep + chrome_bin_dir
 
 from flask import Flask, render_template, request, jsonify
 from selenium import webdriver
@@ -14,133 +18,136 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType # Thêm cái này
 import google.generativeai as genai
 from PIL import Image
 
 app = Flask(__name__, template_folder='templates')
 
-# Cấu hình logging để xem lỗi trên Render dễ hơn
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def init_driver():
-    """Khởi tạo Chrome với cấu hình tối ưu cho Render"""
+    """Khởi tạo Chrome với cấu hình 'trâu bò' cho Render"""
     chrome_options = Options()
     
-    # --- CÁC TÙY CHỌN BẮT BUỘC CHO SERVER LINUX ---
-    chrome_options.add_argument("--headless=new") # Chạy ẩn chế độ mới
+    # --- CẤU HÌNH CHROME ---
+    chrome_options.add_argument("--headless=new") 
     chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage") # Tránh lỗi thiếu bộ nhớ chia sẻ
+    chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--disable-software-rasterizer")
-    chrome_options.add_argument("--window-size=1024,1200")
+    chrome_options.add_argument("--window-size=1280,1080")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--disable-infobars")
     
-    # Đường dẫn Chrome trên Render (khớp với file render-build.sh)
-    chrome_path = "/opt/render/project/.render/chrome/opt/google/chrome/google-chrome"
+    # Đường dẫn file chạy Chrome (Binary)
+    chrome_binary_path = os.path.join(chrome_bin_dir, "google-chrome")
     
-    # Kiểm tra xem file Chrome có tồn tại không
-    if os.path.exists(chrome_path):
-        logger.info(f"Đã tìm thấy Chrome tại: {chrome_path}")
-        chrome_options.binary_location = chrome_path
+    if os.path.exists(chrome_binary_path):
+        logger.info(f"✅ Đã tìm thấy Chrome tại: {chrome_binary_path}")
+        chrome_options.binary_location = chrome_binary_path
     else:
-        logger.warning("Không tìm thấy Chrome ở đường dẫn mặc định, sẽ thử để Selenium tự tìm...")
+        logger.error(f"❌ Không tìm thấy Chrome tại {chrome_binary_path}")
+        return None
 
     try:
-        # Tự động cài driver phù hợp
-        service = Service(ChromeDriverManager().install())
+        # --- FIX LỖI SESSION NOT CREATED ---
+        # Tự động tải Driver khớp với version Chrome đã cài
+        logger.info("Đang cài đặt ChromeDriver...")
+        service = Service(ChromeDriverManager(chrome_type=ChromeType.GOOGLE).install())
+        
         driver = webdriver.Chrome(service=service, options=chrome_options)
+        logger.info("🚀 Khởi động Chrome thành công!")
         return driver
     except Exception as e:
-        logger.error(f"LỖI KHỞI TẠO DRIVER CHI TIẾT: {str(e)}")
-        # In thêm biến môi trường để debug nếu cần
-        logger.error(f"PATH hiện tại: {os.environ.get('PATH')}")
+        logger.error(f"LỖI KHỞI TẠO DRIVER: {str(e)}")
+        # In version chrome ra để debug nếu cần
+        try:
+            version = os.popen(f"{chrome_binary_path} --version").read().strip()
+            logger.error(f"Version Chrome hiện tại: {version}")
+        except:
+            pass
         return None
 
 def login_and_scrape(login_url, username, password, chapter_url, api_key):
     driver = init_driver()
     if not driver:
-        return "Lỗi chí mạng: Không thể khởi động Chrome. Xem log server để biết chi tiết."
+        return "Lỗi Server: Không bật được trình duyệt. Vui lòng xem log."
 
     try:
         # 1. Đăng nhập
-        logger.info(f"Đang truy cập: {login_url}")
+        logger.info(f"Đang vào login: {login_url}")
         driver.get(login_url)
-        time.sleep(5) # Đợi trang load
+        time.sleep(3) 
 
         # Tìm ô đăng nhập (Thử nhiều kiểu tên khác nhau)
         try:
-            user_input = driver.find_element(By.CSS_SELECTOR, "input[name*='user'], input[name*='email'], input[name*='login'], input[type='email']")
+            # Tìm input user
+            user_input = driver.find_element(By.CSS_SELECTOR, "input[name*='user'], input[name*='email'], input[name*='login'], input[type='text']")
+            # Tìm input password
             pass_input = driver.find_element(By.CSS_SELECTOR, "input[name*='pass'], input[type='password']")
             
             user_input.send_keys(username)
             pass_input.send_keys(password)
             
-            # Submit form
-            # Thử tìm nút login trước
-            try:
-                btn_submit = driver.find_element(By.CSS_SELECTOR, "button[type='submit'], input[type='submit']")
-                btn_submit.click()
-            except:
-                pass_input.submit()
-                
+            # Submit (Enter)
+            pass_input.submit()
+            logger.info("Đã submit form đăng nhập")
             time.sleep(5) 
         except Exception as e:
-            logger.error(f"Lỗi form đăng nhập: {str(e)}")
-            driver.quit()
-            return f"Không đăng nhập được. Web này cấu trúc lạ quá anh hai ơi. Lỗi: {str(e)}"
+            logger.warning(f"Đăng nhập tự động thất bại (có thể web ko cần login hoặc sai ID): {e}")
+            # Vẫn cho chạy tiếp, lỡ đâu truyện không cần login vẫn xem được
 
         # 2. Vào chương truyện
         logger.info(f"Đang vào chương: {chapter_url}")
         driver.get(chapter_url)
         time.sleep(5)
 
-        # 3. Chụp ảnh (Có giới hạn để không nổ RAM)
+        # 3. Chụp ảnh
         total_height = driver.execute_script("return document.body.scrollHeight")
         viewport_height = 1000 
         
         images = []
         current_scroll = 0
-        max_images = 15 # Giảm xuống 15 ảnh cho an toàn RAM 512MB
+        max_images = 10 # Giảm xuống 10 để an toàn tuyệt đối cho RAM
         
         while current_scroll < total_height and len(images) < max_images:
             driver.execute_script(f"window.scrollTo(0, {current_scroll});")
-            time.sleep(1.5) 
+            time.sleep(1) 
             
             screenshot = driver.get_screenshot_as_png()
             image = Image.open(io.BytesIO(screenshot))
-            images.append(image.convert('RGB')) # Convert nhẹ ảnh
+            images.append(image.convert('RGB')) 
             
             current_scroll += viewport_height
 
         driver.quit()
-        logger.info(f"Đã chụp được {len(images)} ảnh.")
+        
+        if not images:
+            return "Lỗi: Không chụp được ảnh nào (Trang trắng hoặc chưa load xong)."
 
         # 4. Gửi cho Gemini AI
-        logger.info("Đang gửi cho Gemini...")
+        logger.info(f"Đang gửi {len(images)} ảnh cho Gemini...")
         genai.configure(api_key=api_key)
-        # Dùng model flash cho nhanh và rẻ
         model = genai.GenerativeModel('gemini-1.5-flash')
 
         full_text = ""
-        
-        # Gửi từng cụm nhỏ (3 ảnh một lần)
         batch_size = 3
         for i in range(0, len(images), batch_size):
             batch = images[i:i+batch_size]
-            prompt = "Chuyển đổi nội dung truyện trong các ảnh này thành văn bản tiếng Việt. Chỉ lấy nội dung truyện, bỏ qua quảng cáo/menu."
+            prompt = "Chuyển đổi toàn bộ nội dung văn bản tiếng Việt trong các ảnh này thành text. Bỏ qua quảng cáo. Chỉ trả về nội dung truyện."
             try:
                 response = model.generate_content([prompt, *batch])
                 if response.text:
                     full_text += response.text + "\n"
             except Exception as e:
-                logger.error(f"Lỗi Gemini đoạn {i}: {str(e)}")
-                full_text += f"\n[Lỗi đoạn này: {str(e)}]\n"
+                full_text += f"\n[Lỗi AI đoạn {i}: {str(e)}]\n"
 
-        return full_text if full_text else "AI không trả về kết quả nào (Có thể do ảnh trắng hoặc lỗi)."
+        return full_text
 
     except Exception as e:
         if driver: driver.quit()
-        logger.error(f"Lỗi không xác định: {str(e)}")
+        logger.error(f"Lỗi hệ thống: {str(e)}")
         return f"Lỗi hệ thống: {str(e)}"
 
 @app.route('/')
@@ -157,7 +164,7 @@ def process():
     chapter_url = data.get('chapter_url')
 
     if not api_key or not chapter_url:
-        return jsonify({'error': 'Thiếu thông tin rồi anh hai!'})
+        return jsonify({'error': 'Thiếu API Key hoặc Link truyện!'})
 
     result_text = login_and_scrape(login_url, username, password, chapter_url, api_key)
     return jsonify({'result': result_text})
