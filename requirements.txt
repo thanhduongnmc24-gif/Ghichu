@@ -5,3 +5,4 @@ webdriver-manager
 google-generativeai
 pillow
 requests
+fake-useragent
