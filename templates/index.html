@@ -3,100 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tèo Scraper - Anti Cloudflare</title>
+    <title>Tèo Scraper Pro - Render Version</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <style>
+        body { font-family: sans-serif; }
+        .log-line { border-bottom: 1px solid #333; padding: 4px 0; }
+    </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-4">
 
     <div class="max-w-4xl mx-auto bg-gray-800 rounded-xl shadow-2xl p-6">
-        <h1 class="text-3xl font-bold text-center text-blue-400 mb-6">🕵️‍♂️ Tèo Scraper (Vượt Cloudflare)</h1>
-        
-        <div class="space-y-6">
-            
-            <div>
-                <label class="block text-sm font-bold text-blue-400 mb-2">📍 Link Chương Truyện</label>
-                <input type="text" id="chapter_url" class="w-full p-3 rounded bg-gray-700 border border-gray-600 outline-none" placeholder="https://metruyencv.com/...">
+        <h1 class="text-2xl font-bold text-blue-400 mb-4">🤖 Tèo Scraper (AI + Anti-Cloudflare)</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="md:col-span-2">
+                <label class="text-xs font-bold text-gray-400">User-Agent (Bắt buộc)</label>
+                <input type="text" id="user_agent" class="w-full p-2 bg-gray-700 rounded text-xs text-yellow-300" placeholder="Paste User-Agent...">
             </div>
-
-            <div class="bg-gray-700/50 p-4 rounded-lg border border-yellow-600/50">
-                <h3 class="font-bold text-yellow-400 mb-3">🛠 Cấu hình Vượt Tường Lửa (Bắt buộc)</h3>
-                <p class="text-xs text-gray-400 mb-4">Để qua mặt Cloudflare, bạn cần cung cấp cả Cookie và User-Agent từ cùng một trình duyệt.</p>
-
-                <div class="mb-4">
-                    <label class="block text-xs uppercase text-gray-300 font-bold mb-1">
-                        Bước 1: User Agent (Dấu vân tay trình duyệt)
-                    </label>
-                    <input type="text" id="user_agent" class="w-full p-2 rounded bg-gray-900 border border-gray-600 text-xs font-mono text-purple-400" placeholder="Paste User-Agent vào đây...">
-                    <div class="mt-1 text-xs text-gray-500">
-                        👉 <b>Cách lấy:</b> Trên tab đang đọc truyện > Nhấn <b>F12</b> > Chọn tab <b>Console</b> > Gõ lệnh <code>navigator.userAgent</code> rồi Enter > Copy chuỗi đó.
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xs uppercase text-gray-300 font-bold mb-1">
-                        Bước 2: Cookie (Chìa khóa đăng nhập)
-                    </label>
-                    <textarea id="cookie_str" class="w-full h-20 p-2 rounded bg-gray-900 border border-gray-600 text-xs font-mono text-green-400" placeholder="Paste toàn bộ dòng Cookie vào đây..."></textarea>
-                    <div class="mt-1 text-xs text-gray-500">
-                        👉 <b>Cách lấy:</b> F12 > Tab <b>Network</b> > F5 > Chọn dòng đầu tiên (tên web) > Copy dòng <b>Cookie</b> bên phải.
-                    </div>
-                </div>
-            </div>
-
-            <button onclick="startScrape()" id="btn-run" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-4 rounded-lg transition shadow-lg">
-                🚀 Bắt đầu Hút & Dịch
-            </button>
-            
-            <div id="status" class="hidden text-center text-yellow-400 font-mono text-sm mt-2 animate-pulse">
-                ⏳ Đang giả danh & vượt Cloudflare... (Chờ khoảng 2 phút)...
+            <div class="md:col-span-2">
+                <label class="text-xs font-bold text-gray-400">Cookie (Nếu web chặn)</label>
+                <textarea id="cookie_str" class="w-full h-12 p-2 bg-gray-700 rounded text-xs text-green-300" placeholder="Paste Cookie..."></textarea>
             </div>
         </div>
 
-        <div class="mt-8">
-            <h2 class="text-xl font-bold mb-2">📄 Kết quả:</h2>
-            <textarea id="result_area" class="w-full h-96 bg-black p-4 rounded border border-gray-700 font-mono text-sm text-gray-300" readonly></textarea>
+        <div class="border-t border-gray-700 pt-4 mb-4">
+            <label class="block text-sm font-bold mb-1">Link Truyện (Trang mục lục)</label>
+            <div class="flex gap-2">
+                <input type="text" id="story_url" class="flex-1 p-2 rounded bg-gray-700" placeholder="https://metruyencv.com/truyen/...">
+                <button onclick="getChapters()" id="btn-get" class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-500">
+                    🔍 Lấy DS
+                </button>
+            </div>
+            <div id="chapter_info" class="text-sm text-green-400 mt-2 hidden">
+                ✅ Tìm thấy <span id="total_chapters" class="font-bold">0</span> chương.
+            </div>
+        </div>
+
+        <div id="step-2" class="border-t border-gray-700 pt-4 mb-4 hidden opacity-50 pointer-events-none">
+            <div class="flex gap-4 items-end">
+                <div>
+                    <label class="text-xs">Từ chương (Index)</label>
+                    <input type="number" id="start_idx" class="w-24 p-2 bg-gray-700 rounded" value="1">
+                </div>
+                <div>
+                    <label class="text-xs">Đến chương (Index)</label>
+                    <input type="number" id="end_idx" class="w-24 p-2 bg-gray-700 rounded" value="5">
+                </div>
+                <button onclick="startScrape()" id="btn-run" class="bg-red-600 hover:bg-red-500 px-6 py-2 rounded font-bold">
+                    🚀 CHẠY NGAY ĐI
+                </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Lưu ý: Render Free chạy chậm, nên cào mỗi lần khoảng 10-20 chương thôi nhé.</p>
+        </div>
+
+        <div class="mt-6">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold">📺 Tiến độ & Kết quả</h3>
+                <button onclick="downloadTxt()" id="btn-down" class="hidden bg-green-600 px-3 py-1 rounded text-sm">
+                    💾 Tải file .txt
+                </button>
+            </div>
+            <div id="logs" class="h-64 bg-black p-4 rounded overflow-y-auto font-mono text-xs text-gray-300 border border-gray-700">
+                <p class="text-gray-500 italic">Chưa có hoạt động nào...</p>
+            </div>
         </div>
     </div>
 
     <script>
-        async function startScrape() {
-            const btn = document.getElementById('btn-run');
-            const status = document.getElementById('status');
-            const resultArea = document.getElementById('result_area');
+        let allChapters = [];
+        let scrapedContent = [];
 
-            const data = {
-                chapter_url: document.getElementById('chapter_url').value,
-                cookie_str: document.getElementById('cookie_str').value,
-                user_agent: document.getElementById('user_agent').value,
-            };
+        function log(msg, color = 'text-gray-300') {
+            const logs = document.getElementById('logs');
+            logs.innerHTML += `<div class="log-line ${color}">${msg}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+        }
 
-            if (!data.chapter_url || !data.cookie_str || !data.user_agent) {
-                alert("Thiếu thông tin! Phải nhập đủ Link, Cookie và User-Agent để vượt Cloudflare.");
-                return;
-            }
+        async function getChapters() {
+            const url = document.getElementById('story_url').value;
+            const ua = document.getElementById('user_agent').value;
+            const ck = document.getElementById('cookie_str').value;
+            
+            if(!url || !ua) return alert("Nhập Link và User-Agent!");
 
-            btn.disabled = true;
-            btn.classList.add('opacity-50');
-            status.classList.remove('hidden');
-            resultArea.value = "Đang xử lý...";
+            log("🔄 Đang quét danh sách chương...", "text-blue-400");
+            document.getElementById('btn-get').disabled = true;
 
             try {
-                const response = await fetch('/process', {
+                const res = await fetch('/get_chapters', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({story_url: url, user_agent: ua, cookie_str: ck})
                 });
-                const json = await response.json();
-                resultArea.value = json.result || json.error;
-            } catch (e) {
-                resultArea.value = "Lỗi kết nối: " + e;
+                const data = await res.json();
+                
+                if(data.error) {
+                    log("❌ Lỗi: " + data.error, "text-red-500");
+                } else {
+                    allChapters = data.chapters;
+                    document.getElementById('total_chapters').innerText = data.count;
+                    document.getElementById('chapter_info').classList.remove('hidden');
+                    
+                    // Mở bước 2
+                    const step2 = document.getElementById('step-2');
+                    step2.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
+                    document.getElementById('end_idx').value = Math.min(5, data.count); // Mặc định 5 chương
+                    
+                    log(`✅ Đã tải xong ${data.count} chương.`, "text-green-400");
+                }
+            } catch(e) {
+                log("❌ Lỗi mạng: " + e, "text-red-500");
             } finally {
-                btn.disabled = false;
-                btn.classList.remove('opacity-50');
-                status.classList.add('hidden');
+                document.getElementById('btn-get').disabled = false;
             }
+        }
+
+        async function startScrape() {
+            const start = parseInt(document.getElementById('start_idx').value) - 1;
+            const end = parseInt(document.getElementById('end_idx').value);
+            const ua = document.getElementById('user_agent').value;
+            const ck = document.getElementById('cookie_str').value;
+
+            if(start < 0 || end > allChapters.length || start >= end) {
+                return alert("Số chương không hợp lệ!");
+            }
+
+            // Lấy danh sách link cần cào
+            const targets = allChapters.slice(start, end).map(c => c.url);
+            scrapedContent = []; // Reset kết quả
+
+            document.getElementById('btn-run').disabled = true;
+            log(`🚀 Bắt đầu cào từ chương ${start + 1} đến ${end}...`, "text-yellow-400");
+
+            try {
+                const response = await fetch('/stream_scrape', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        chapter_urls: targets,
+                        user_agent: ua,
+                        cookie_str: ck
+                    })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value, {stream: true});
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (!line.trim()) continue;
+                        try {
+                            const json = JSON.parse(line);
+                            if(json.status === 'progress') {
+                                log(json.msg, "text-blue-300");
+                            } else if(json.status === 'data') {
+                                log(`✅ Xong: ${json.url}`, "text-green-400");
+                                scrapedContent.push(`\n\n--- CHƯƠNG ${json.chapter_index + 1 + start} ---\n` + json.content);
+                            } else if(json.status === 'done') {
+                                log("🎉 HOÀN TẤT!", "text-purple-400");
+                                document.getElementById('btn-down').classList.remove('hidden');
+                            }
+                        } catch(e) {}
+                    }
+                }
+
+            } catch(e) {
+                log("❌ Lỗi khi chạy: " + e, "text-red-500");
+            } finally {
+                document.getElementById('btn-run').disabled = false;
+            }
+        }
+
+        function downloadTxt() {
+            if(scrapedContent.length === 0) return alert("Chưa có nội dung!");
+            const blob = new Blob(scrapedContent, { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "truyen_convert_teo.txt";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
     </script>
 </body>
