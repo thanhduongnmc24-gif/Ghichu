@@ -7,3 +7,4 @@ pillow
 requests
 fake-useragent
 packaging
+beautifulsoup4
