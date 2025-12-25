@@ -1,10 +1,5 @@
 flask
-gunicorn
-selenium
-webdriver-manager
-google-generativeai
-pillow
-requests
-fake-useragent
-packaging
-beautifulsoup4
+flask_sqlalchemy
+flask_login
+psycopg2-binary
+werkzeug

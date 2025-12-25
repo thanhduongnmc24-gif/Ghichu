@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Xưởng Thép</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <style>
+        .fade-out { opacity: 0; transition: opacity 0.5s ease-out; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 font-sans min-h-screen flex flex-col">
+
+    <nav class="bg-gray-800 border-b border-gray-700 p-4 sticky top-0 z-50 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-industry text-2xl text-yellow-500"></i>
+                <h1 class="text-xl font-bold text-white uppercase hidden md:block">Data Xưởng Thép</h1>
+            </div>
+            <div class="flex gap-4 items-center">
+                <button onclick="openModal('setting-modal')" class="text-gray-400 hover:text-white transition" title="Cài đặt">
+                    <i class="fas fa-cog text-xl"></i>
+                </button>
+                <span class="text-sm font-bold text-yellow-500">Hi, {{ current_user.username }}</span>
+                <a href="/logout" class="text-red-400 hover:text-red-300 transition" title="Đăng xuất">
+                    <i class="fas fa-sign-out-alt text-xl"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-4 flex-1">
+        <div id="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash-msg p-3 mb-4 rounded shadow-lg flex justify-between items-center {{ 'bg-green-600 text-white' if category=='success' else 'bg-red-600 text-white' }}">
+                    <span>{{ message }}</span>
+                    <button onclick="this.parentElement.remove()" class="text-white hover:text-gray-200">&times;</button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
+            <div class="relative w-full md:w-1/3">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                <input type="text" id="search-box" onkeyup="filterTable()" 
+                       class="w-full bg-gray-800 border border-gray-600 rounded-full py-2 pl-10 pr-4 text-white focus:ring-blue-500 outline-none" 
+                       placeholder="Tìm kiếm...">
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="openSortModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded shadow transition flex items-center gap-2">
+                    <i class="fas fa-tasks"></i> Quản lý Cột
+                </button>
+                <button onclick="openModal('col-modal')" class="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded shadow transition flex items-center gap-2">
+                    <i class="fas fa-columns"></i> + Cột
+                </button>
+                <button onclick="openEditModal()" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded shadow font-bold transition flex items-center gap-2">
+                    <i class="fas fa-plus"></i> THÊM DỮ LIỆU
+                </button>
+            </div>
+        </div>
+
+        <div class="flex flex-row border border-gray-700 rounded-lg overflow-hidden bg-gray-800 shadow-2xl">
+            <div class="flex-1 overflow-x-auto relative">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-700 text-gray-300 text-sm uppercase sticky top-0 z-10">
+                        <tr class="h-12">
+                            {% for col in columns %}
+                            <th class="p-3 border-b border-r border-gray-600 whitespace-nowrap min-w-[150px]">{{ col.name }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody id="data-table-body">
+                        {% for row in rows %}
+                        <tr class="data-row hover:bg-gray-700/50 transition border-b border-gray-700/50 h-14" 
+                            data-id="{{ row.id }}" 
+                            onmouseover="syncHover('{{ row.id }}', true)" 
+                            onmouseout="syncHover('{{ row.id }}', false)">
+                            {% for col in columns %}
+                            <td class="p-3 border-r border-gray-700/50 text-white whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
+                                {{ row.content.get(col.name, '') }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% else %}
+                        <tr class="h-14"><td colspan="100%" class="p-4 text-center text-gray-500">Chưa có dữ liệu.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="w-24 shrink-0 border-l-2 border-gray-600 bg-gray-800 z-20 shadow-[-5px_0_15px_rgba(0,0,0,0.5)]">
+                <table class="w-full">
+                    <thead class="bg-gray-700 text-gray-300 sticky top-0 z-10">
+                        <tr class="h-12">
+                            <th class="p-3 border-b border-gray-600 text-center"></th> 
+                        </tr>
+                    </thead>
+                    <tbody id="action-table-body">
+                        {% for row in rows %}
+                        <tr id="action-row-{{ row.id }}" class="hover:bg-gray-700/50 transition border-b border-gray-700/50 h-14 bg-gray-800">
+                            <td class="p-3 flex justify-center items-center gap-4 h-full">
+                                <button 
+                                    onclick="handleEdit('{{ row.id }}')"
+                                    class="text-blue-400 hover:text-blue-200 transition transform hover:scale-125" 
+                                    title="Sửa">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                <a href="/delete_row/{{ row.id }}" onclick="return confirm('Xóa dòng này?')" 
+                                   class="text-gray-500 hover:text-red-500 transition transform hover:scale-125" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr class="h-14"><td></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="col-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600 shadow-2xl">
+            <h3 class="text-xl font-bold mb-4 text-purple-400">Thêm Cột Mới</h3>
+            <form action="/add_column" method="POST">
+                <input type="text" name="col_name" required class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white mb-4" placeholder="Tên cột...">
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('col-modal')" class="text-gray-400 hover:text-white px-3">Hủy</button>
+                    <button type="submit" class="bg-purple-600 px-4 py-2 rounded text-white">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="row-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-6 rounded-lg w-[600px] max-h-[90vh] overflow-y-auto border border-gray-600 shadow-2xl">
+            <h3 id="modal-title" class="text-xl font-bold mb-4 text-green-400">Nhập Dữ Liệu</h3>
+            <form action="/save_row" method="POST" id="row-form">
+                <input type="hidden" name="row_id" id="row_id_input">
+                <div class="grid grid-cols-2 gap-4">
+                    {% for col in columns %}
+                    <div class="col-span-1">
+                        <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">{{ col.name }}</label>
+                        <input type="text" name="field_{{ col.id }}" id="input_col_{{ col.name }}" 
+                               class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white focus:border-green-500 outline-none">
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="flex justify-end gap-3 mt-6 border-t border-gray-700 pt-4">
+                    <button type="button" onclick="closeModal('row-modal')" class="text-gray-400 hover:text-white px-3">Hủy</button>
+                    <button type="submit" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded font-bold">Lưu Dữ Liệu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="sort-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600 shadow-2xl">
+            <h3 class="text-xl font-bold mb-2 text-blue-400">Quản Lý Cột</h3>
+            <p class="text-xs text-gray-500 mb-4">Kéo thả để sắp xếp, bấm thùng rác để xóa.</p>
+            <ul id="sortable-list" class="space-y-2 mb-6 max-h-[60vh] overflow-y-auto pr-2">
+                {% for col in columns %}
+                <li data-id="{{ col.id }}" class="bg-gray-700 p-3 rounded cursor-move flex justify-between items-center border border-gray-600 hover:bg-gray-600">
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <i class="fas fa-grip-vertical text-gray-500"></i>
+                        <span class="truncate">{{ col.name }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="/delete_column/{{ col.id }}" onclick="return confirm('CẢNH BÁO: Mất dữ liệu cột này. Chắc chưa?')" class="text-gray-400 hover:text-red-500 p-1">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                        <div class="flex flex-col">
+                            <button type="button" onclick="moveItem(this, -1)" class="text-gray-400 hover:text-white text-[10px]"><i class="fas fa-chevron-up"></i></button>
+                            <button type="button" onclick="moveItem(this, 1)" class="text-gray-400 hover:text-white text-[10px]"><i class="fas fa-chevron-down"></i></button>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="flex justify-end gap-2 border-t border-gray-700 pt-4">
+                <button type="button" onclick="closeModal('sort-modal')" class="text-gray-400 px-3">Hủy</button>
+                <button type="button" onclick="saveOrder()" class="bg-blue-600 px-4 py-2 rounded text-white font-bold">Cập Nhật</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="setting-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600 shadow-2xl relative">
+            <button onclick="closeModal('setting-modal')" class="absolute top-2 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+            <h2 class="text-xl font-bold mb-6 text-white border-b border-gray-700 pb-2">Cài đặt tài khoản</h2>
+            <form action="/change_password" method="POST">
+                <label class="block text-sm text-gray-400 mb-1">Đổi mật khẩu mới</label>
+                <input type="password" name="new_password" required class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white mb-4" placeholder="Nhập mật khẩu mới...">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded">Cập nhật</button>
+            </form>
+        </div>
+    </div>
+
+    <script id="json-rows" type="application/json">
+    {
+        {% for row in rows %}
+            "{{ row.id }}": {{ row.content | tojson | safe }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
+    }
+    </script>
+
+    <script>
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.flash-msg');
+            alerts.forEach(alert => {
+                alert.classList.add('fade-out');
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 3000);
+
+        // --- 2. Đọc dữ liệu từ thẻ JSON ở trên ---
+        let ROW_DATA_MAP = {};
+        try {
+            const rawData = document.getElementById('json-rows').textContent;
+            ROW_DATA_MAP = JSON.parse(rawData);
+        } catch (e) {
+            console.error("Lỗi đọc dữ liệu:", e);
+        }
+
+        // --- HÀM SỬA DỮ LIỆU ---
+        function handleEdit(id) {
+            const content = ROW_DATA_MAP[String(id)];
+            if (content) {
+                openEditModal(id, content);
+            } else {
+                alert("Không tìm thấy dữ liệu!");
+            }
+        }
+
+        function openEditModal(rowId = null, rowContent = null) {
+            const modal = document.getElementById('row-modal');
+            const title = document.getElementById('modal-title');
+            const idInput = document.getElementById('row_id_input');
+            const form = document.getElementById('row-form');
+            form.reset();
+
+            if (rowId) {
+                title.innerText = "Chỉnh Sửa Dữ Liệu";
+                idInput.value = rowId;
+                for (const [key, value] of Object.entries(rowContent)) {
+                    let input = document.getElementById(`input_col_${key}`);
+                    if (input) input.value = value;
+                }
+            } else {
+                title.innerText = "Thêm Dữ Liệu Mới";
+                idInput.value = "";
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function openSortModal() { openModal('sort-modal'); }
+        const list = document.getElementById('sortable-list');
+        if (list) {
+            new Sortable(list, { animation: 150, ghostClass: 'sortable-ghost', handle: '.cursor-move' });
+        }
+
+        function moveItem(btn, direction) {
+            const li = btn.closest('li');
+            if (direction === -1 && li.previousElementSibling) li.parentNode.insertBefore(li, li.previousElementSibling);
+            else if (direction === 1 && li.nextElementSibling) li.parentNode.insertBefore(li.nextElementSibling, li);
+        }
+
+        async function saveOrder() {
+            const items = list.querySelectorAll('li');
+            const newOrder = Array.from(items).map(item => item.getAttribute('data-id'));
+            try {
+                const res = await fetch('/reorder_columns', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ order: newOrder })
+                });
+                const data = await res.json();
+                if(data.status === 'success') window.location.reload();
+                else alert('Lỗi: ' + data.message);
+            } catch(e) { alert('Lỗi mạng!'); }
+        }
+
+        function filterTable() {
+            const filter = document.getElementById("search-box").value.toLowerCase();
+            const dataRows = document.querySelectorAll('.data-row');
+            dataRows.forEach(row => {
+                const id = row.getAttribute('data-id');
+                const actionRow = document.getElementById(`action-row-${id}`);
+                if (row.innerText.toLowerCase().includes(filter)) {
+                    row.classList.remove('hidden');
+                    if(actionRow) actionRow.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                    if(actionRow) actionRow.classList.add('hidden');
+                }
+            });
+        }
+
+        function syncHover(id, isHover) {
+            const actionRow = document.getElementById(`action-row-${id}`);
+            if (actionRow) {
+                if (isHover) actionRow.classList.add('bg-gray-700');
+                else actionRow.classList.remove('bg-gray-700');
+            }
+        }
+    </script>
+</body>
+</html>

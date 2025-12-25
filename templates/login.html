@@ -1,1 +1,40 @@
-1
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Xưởng Thép</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 flex items-center justify-center h-screen text-white">
+    <div class="bg-gray-800 p-8 rounded-lg shadow-2xl w-96 border border-gray-700">
+        <h1 class="text-2xl font-bold text-center text-blue-500 mb-6">⚙️ DATA XƯỞNG THÉP</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-4 p-2 rounded {{ 'bg-red-500' if category == 'error' else 'bg-green-500' }} text-sm text-center">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-2">Tài khoản</label>
+                <input type="text" name="username" required class="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500">
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-bold mb-2">Mật khẩu</label>
+                <input type="password" name="password" required class="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500">
+            </div>
+            
+            <div class="flex gap-2">
+                <button type="submit" name="action" value="login" class="w-1/2 bg-blue-600 hover:bg-blue-700 py-2 rounded font-bold">Đăng nhập</button>
+                <button type="submit" name="action" value="register" class="w-1/2 bg-gray-600 hover:bg-gray-500 py-2 rounded font-bold">Tạo mới</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
