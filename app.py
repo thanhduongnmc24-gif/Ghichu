@@ -46,9 +46,6 @@ def load_user(user_id):
 def index():
     columns = TableColumn.query.order_by(TableColumn.order_index).all()
     rows = DataRow.query.order_by(DataRow.id.desc()).all()
-    
-    # --- LOGIC MỚI: Đóng gói dữ liệu tại đây để JavaScript không phải loop ---
-    # Tạo dictionary: { id_dòng: nội_dung_json }
     data_map = {row.id: row.content for row in rows}
 
     if not columns:
@@ -58,10 +55,8 @@ def index():
         db.session.commit()
         return redirect(url_for('index'))
 
-    # Truyền thêm biến data_map sang HTML
     return render_template('dashboard.html', columns=columns, rows=rows, data_map=data_map)
 
-# API: Thêm cột
 @app.route('/add_column', methods=['POST'])
 @login_required
 def add_column():
@@ -77,26 +72,6 @@ def add_column():
             flash('Cột này có rồi anh hai ơi!', 'error')
     return redirect(url_for('index'))
 
-# API: Sửa tên cột
-@app.route('/edit_column', methods=['POST'])
-@login_required
-def edit_column():
-    col_id = request.form.get('col_id')
-    new_name = request.form.get('new_name')
-    
-    if col_id and new_name:
-        col = TableColumn.query.get(col_id)
-        if col:
-            existing = TableColumn.query.filter_by(name=new_name).first()
-            if existing and existing.id != col.id:
-                 flash('Tên cột này đã tồn tại rồi!', 'error')
-            else:
-                col.name = new_name
-                db.session.commit()
-                flash('Đã đổi tên cột!', 'success')
-    return redirect(url_for('index'))
-
-# API: Xóa cột
 @app.route('/delete_column/<int:id>')
 @login_required
 def delete_column(id):
@@ -107,22 +82,44 @@ def delete_column(id):
         flash(f'Đã xóa cột: {col.name}', 'success')
     return redirect(url_for('index'))
 
-# API: Sắp xếp cột
-@app.route('/reorder_columns', methods=['POST'])
+@app.route('/batch_update_columns', methods=['POST'])
 @login_required
-def reorder_columns():
+def batch_update_columns():
     try:
-        new_order = request.json.get('order', [])
-        for index, col_id in enumerate(new_order):
+        data = request.json.get('columns', [])
+        all_rows = DataRow.query.all()
+        
+        for item in data:
+            col_id = item.get('id')
+            new_name = item.get('name')
+            new_order = item.get('order')
+
             col = TableColumn.query.get(col_id)
             if col:
-                col.order_index = index
+                if col.name != new_name:
+                    existing = TableColumn.query.filter(TableColumn.name == new_name, TableColumn.id != col_id).first()
+                    if existing:
+                        return jsonify({'status': 'error', 'message': f'Tên "{new_name}" bị trùng!'})
+                    
+                    old_name = col.name
+                    col.name = new_name 
+
+                    for row in all_rows:
+                        if row.content and old_name in row.content:
+                            updated_content = dict(row.content)
+                            updated_content[new_name] = updated_content.pop(old_name)
+                            row.content = updated_content
+
+                col.order_index = new_order
+
         db.session.commit()
+        flash('Đã cập nhật cấu trúc bảng thành công!', 'success')
         return jsonify({'status': 'success'})
+
     except Exception as e:
+        db.session.rollback()
         return jsonify({'status': 'error', 'message': str(e)})
 
-# API: Thêm/Sửa dòng
 @app.route('/save_row', methods=['POST'])
 @login_required
 def save_row():
@@ -151,6 +148,14 @@ def save_row():
         flash('Đã thêm dòng mới!', 'success')
     
     return redirect(url_for('index'))
+
+# --- MỚI: ROUTE IN PHIẾU ---
+@app.route('/print_row/<int:id>')
+@login_required
+def print_row(id):
+    row = DataRow.query.get_or_404(id)
+    columns = TableColumn.query.order_by(TableColumn.order_index).all()
+    return render_template('print_ticket.html', row=row, columns=columns)
 
 @app.route('/delete_row/<int:id>')
 @login_required
@@ -190,7 +195,6 @@ def login():
 @app.route('/logout')
 @login_required
 def logout(): logout_user(); return redirect(url_for('login'))
-
+with app.app_context(): db.create_all()
 if __name__ == '__main__':
-    with app.app_context(): db.create_all()
     app.run(host='0.0.0.0', port=5000, debug=True)

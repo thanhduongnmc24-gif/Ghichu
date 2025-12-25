@@ -13,6 +13,8 @@
         ::-webkit-scrollbar-track { background: #1f2937; }
         ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        .multi-line-cell div { padding: 4px 0; border-bottom: 1px solid rgba(75, 85, 99, 0.4); }
+        .multi-line-cell div:last-child { border-bottom: none; }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 font-sans min-h-screen flex flex-col">
@@ -82,13 +84,15 @@
                     </thead>
                     <tbody id="data-table-body">
                         {% for row in rows %}
-                        <tr class="data-row hover:bg-gray-700/50 transition border-b border-gray-700/50 h-14" 
-                            data-id="{{ row.id }}" 
-                            onmouseover="syncHover('{{ row.id }}', true)" 
-                            onmouseout="syncHover('{{ row.id }}', false)">
+                        <tr class="data-row hover:bg-gray-700/50 transition border-b border-gray-700/50" data-id="{{ row.id }}">
                             {% for col in columns %}
-                            <td class="p-3 border-r border-gray-700/50 text-white whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
-                                {{ row.content.get(col.name, '') }}
+                            <td class="p-3 border-r border-gray-700/50 text-white align-top">
+                                {% set cell_data = row.content.get(col.name, '') %}
+                                {% if cell_data is iterable and cell_data is not string %}
+                                    <div class="multi-line-cell">
+                                        {% for line in cell_data %}<div>{{ line }}</div>{% endfor %}
+                                    </div>
+                                {% else %}{{ cell_data }}{% endif %}
                             </td>
                             {% endfor %}
                         </tr>
@@ -99,25 +103,23 @@
                 </table>
             </div>
 
-            <div class="w-24 shrink-0 border-l-2 border-gray-600 bg-gray-800 z-20 shadow-[-5px_0_15px_rgba(0,0,0,0.5)]">
+            <div class="w-36 shrink-0 border-l-2 border-gray-600 bg-gray-800 z-20 shadow-[-5px_0_15px_rgba(0,0,0,0.5)]">
                 <table class="w-full">
                     <thead class="bg-gray-700 text-gray-300 sticky top-0 z-10">
-                        <tr class="h-12">
-                            <th class="p-3 border-b border-gray-600 text-center"></th> 
-                        </tr>
+                        <tr class="h-12"><th class="p-3 border-b border-gray-600 text-center">Tác vụ</th></tr>
                     </thead>
                     <tbody id="action-table-body">
                         {% for row in rows %}
-                        <tr id="action-row-{{ row.id }}" class="hover:bg-gray-700/50 transition border-b border-gray-700/50 h-14 bg-gray-800">
-                            <td class="p-3 flex justify-center items-center gap-4 h-full">
-                                <button 
-                                    onclick="handleEdit('{{ row.id }}')"
-                                    class="text-blue-400 hover:text-blue-200 transition transform hover:scale-125" 
-                                    title="Sửa">
+                        <tr id="action-row-{{ row.id }}" class="hover:bg-gray-700/50 transition border-b border-gray-700/50 bg-gray-800">
+                            <td class="p-3 flex justify-center items-center gap-3 h-full">
+                                <button class="btn-edit text-blue-400 hover:text-blue-200 transition transform hover:scale-125" 
+                                        data-id="{{ row.id }}" title="Sửa">
                                     <i class="fas fa-pen"></i>
                                 </button>
-                                <a href="/delete_row/{{ row.id }}" onclick="return confirm('Xóa dòng này?')" 
-                                   class="text-gray-500 hover:text-red-500 transition transform hover:scale-125" title="Xóa">
+                                <a href="/print_row/{{ row.id }}" target="_blank" class="text-purple-400 hover:text-purple-200 transition transform hover:scale-125" title="In phiếu">
+                                    <i class="fas fa-print"></i>
+                                </a>
+                                <a href="/delete_row/{{ row.id }}" onclick="return confirm('Xóa dòng này?')" class="text-gray-500 hover:text-red-500 transition transform hover:scale-125" title="Xóa">
                                     <i class="fas fa-trash"></i>
                                 </a>
                             </td>
@@ -130,6 +132,10 @@
             </div>
         </div>
     </div>
+
+    <script id="server-data-script" type="text/plain">
+        {{ data_map | tojson | safe }}
+    </script>
 
     <div id="col-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
         <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600 shadow-2xl">
@@ -145,53 +151,49 @@
     </div>
 
     <div id="row-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
-        <div class="bg-gray-800 p-6 rounded-lg w-[600px] max-h-[90vh] overflow-y-auto border border-gray-600 shadow-2xl">
-            <h3 id="modal-title" class="text-xl font-bold mb-4 text-green-400">Nhập Dữ Liệu</h3>
+        <div class="bg-gray-800 p-6 rounded-lg w-[700px] max-h-[90vh] overflow-y-auto border border-gray-600 shadow-2xl">
+            <h3 id="modal-title" class="text-xl font-bold mb-2 text-green-400">Nhập Dữ Liệu</h3>
+            <p class="text-xs text-gray-500 mb-6 italic">* Mẹo: Bấm Enter để xuống dòng.</p>
             <form action="/save_row" method="POST" id="row-form">
                 <input type="hidden" name="row_id" id="row_id_input">
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-6">
                     {% for col in columns %}
                     <div class="col-span-1">
-                        <label class="block text-xs font-bold text-gray-400 mb-1 uppercase">{{ col.name }}</label>
-                        <input type="text" name="field_{{ col.id }}" id="input_col_{{ col.name }}" 
-                               class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white focus:border-green-500 outline-none">
+                        <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">{{ col.name }}</label>
+                        <textarea name="field_{{ col.id }}" id="input_col_{{ col.name }}" rows="3" class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white focus:border-green-500 outline-none resize-none" placeholder="Nhập nội dung..."></textarea>
                     </div>
                     {% endfor %}
                 </div>
                 <div class="flex justify-end gap-3 mt-6 border-t border-gray-700 pt-4">
                     <button type="button" onclick="closeModal('row-modal')" class="text-gray-400 hover:text-white px-3">Hủy</button>
-                    <button type="submit" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded font-bold">Lưu Dữ Liệu</button>
+                    <button type="submit" class="bg-green-600 px-6 py-2 rounded font-bold text-white">Lưu Dữ Liệu</button>
                 </div>
             </form>
         </div>
     </div>
 
     <div id="sort-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
-        <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600 shadow-2xl">
+        <div class="bg-gray-800 p-6 rounded-lg w-[500px] border border-gray-600 shadow-2xl">
             <h3 class="text-xl font-bold mb-2 text-blue-400">Quản Lý Cột</h3>
-            <p class="text-xs text-gray-500 mb-4">Kéo thả để sắp xếp, bấm thùng rác để xóa.</p>
+            <p class="text-xs text-gray-500 mb-4">Kéo thả để sắp xếp, nhập vào ô để đổi tên.</p>
+            
             <ul id="sortable-list" class="space-y-2 mb-6 max-h-[60vh] overflow-y-auto pr-2">
                 {% for col in columns %}
-                <li data-id="{{ col.id }}" class="bg-gray-700 p-3 rounded cursor-move flex justify-between items-center border border-gray-600 hover:bg-gray-600">
-                    <div class="flex items-center gap-2 overflow-hidden">
-                        <i class="fas fa-grip-vertical text-gray-500"></i>
-                        <span class="truncate">{{ col.name }}</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <a href="/delete_column/{{ col.id }}" onclick="return confirm('CẢNH BÁO: Mất dữ liệu cột này. Chắc chưa?')" class="text-gray-400 hover:text-red-500 p-1">
-                            <i class="fas fa-trash-alt"></i>
-                        </a>
-                        <div class="flex flex-col">
-                            <button type="button" onclick="moveItem(this, -1)" class="text-gray-400 hover:text-white text-[10px]"><i class="fas fa-chevron-up"></i></button>
-                            <button type="button" onclick="moveItem(this, 1)" class="text-gray-400 hover:text-white text-[10px]"><i class="fas fa-chevron-down"></i></button>
-                        </div>
-                    </div>
+                <li data-id="{{ col.id }}" class="bg-gray-700 p-2 rounded cursor-move flex items-center border border-gray-600 hover:bg-gray-600 group gap-3">
+                    <i class="fas fa-grip-vertical text-gray-500 cursor-move py-2 px-1"></i>
+                    <input type="text" value="{{ col.name }}" class="col-name-input w-full bg-gray-900 border border-gray-500 rounded px-3 py-1 text-white focus:border-blue-500 outline-none" placeholder="Tên cột...">
+                    <a href="/delete_column/{{ col.id }}" onclick="return confirm('CẢNH BÁO: Xóa là mất hết dữ liệu cột này nha. Chắc chưa?')" class="text-gray-500 hover:text-red-500 p-2" title="Xóa cột này">
+                        <i class="fas fa-trash-alt"></i>
+                    </a>
                 </li>
                 {% endfor %}
             </ul>
+
             <div class="flex justify-end gap-2 border-t border-gray-700 pt-4">
                 <button type="button" onclick="closeModal('sort-modal')" class="text-gray-400 px-3">Hủy</button>
-                <button type="button" onclick="saveOrder()" class="bg-blue-600 px-4 py-2 rounded text-white font-bold">Cập Nhật</button>
+                <button type="button" onclick="saveBatch()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded text-white font-bold shadow-lg transform transition active:scale-95">
+                    <i class="fas fa-save mr-2"></i>Lưu Thay Đổi
+                </button>
             </div>
         </div>
     </div>
@@ -208,14 +210,6 @@
         </div>
     </div>
 
-    <script id="json-rows" type="application/json">
-    {
-        {% for row in rows %}
-            "{{ row.id }}": {{ row.content | tojson | safe }}{% if not loop.last %}, {% endif %}
-        {% endfor %}
-    }
-    </script>
-
     <script>
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
@@ -228,23 +222,18 @@
             });
         }, 3000);
 
-        // --- 2. Đọc dữ liệu từ thẻ JSON ở trên ---
         let ROW_DATA_MAP = {};
         try {
-            const rawData = document.getElementById('json-rows').textContent;
-            ROW_DATA_MAP = JSON.parse(rawData);
+            const jsonString = document.getElementById('server-data-script').textContent;
+            ROW_DATA_MAP = JSON.parse(jsonString);
         } catch (e) {
             console.error("Lỗi đọc dữ liệu:", e);
         }
 
-        // --- HÀM SỬA DỮ LIỆU ---
         function handleEdit(id) {
-            const content = ROW_DATA_MAP[String(id)];
-            if (content) {
-                openEditModal(id, content);
-            } else {
-                alert("Không tìm thấy dữ liệu!");
-            }
+            const content = ROW_DATA_MAP[id];
+            if (content) openEditModal(id, content);
+            else alert("Không tìm thấy dữ liệu!");
         }
 
         function openEditModal(rowId = null, rowContent = null) {
@@ -259,7 +248,10 @@
                 idInput.value = rowId;
                 for (const [key, value] of Object.entries(rowContent)) {
                     let input = document.getElementById(`input_col_${key}`);
-                    if (input) input.value = value;
+                    if (input) {
+                        if (Array.isArray(value)) input.value = value.join('\n');
+                        else input.value = value;
+                    }
                 }
             } else {
                 title.innerText = "Thêm Dữ Liệu Mới";
@@ -270,29 +262,40 @@
 
         function openSortModal() { openModal('sort-modal'); }
         const list = document.getElementById('sortable-list');
-        if (list) {
-            new Sortable(list, { animation: 150, ghostClass: 'sortable-ghost', handle: '.cursor-move' });
-        }
+        if (list) { new Sortable(list, { animation: 150, ghostClass: 'sortable-ghost', handle: '.cursor-move' }); }
+        
+        async function saveBatch() {
+            const listItems = document.querySelectorAll('#sortable-list li');
+            const batchData = [];
+            listItems.forEach((item, index) => {
+                const id = item.getAttribute('data-id');
+                const nameInput = item.querySelector('.col-name-input');
+                batchData.push({
+                    id: id,
+                    name: nameInput.value.trim(),
+                    order: index
+                });
+            });
 
-        function moveItem(btn, direction) {
-            const li = btn.closest('li');
-            if (direction === -1 && li.previousElementSibling) li.parentNode.insertBefore(li, li.previousElementSibling);
-            else if (direction === 1 && li.nextElementSibling) li.parentNode.insertBefore(li.nextElementSibling, li);
-        }
+            if (batchData.length === 0) return;
 
-        async function saveOrder() {
-            const items = list.querySelectorAll('li');
-            const newOrder = Array.from(items).map(item => item.getAttribute('data-id'));
             try {
-                const res = await fetch('/reorder_columns', {
+                const res = await fetch('/batch_update_columns', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ order: newOrder })
+                    body: JSON.stringify({ columns: batchData })
                 });
                 const data = await res.json();
-                if(data.status === 'success') window.location.reload();
-                else alert('Lỗi: ' + data.message);
-            } catch(e) { alert('Lỗi mạng!'); }
+                
+                if(data.status === 'success') {
+                    window.location.reload(); 
+                } else {
+                    alert('Có lỗi xảy ra: ' + data.message);
+                }
+            } catch(e) { 
+                console.error(e);
+                alert('Lỗi mạng rồi anh hai ơi!'); 
+            }
         }
 
         function filterTable() {
@@ -301,7 +304,8 @@
             dataRows.forEach(row => {
                 const id = row.getAttribute('data-id');
                 const actionRow = document.getElementById(`action-row-${id}`);
-                if (row.innerText.toLowerCase().includes(filter)) {
+                const isMatch = row.innerText.toLowerCase().includes(filter);
+                if (isMatch) {
                     row.classList.remove('hidden');
                     if(actionRow) actionRow.classList.remove('hidden');
                 } else {
@@ -309,6 +313,7 @@
                     if(actionRow) actionRow.classList.add('hidden');
                 }
             });
+            setTimeout(syncRowHeights, 50);
         }
 
         function syncHover(id, isHover) {
@@ -318,6 +323,40 @@
                 else actionRow.classList.remove('bg-gray-700');
             }
         }
+
+        function syncRowHeights() {
+            const rows = document.querySelectorAll('.data-row');
+            rows.forEach(row => {
+                const id = row.getAttribute('data-id');
+                const actionRow = document.getElementById(`action-row-${id}`);
+                if (actionRow && !row.classList.contains('hidden')) {
+                    actionRow.style.height = row.offsetHeight + 'px';
+                }
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const rows = document.querySelectorAll('.data-row');
+            rows.forEach(row => {
+                row.addEventListener('mouseenter', function() {
+                    syncHover(this.getAttribute('data-id'), true);
+                });
+                row.addEventListener('mouseleave', function() {
+                    syncHover(this.getAttribute('data-id'), false);
+                });
+            });
+
+            const editBtns = document.querySelectorAll('.btn-edit');
+            editBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    handleEdit(this.getAttribute('data-id'));
+                });
+            });
+
+            syncRowHeights();
+        });
+
+        window.addEventListener('resize', syncRowHeights);
     </script>
 </body>
 </html>
