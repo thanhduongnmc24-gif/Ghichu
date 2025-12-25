@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang Quản Trị - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-200 font-sans min-h-screen">
+
+    <nav class="bg-gray-800 border-b border-gray-700 p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-user-shield text-2xl text-red-500"></i>
+                <h1 class="text-xl font-bold text-white uppercase">ADMIN CONTROL PANEL</h1>
+            </div>
+            <div class="flex gap-4 items-center">
+                <span class="text-sm font-bold text-red-400">Hello, BOSS ({{ current_user.username }})</span>
+                <button onclick="document.getElementById('setting-modal').classList.remove('hidden')" class="text-gray-400 hover:text-white" title="Đổi mật khẩu Admin">
+                    <i class="fas fa-key"></i>
+                </button>
+                <a href="/logout" class="text-gray-400 hover:text-white transition" title="Đăng xuất">
+                    <i class="fas fa-sign-out-alt text-xl"></i>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-6">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="p-3 mb-6 rounded shadow-lg text-white {{ 'bg-green-600' if category=='success' else 'bg-red-600' }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-gray-800 p-6 rounded border border-gray-700 shadow flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm uppercase">Tổng số User</p>
+                    <p class="text-3xl font-bold text-white">{{ stats.total_users }}</p>
+                </div>
+                <i class="fas fa-users text-4xl text-blue-500 opacity-50"></i>
+            </div>
+            <div class="bg-gray-800 p-6 rounded border border-gray-700 shadow flex items-center justify-between">
+                <div>
+                    <p class="text-gray-400 text-sm uppercase">Tổng số Dòng Dữ Liệu</p>
+                    <p class="text-3xl font-bold text-white">{{ stats.total_rows }}</p>
+                </div>
+                <i class="fas fa-database text-4xl text-green-500 opacity-50"></i>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 rounded border border-gray-700 shadow overflow-hidden">
+            <div class="p-4 border-b border-gray-700 bg-gray-750 flex justify-between items-center">
+                <h3 class="font-bold text-lg text-white">Quản Lý Tài Khoản</h3>
+            </div>
+            <table class="w-full text-left">
+                <thead class="bg-gray-700 text-gray-300 uppercase text-xs">
+                    <tr>
+                        <th class="p-4">ID</th>
+                        <th class="p-4">Tên Tài Khoản</th>
+                        <th class="p-4">Vai Trò</th>
+                        <th class="p-4 text-center">Hành Động</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-700">
+                    {% for user in users %}
+                    <tr class="hover:bg-gray-700/50 transition">
+                        <td class="p-4 text-gray-400">#{{ user.id }}</td>
+                        <td class="p-4 font-bold {{ 'text-red-400' if user.role == 'admin' else 'text-white' }}">
+                            {{ user.username }}
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 rounded text-xs font-bold {{ 'bg-red-900 text-red-200' if user.role == 'admin' else 'bg-blue-900 text-blue-200' }}">
+                                {{ user.role.upper() }}
+                            </span>
+                        </td>
+                        <td class="p-4 flex justify-center gap-3">
+                            {% if user.role != 'admin' %}
+                            <form action="/admin/reset_password/{{ user.id }}" method="POST" onsubmit="return confirm('Đặt lại mật khẩu của {{ user.username }} về 123456?')">
+                                <button type="submit" class="text-yellow-500 hover:text-yellow-300" title="Reset mật khẩu về 123456">
+                                    <i class="fas fa-sync-alt"></i> Reset Pass
+                                </button>
+                            </form>
+                            <span class="text-gray-600">|</span>
+                            <a href="/admin/delete_user/{{ user.id }}" onclick="return confirm('CẢNH BÁO: Xóa user {{ user.username }} sẽ MẤT HẾT DỮ LIỆU của họ. Chắc chắn?')" class="text-red-500 hover:text-red-300" title="Xóa tài khoản">
+                                <i class="fas fa-trash"></i> Xóa
+                            </a>
+                            {% else %}
+                            <span class="text-gray-600 italic text-xs">Admin (Không thể xóa)</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="setting-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600 shadow-2xl relative">
+            <button onclick="document.getElementById('setting-modal').classList.add('hidden')" class="absolute top-2 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+            <h2 class="text-xl font-bold mb-6 text-white border-b border-gray-700 pb-2">Đổi Mật Khẩu Admin</h2>
+            <form action="/change_password" method="POST">
+                <input type="password" name="new_password" required class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white mb-4" placeholder="Mật khẩu mới...">
+                <button type="submit" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded">Cập nhật ngay</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -26,9 +26,13 @@
                 <h1 class="text-xl font-bold text-white uppercase hidden md:block">Data Xưởng Thép</h1>
             </div>
             <div class="flex gap-4 items-center">
-                <button onclick="openModal('setting-modal')" class="text-gray-400 hover:text-white transition" title="Cài đặt">
-                    <i class="fas fa-cog text-xl"></i>
+                <button onclick="openModal('setting-modal')" class="flex items-center gap-2 text-gray-400 hover:text-white transition bg-gray-700 px-3 py-1 rounded" title="Cài đặt & Quản trị">
+                    <i class="fas fa-cog text-xl {{ 'text-red-500 animate-spin-slow' if current_user.role == 'admin' }}"></i>
+                    {% if current_user.role == 'admin' %}
+                        <span class="text-xs font-bold text-red-400 uppercase">Admin Panel</span>
+                    {% endif %}
                 </button>
+                
                 <span class="text-sm font-bold text-yellow-500">Hi, {{ current_user.username }}</span>
                 <a href="/logout" class="text-red-400 hover:text-red-300 transition" title="Đăng xuất">
                     <i class="fas fa-sign-out-alt text-xl"></i>
@@ -137,6 +141,71 @@
         {{ data_map | tojson | safe }}
     </script>
 
+    <div id="setting-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-6 rounded-lg border border-gray-600 shadow-2xl relative {{ 'w-[900px]' if current_user.role == 'admin' else 'w-96' }} max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('setting-modal')" class="absolute top-2 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+            
+            <h2 class="text-xl font-bold mb-6 text-white border-b border-gray-700 pb-2 flex items-center gap-2">
+                <i class="fas fa-cog"></i> Cài đặt tài khoản
+            </h2>
+
+            <form action="/change_password" method="POST" class="mb-8">
+                <label class="block text-sm text-gray-400 mb-1">Đổi mật khẩu mới</label>
+                <div class="flex gap-2">
+                    <input type="password" name="new_password" required class="flex-1 bg-gray-900 border border-gray-600 p-2 rounded text-white" placeholder="Mật khẩu mới...">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 rounded">Lưu</button>
+                </div>
+            </form>
+
+            {% if current_user.role == 'admin' %}
+            <div class="border-t border-gray-600 pt-6">
+                <h3 class="text-lg font-bold text-red-400 mb-4 uppercase flex items-center gap-2">
+                    <i class="fas fa-user-shield"></i> Quản Trị Hệ Thống (Admin Zone)
+                </h3>
+                
+                <table class="w-full text-left bg-gray-900 rounded overflow-hidden">
+                    <thead class="bg-gray-700 text-gray-300 text-xs uppercase">
+                        <tr>
+                            <th class="p-3">User</th>
+                            <th class="p-3">Role</th>
+                            <th class="p-3 text-center">Set Admin</th>
+                            <th class="p-3 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                        {% for user in all_users %}
+                        <tr class="hover:bg-gray-800">
+                            <td class="p-3 font-bold {{ 'text-red-400' if user.role=='admin' else 'text-white' }}">
+                                {{ user.username }} 
+                                {% if user.id == current_user.id %} (Me) {% endif %}
+                            </td>
+                            <td class="p-3 text-xs">{{ user.role.upper() }}</td>
+                            <td class="p-3 text-center">
+                                {% if user.id != current_user.id %}
+                                <a href="/admin/toggle_role/{{ user.id }}" 
+                                   class="text-xs px-2 py-1 rounded font-bold transition {{ 'bg-red-900 text-red-200 hover:bg-red-700' if user.role=='user' else 'bg-gray-600 text-gray-300 hover:bg-gray-500' }}">
+                                    {{ 'Make Admin' if user.role=='user' else 'Demote' }}
+                                </a>
+                                {% endif %}
+                            </td>
+                            <td class="p-3 flex justify-center gap-3">
+                                {% if user.id != current_user.id and user.role != 'admin' %}
+                                <form action="/admin/reset_password/{{ user.id }}" method="POST" onsubmit="return confirm('Reset pass về 123456?')">
+                                    <button type="submit" class="text-yellow-500 hover:text-yellow-300" title="Reset Pass 123456"><i class="fas fa-key"></i></button>
+                                </form>
+                                <a href="/admin/delete_user/{{ user.id }}" onclick="return confirm('Xóa user này và toàn bộ dữ liệu?')" class="text-red-500 hover:text-red-300" title="Delete"><i class="fas fa-trash"></i></a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
     <div id="col-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
         <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600 shadow-2xl">
             <h3 class="text-xl font-bold mb-4 text-purple-400">Thêm Cột Mới</h3>
@@ -176,7 +245,6 @@
         <div class="bg-gray-800 p-6 rounded-lg w-[500px] border border-gray-600 shadow-2xl">
             <h3 class="text-xl font-bold mb-2 text-blue-400">Quản Lý Cột</h3>
             <p class="text-xs text-gray-500 mb-4">Kéo thả để sắp xếp, nhập vào ô để đổi tên.</p>
-            
             <ul id="sortable-list" class="space-y-2 mb-6 max-h-[60vh] overflow-y-auto pr-2">
                 {% for col in columns %}
                 <li data-id="{{ col.id }}" class="bg-gray-700 p-2 rounded cursor-move flex items-center border border-gray-600 hover:bg-gray-600 group gap-3">
@@ -188,25 +256,12 @@
                 </li>
                 {% endfor %}
             </ul>
-
             <div class="flex justify-end gap-2 border-t border-gray-700 pt-4">
                 <button type="button" onclick="closeModal('sort-modal')" class="text-gray-400 px-3">Hủy</button>
                 <button type="button" onclick="saveBatch()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded text-white font-bold shadow-lg transform transition active:scale-95">
                     <i class="fas fa-save mr-2"></i>Lưu Thay Đổi
                 </button>
             </div>
-        </div>
-    </div>
-
-    <div id="setting-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
-        <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600 shadow-2xl relative">
-            <button onclick="closeModal('setting-modal')" class="absolute top-2 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
-            <h2 class="text-xl font-bold mb-6 text-white border-b border-gray-700 pb-2">Cài đặt tài khoản</h2>
-            <form action="/change_password" method="POST">
-                <label class="block text-sm text-gray-400 mb-1">Đổi mật khẩu mới</label>
-                <input type="password" name="new_password" required class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white mb-4" placeholder="Nhập mật khẩu mới...">
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded">Cập nhật</button>
-            </form>
         </div>
     </div>
 
@@ -276,9 +331,7 @@
                     order: index
                 });
             });
-
             if (batchData.length === 0) return;
-
             try {
                 const res = await fetch('/batch_update_columns', {
                     method: 'POST',
@@ -286,16 +339,9 @@
                     body: JSON.stringify({ columns: batchData })
                 });
                 const data = await res.json();
-                
-                if(data.status === 'success') {
-                    window.location.reload(); 
-                } else {
-                    alert('Có lỗi xảy ra: ' + data.message);
-                }
-            } catch(e) { 
-                console.error(e);
-                alert('Lỗi mạng rồi anh hai ơi!'); 
-            }
+                if(data.status === 'success') window.location.reload();
+                else alert('Có lỗi xảy ra: ' + data.message);
+            } catch(e) { console.error(e); alert('Lỗi mạng rồi anh hai ơi!'); }
         }
 
         function filterTable() {
@@ -338,24 +384,15 @@
         document.addEventListener("DOMContentLoaded", function() {
             const rows = document.querySelectorAll('.data-row');
             rows.forEach(row => {
-                row.addEventListener('mouseenter', function() {
-                    syncHover(this.getAttribute('data-id'), true);
-                });
-                row.addEventListener('mouseleave', function() {
-                    syncHover(this.getAttribute('data-id'), false);
-                });
+                row.addEventListener('mouseenter', function() { syncHover(this.getAttribute('data-id'), true); });
+                row.addEventListener('mouseleave', function() { syncHover(this.getAttribute('data-id'), false); });
             });
-
             const editBtns = document.querySelectorAll('.btn-edit');
             editBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    handleEdit(this.getAttribute('data-id'));
-                });
+                btn.addEventListener('click', function() { handleEdit(this.getAttribute('data-id')); });
             });
-
             syncRowHeights();
         });
-
         window.addEventListener('resize', syncRowHeights);
     </script>
 </body>
