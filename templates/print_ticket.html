@@ -3,31 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>In Phiếu #{{ row.id }}</title>
+    <title>In Phiếu {{ today }}</title>
     <style>
-        /* Reset lề trang */
         body { 
-            margin: 0; 
-            padding: 0; 
+            margin: 0; padding: 0; 
             font-family: Arial, Helvetica, sans-serif; 
             background: #fff;
-            font-size: 11px; /* Chữ nhỏ gọn */
+            font-size: 11px;
         }
-        
         .ticket-box {
-            /* Mở rộng chiều ngang lên 140mm để chứa đủ 2 cột */
             width: 140mm; 
-            
-            /* Căn lề góc trái */
-            margin-left: 5mm;
-            margin-top: 5mm;
-            
-            /* Viền */
+            margin-left: 5mm; margin-top: 5mm;
             border: 2px dashed #000;
             padding: 10px;
             box-sizing: border-box;
         }
-
         h3 { 
             text-align: center; 
             text-transform: uppercase; 
@@ -35,73 +25,43 @@
             font-size: 14px; 
             border-bottom: 2px solid #000;
             padding-bottom: 5px;
-            /* Tiêu đề nằm trọn vẹn phía trên */
             grid-column: span 2; 
         }
-
-        /* KHUNG CHỨA DẠNG LƯỚI (GRID) */
         .grid-container {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* Chia 2 cột bằng nhau */
-            column-gap: 15px; /* Khoảng cách giữa 2 cột lớn */
-            row-gap: 5px;     /* Khoảng cách giữa các dòng nhỏ */
+            grid-template-columns: 1fr 1fr;
+            column-gap: 15px; row-gap: 5px;
         }
-
         .info-item { 
-            display: flex; 
-            align-items: flex-start;
+            display: flex; align-items: flex-start;
             border-bottom: 1px dotted #ccc; 
             padding-bottom: 2px;
         }
-
         .label { 
-            font-weight: bold; 
-            width: 40%; /* Tên cột chiếm 40% bề ngang của 1 cột lớn */
+            font-weight: bold; width: 40%; 
             text-transform: uppercase; 
-            padding-right: 5px;
-            flex-shrink: 0; 
+            padding-right: 5px; flex-shrink: 0; 
         }
-
-        .value { 
-            width: 60%; 
-            font-weight: 500;
-            word-wrap: break-word;
-        }
-
+        .value { width: 60%; font-weight: 500; word-wrap: break-word; }
         .line-item { display: block; }
-
-        /* Nút in */
         .btn-print { 
-            position: fixed; 
-            top: 20px; 
-            left: 150mm; /* Nằm bên cạnh phiếu */
-            padding: 10px 20px; 
-            background: #6b21a8; 
-            color: white; 
-            border: none; 
-            cursor: pointer; 
-            font-size: 14px; 
-            border-radius: 4px;
-            font-weight: bold;
+            position: fixed; top: 20px; left: 150mm;
+            padding: 10px 20px; background: #6b21a8; color: white; 
+            border: none; cursor: pointer; font-size: 14px; 
+            border-radius: 4px; font-weight: bold;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
         }
-
         @media print {
             .btn-print { display: none; }
             body { margin: 0; padding: 0; }
-            .ticket-box { 
-                margin-left: 5mm; 
-                margin-top: 5mm; 
-                border: 2px solid #000; 
-            }
+            .ticket-box { margin-left: 5mm; margin-top: 5mm; border: 2px solid #000; }
             @page { margin: 0; size: auto; }
         }
     </style>
 </head>
 <body>
-
     <div class="ticket-box">
-        <h3>PHIẾU DỮ LIỆU (#{{ row.id }})</h3>
+        <h3>PHIẾU DỮ LIỆU - {{ today }}</h3>
         
         <div class="grid-container">
             {% for col in columns %}
@@ -109,7 +69,6 @@
                 <div class="label">{{ col.name }}</div>
                 <div class="value">
                     {% set cell_data = row.content.get(col.name, '') %}
-                    
                     {% if cell_data is iterable and cell_data is not string %}
                         {% for line in cell_data %}
                             <div class="line-item">- {{ line }}</div>
@@ -122,11 +81,7 @@
             {% endfor %}
         </div>
     </div>
-
     <button onclick="window.print()" class="btn-print">🖨️ IN NGAY</button>
-
-    <script>
-        window.onload = function() { window.print(); }
-    </script>
+    <script>window.onload = function() { window.print(); }</script>
 </body>
 </html>
