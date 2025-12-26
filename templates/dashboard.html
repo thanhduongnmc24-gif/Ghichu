@@ -39,20 +39,33 @@
                             <a href="/table/{{ table.id }}" class="flex-1 font-bold {{ 'text-yellow-500' if table.id == current_table.id else 'text-white' }}">
                                 {{ table.name }}
                             </a>
+                            
                             {% if current_user.role == 'admin' %}
                             <div class="flex gap-3 opacity-0 group-hover/item:opacity-100 transition duration-200">
-                                <button type="button" data-id="{{ table.id }}" data-name="{{ table.name }}" onclick="openEditTableModal(this)" class="text-blue-400 hover:text-white" title="Đổi tên"><i class="fas fa-pen"></i></button>
+                                <button type="button" 
+                                        data-id="{{ table.id }}" 
+                                        data-name="{{ table.name }}"
+                                        onclick="openEditTableModal(this)" 
+                                        class="text-blue-400 hover:text-white" title="Đổi tên">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                
                                 {% if all_tables|length > 1 %}
-                                <a href="/admin/delete_table/{{ table.id }}" onclick="return confirm('CẢNH BÁO: Mất hết dữ liệu trong mục này. Chắc chưa?')" class="text-red-500 hover:text-red-300" title="Xóa"><i class="fas fa-trash"></i></a>
+                                <a href="/admin/delete_table/{{ table.id }}" onclick="return confirm('CẢNH BÁO NGUY HIỂM:\nXóa mục này sẽ MẤT HẾT DỮ LIỆU của TẤT CẢ mọi người trong mục này.\n\nAnh chắc chưa?')" class="text-red-500 hover:text-red-300" title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </a>
                                 {% endif %}
                             </div>
                             {% endif %}
                         </div>
                         {% endfor %}
                     </div>
+
                     {% if current_user.role == 'admin' %}
                     <div class="p-2 bg-gray-900 border-t border-gray-600">
-                        <button onclick="openModal('add-table-modal')" class="w-full bg-green-700 hover:bg-green-600 text-white py-2 rounded font-bold text-sm transition"><i class="fas fa-plus mr-2"></i> THÊM MỤC MỚI</button>
+                        <button onclick="openModal('add-table-modal')" class="w-full bg-green-700 hover:bg-green-600 text-white py-2 rounded font-bold text-sm transition">
+                            <i class="fas fa-plus mr-2"></i> THÊM MỤC MỚI
+                        </button>
                     </div>
                     {% endif %}
                 </div>
@@ -64,7 +77,9 @@
                     {% if current_user.role == 'admin' %} <span class="text-xs font-bold text-red-400 uppercase">Admin</span> {% endif %}
                 </button>
                 <span class="text-sm font-bold text-yellow-500 select-none">Hi, {{ current_user.username }}</span>
-                <a href="/logout" class="text-red-400 hover:text-red-300 transition" title="Đăng xuất"><i class="fas fa-sign-out-alt text-xl"></i></a>
+                <a href="/logout" class="text-red-400 hover:text-red-300 transition" title="Đăng xuất">
+                    <i class="fas fa-sign-out-alt text-xl"></i>
+                </a>
             </div>
         </div>
     </nav>
@@ -92,9 +107,10 @@
             </div>
 
             <div class="flex gap-2 flex-wrap justify-end z-10">
-                <a href="/export_excel/{{ current_table.id }}" class="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded shadow transition flex items-center gap-2 font-bold">
+                <a href="/export_excel/{{ current_table.id }}" class="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded shadow transition flex items-center gap-2 font-bold" title="Tải file Excel">
                     <i class="fas fa-file-excel"></i> <span class="hidden sm:inline">Xuất Excel</span>
                 </a>
+
                 <button onclick="openSortModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded shadow transition flex items-center gap-2">
                     <i class="fas fa-tasks"></i> <span class="hidden sm:inline">Cột</span>
                 </button>
@@ -130,7 +146,9 @@
                             {% endfor %}
                         </tr>
                         {% else %}
-                        <tr class="h-14"><td colspan="100%" class="p-4 text-center text-gray-500 italic">Chưa có dữ liệu.</td></tr>
+                        <tr class="h-14"><td colspan="100%" class="p-4 text-center text-gray-500 italic">
+                            Chưa có dữ liệu nào. Bấm nút <b>+ DATA</b> để thêm nhé!
+                        </td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -164,7 +182,7 @@
             <h3 class="text-xl font-bold mb-4 text-purple-400">Thêm Cột Mới</h3>
             <form action="/add_column" method="POST">
                 <input type="hidden" name="table_id" value="{{ current_table.id }}">
-                <input type="text" name="col_name" required class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white mb-4" placeholder="Tên cột...">
+                <input type="text" name="col_name" required class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white mb-4" placeholder="Tên cột (VD: Độ cứng)...">
                 <div class="flex justify-end gap-2">
                     <button type="button" onclick="closeModal('col-modal')" class="text-gray-400 px-3 hover:text-white">Hủy</button>
                     <button type="submit" class="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded text-white font-bold transition">Lưu</button>
@@ -176,6 +194,7 @@
     <div id="row-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
         <div class="bg-gray-800 p-6 rounded-lg w-[700px] max-h-[90vh] overflow-y-auto border border-gray-600 shadow-2xl">
             <h3 id="modal-title" class="text-xl font-bold mb-2 text-green-400">Nhập Dữ Liệu</h3>
+            <p class="text-xs text-gray-500 mb-6 italic">* Mẹo: Bấm Enter để xuống dòng trong 1 ô.</p>
             <form action="/save_row" method="POST" id="row-form">
                 <input type="hidden" name="row_id" id="row_id_input">
                 <input type="hidden" name="table_id" value="{{ current_table.id }}">
@@ -198,17 +217,24 @@
     <div id="sort-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
         <div class="bg-gray-800 p-6 rounded-lg w-[500px] border border-gray-600 shadow-2xl">
             <h3 class="text-xl font-bold mb-2 text-blue-400">Quản Lý Cột</h3>
+            <p class="text-xs text-gray-500 mb-4">Kéo thả để sắp xếp. Bấm thùng rác để xóa (Bấm Lưu mới chính thức xóa).</p>
+            
             <ul id="sortable-list" class="space-y-2 mb-6 max-h-[60vh] overflow-y-auto pr-2">
                 {% for col in columns %}
                 <li data-id="{{ col.id }}" class="bg-gray-700 p-2 rounded cursor-move flex items-center border border-gray-600 hover:bg-gray-600 group gap-3">
                     <i class="fas fa-grip-vertical text-gray-500 cursor-move py-2 px-1"></i>
+                    
                     <input type="text" value="{{ col.name }}" class="col-name-input w-full bg-gray-900 border border-gray-500 rounded px-3 py-1 text-white focus:border-blue-500 outline-none">
-                    <a href="/delete_column/{{ col.id }}" onclick="return confirm('Xóa là mất hết dữ liệu cột này nha. Chắc chưa?')" class="text-gray-500 hover:text-red-500 p-2"><i class="fas fa-trash-alt"></i></a>
+                    
+                    <button type="button" onclick="removeColItem(this)" class="text-gray-500 hover:text-red-500 p-2 transition" title="Xóa cột này">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </li>
                 {% endfor %}
             </ul>
+            
             <div class="flex justify-end gap-2 border-t border-gray-700 pt-4">
-                <button type="button" onclick="closeModal('sort-modal')" class="text-gray-400 px-3 hover:text-white">Hủy</button>
+                <button type="button" onclick="closeModal('sort-modal'); window.location.reload();" class="text-gray-400 px-3 hover:text-white">Hủy</button>
                 <button type="button" onclick="saveBatch()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded text-white font-bold transition">Lưu Thay Đổi</button>
             </div>
         </div>
@@ -220,7 +246,6 @@
             <h2 class="text-xl font-bold mb-6 text-white border-b border-gray-700 pb-2 flex items-center gap-2">
                 <i class="fas fa-cog"></i> Cài đặt & Sao lưu
             </h2>
-            
             <form action="/change_password" method="POST" class="mb-8">
                 <label class="block text-sm text-gray-400 mb-1">Đổi mật khẩu mới</label>
                 <div class="flex gap-2">
@@ -228,18 +253,18 @@
                     <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 rounded transition">Lưu</button>
                 </div>
             </form>
-
+            
             <div class="border-t border-gray-600 pt-6 mb-8">
                 <h3 class="text-lg font-bold text-green-400 mb-4 uppercase flex items-center gap-2">
                     <i class="fas fa-database"></i> Sao lưu dữ liệu (JSON)
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-gray-700 p-4 rounded border border-gray-600">
-                        <p class="text-sm text-gray-300 mb-3">Tải toàn bộ dữ liệu về máy.</p>
+                        <p class="text-sm text-gray-300 mb-3">Tải toàn bộ dữ liệu (tất cả bảng) về máy.</p>
                         <a href="/backup_json" class="block w-full text-center bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded transition"><i class="fas fa-download mr-2"></i> Tải Backup (.json)</a>
                     </div>
                     <div class="bg-gray-700 p-4 rounded border border-gray-600">
-                        <p class="text-sm text-gray-300 mb-3">Nạp lại dữ liệu (Thêm mới).</p>
+                        <p class="text-sm text-gray-300 mb-3">Nạp lại dữ liệu (chỉ thêm mới, không trùng).</p>
                         <form action="/restore_json" method="POST" enctype="multipart/form-data" class="flex flex-col gap-2">
                             <input type="file" name="file" accept=".json" required class="text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-gray-600 file:text-white hover:file:bg-gray-500">
                             <button type="submit" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 rounded transition"><i class="fas fa-upload mr-2"></i> Khôi phục</button>
@@ -247,13 +272,15 @@
                     </div>
                 </div>
             </div>
-            
+
             {% if current_user.role == 'admin' %}
             <div class="border-t border-gray-600 pt-6">
                 <h3 class="text-lg font-bold text-red-400 mb-4 uppercase flex items-center gap-2"><i class="fas fa-user-shield"></i> Quản Trị Viên</h3>
                 <div class="overflow-x-auto rounded border border-gray-700">
                     <table class="w-full text-left bg-gray-900">
-                        <thead class="bg-gray-700 text-gray-300 text-xs uppercase"><tr><th class="p-3">User</th><th class="p-3">Role</th><th class="p-3 text-center">Action</th></tr></thead>
+                        <thead class="bg-gray-700 text-gray-300 text-xs uppercase">
+                            <tr><th class="p-3">User</th><th class="p-3">Role</th><th class="p-3 text-center">Action</th></tr>
+                        </thead>
                         <tbody class="divide-y divide-gray-700">
                             {% for user in all_users %}
                             <tr class="hover:bg-gray-800">
@@ -262,8 +289,10 @@
                                 <td class="p-3 flex justify-center gap-2">
                                     {% if user.id != current_user.id %}
                                     <a href="/admin/toggle_role/{{ user.id }}" class="text-xs px-2 py-1 rounded font-bold border border-gray-600 {{ 'bg-red-900 text-red-200' if user.role=='user' else 'bg-gray-600 text-gray-300' }}">{{ 'Make Admin' if user.role=='user' else 'Demote' }}</a>
-                                    <form action="/admin/reset_password/{{ user.id }}" method="POST" onsubmit="return confirm('Reset pass?')" class="inline"><button class="text-yellow-500 px-2"><i class="fas fa-key"></i></button></form>
-                                    <a href="/admin/delete_user/{{ user.id }}" onclick="return confirm('Xóa user?')" class="text-red-500 px-2"><i class="fas fa-trash"></i></a>
+                                    <form action="/admin/reset_password/{{ user.id }}" method="POST" onsubmit="return confirm('Reset pass về 123456?')" class="inline">
+                                        <button class="text-yellow-500 hover:text-yellow-300 px-2" title="Reset Pass"><i class="fas fa-key"></i></button>
+                                    </form>
+                                    <a href="/admin/delete_user/{{ user.id }}" onclick="return confirm('Xóa user này?')" class="text-red-500 hover:text-red-300 px-2"><i class="fas fa-trash"></i></a>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -280,7 +309,7 @@
         <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600 shadow-2xl">
             <h3 class="text-xl font-bold mb-4 text-green-400">Tạo Mục Mới</h3>
             <form action="/admin/add_table" method="POST">
-                <label class="block text-sm text-gray-400 mb-1">Tên mục</label>
+                <label class="block text-sm text-gray-400 mb-1">Tên mục (Ví dụ: Kho A, Nhân sự...)</label>
                 <input type="text" name="table_name" required class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white mb-4">
                 <div class="flex justify-end gap-2">
                     <button type="button" onclick="closeModal('add-table-modal')" class="text-gray-400 px-3 hover:text-white">Hủy</button>
@@ -306,20 +335,21 @@
     </div>
 
     <script>
-        // Data Load
+        // --- DATA LOAD ---
         let ROW_DATA_MAP = {};
         try { 
             const scriptTag = document.getElementById('server-data-script');
             if(scriptTag) ROW_DATA_MAP = JSON.parse(scriptTag.textContent); 
-        } catch (e) { }
+        } catch (e) { console.error("Lỗi parse data:", e); }
 
-        // Filter Function (Tại chỗ)
+        // --- FILTER FUNCTION (Client-Side Instant Search) ---
         function filterTable() {
             const filter = document.getElementById("search-box").value.toLowerCase();
             document.querySelectorAll('.data-row').forEach(row => {
                 const id = row.getAttribute('data-id');
                 const actionRow = document.getElementById(`action-row-${id}`);
                 const isMatch = row.innerText.toLowerCase().includes(filter);
+                
                 if (isMatch) {
                     row.classList.remove('hidden');
                     if (actionRow) actionRow.classList.remove('hidden');
@@ -331,22 +361,38 @@
             setTimeout(syncRowHeights, 50);
         }
 
-        // Modal Logic
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        // --- MODAL FUNCTIONS ---
+        function openModal(id) { 
+            const el = document.getElementById(id);
+            if(el) el.classList.remove('hidden');
+        }
+        function closeModal(id) { 
+            const el = document.getElementById(id);
+            if(el) el.classList.add('hidden');
+        }
+        
+        // Mở Modal Sửa Tên Bảng
         function openEditTableModal(btn) {
-            document.getElementById('edit-table-id').value = btn.getAttribute('data-id');
-            document.getElementById('edit-table-name').value = btn.getAttribute('data-name');
+            const id = btn.getAttribute('data-id');
+            const name = btn.getAttribute('data-name');
+            document.getElementById('edit-table-id').value = id;
+            document.getElementById('edit-table-name').value = name;
             openModal('edit-table-modal');
         }
 
-        // Flash msg
-        setTimeout(function() { document.querySelectorAll('.flash-msg').forEach(alert => { alert.classList.add('fade-out'); setTimeout(() => alert.remove(), 500); }); }, 3000);
+        // --- FLASH MESSAGE ---
+        setTimeout(function() {
+            document.querySelectorAll('.flash-msg').forEach(alert => {
+                alert.classList.add('fade-out');
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 3000);
 
-        // Edit Row
+        // --- EDIT ROW ---
         function handleEdit(id) {
             const content = ROW_DATA_MAP[id];
             if (content) openEditModal(id, content);
+            else alert('Dữ liệu không tìm thấy!');
         }
 
         function openEditModal(rowId = null, rowContent = null) {
@@ -354,6 +400,7 @@
             const idInput = document.getElementById('row_id_input');
             const form = document.getElementById('row-form');
             form.reset();
+            
             if (rowId) {
                 document.getElementById('modal-title').innerText = "Sửa Dữ Liệu";
                 idInput.value = rowId;
@@ -368,31 +415,47 @@
             openModal('row-modal');
         }
 
-        // Sort Column
+        // --- SORT & DELETE COLUMNS ---
         function openSortModal() { openModal('sort-modal'); }
         const list = document.getElementById('sortable-list');
         if (list) { new Sortable(list, { animation: 150, ghostClass: 'sortable-ghost', handle: '.cursor-move' }); }
         
+        // Hàm xóa giao diện (Mới)
+        function removeColItem(btn) {
+            if (confirm('Xóa cột này? (Bấm LƯU mới chính thức xóa)')) {
+                btn.closest('li').remove();
+            }
+        }
+
+        // Hàm Lưu Batch (Gửi table_id)
         async function saveBatch() {
             const listItems = document.querySelectorAll('#sortable-list li');
             const batchData = [];
             listItems.forEach((item, index) => {
                 const nameInput = item.querySelector('.col-name-input');
-                batchData.push({ id: item.getAttribute('data-id'), name: nameInput.value.trim(), order: index });
+                batchData.push({ 
+                    id: item.getAttribute('data-id'), 
+                    name: nameInput.value.trim(), 
+                    order: index 
+                });
             });
-            if (batchData.length === 0) return;
+            
             try {
                 const res = await fetch('/batch_update_columns', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ columns: batchData })
+                    body: JSON.stringify({ 
+                        table_id: "{{ current_table.id }}", 
+                        columns: batchData 
+                    })
                 });
                 const data = await res.json();
                 if(data.status === 'success') window.location.reload();
-            } catch(e) { alert('Lỗi mạng!'); }
+                else alert('Lỗi: ' + data.message);
+            } catch(e) { alert('Lỗi kết nối!'); }
         }
 
-        // Sync Height
+        // --- UI SYNC ---
         function syncRowHeights() {
             document.querySelectorAll('.data-row').forEach(row => {
                 const id = row.getAttribute('data-id');
@@ -414,10 +477,6 @@
             syncRowHeights();
         });
         window.addEventListener('resize', syncRowHeights);
-    </script>
-    
-    <script id="server-data-script" type="text/plain">
-        {{ data_map | tojson | safe }}
     </script>
 </body>
 </html>

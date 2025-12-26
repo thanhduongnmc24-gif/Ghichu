@@ -380,34 +380,65 @@ def save_row():
         flash('Đã thêm dòng!', 'success')
     return redirect(url_for('index', table_id=table_id))
 
+# --- SỬA HÀM NÀY TRONG APP.PY ---
 @app.route('/batch_update_columns', methods=['POST'])
 @login_required
 def batch_update_columns():
     try:
-        data = request.json.get('columns', [])
-        if not data: return jsonify({'status': 'success'})
-        first_col = TableColumn.query.get(data[0]['id'])
-        current_table_id = first_col.table_id
-        my_rows = DataRow.query.filter_by(created_by=current_user.id, table_id=current_table_id).all()
-        for item in data:
-            col = TableColumn.query.get(item.get('id'))
+        req_data = request.json
+        columns_data = req_data.get('columns', [])
+        table_id = req_data.get('table_id') # Lấy ID bảng để đối chiếu
+
+        if not table_id:
+             return jsonify({'status': 'error', 'message': 'Thiếu ID bảng!'})
+
+        # 1. Lấy tất cả cột hiện có trong Database của bảng này
+        current_db_columns = TableColumn.query.filter_by(
+            user_id=current_user.id, 
+            table_id=table_id
+        ).all()
+
+        # 2. Tạo danh sách các ID được gửi lên (những cột còn giữ lại)
+        submitted_ids = [int(item['id']) for item in columns_data]
+
+        # 3. XÓA CỘT: Cột nào có trong DB mà không có trong danh sách gửi lên -> Xóa
+        for db_col in current_db_columns:
+            if db_col.id not in submitted_ids:
+                db.session.delete(db_col)
+
+        # 4. CẬP NHẬT: Tên và Thứ tự cho các cột còn lại
+        my_rows = DataRow.query.filter_by(created_by=current_user.id, table_id=table_id).all()
+        
+        for item in columns_data:
+            col_id = int(item.get('id'))
+            new_name = item.get('name')
+            new_order = item.get('order')
+
+            col = TableColumn.query.get(col_id)
             if col and col.user_id == current_user.id:
-                new_name = item.get('name')
+                # Nếu đổi tên cột thì cập nhật luôn dữ liệu JSON
                 if col.name != new_name:
-                    existing = TableColumn.query.filter_by(name=new_name, user_id=current_user.id, table_id=current_table_id).filter(TableColumn.id != col.id).first()
-                    if existing: return jsonify({'status': 'error', 'message': f'Tên {new_name} bị trùng!'})
+                    # Check trùng tên
+                    existing = TableColumn.query.filter_by(name=new_name, user_id=current_user.id, table_id=table_id).filter(TableColumn.id != col_id).first()
+                    if existing: return jsonify({'status': 'error', 'message': f'Tên "{new_name}" bị trùng!'})
+                    
                     old_name = col.name
                     col.name = new_name
+                    # Cập nhật key trong JSON data
                     for row in my_rows:
                         if row.content and old_name in row.content:
                             updated = dict(row.content)
                             updated[new_name] = updated.pop(old_name)
                             row.content = updated
-                col.order_index = item.get('order')
+                
+                col.order_index = new_order
+
         db.session.commit()
         return jsonify({'status': 'success'})
-    except Exception as e: return jsonify({'status': 'error', 'message': str(e)})
 
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+    
 @app.route('/delete_row/<int:id>')
 @login_required
 def delete_row(id):
