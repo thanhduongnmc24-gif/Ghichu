@@ -15,7 +15,6 @@
         ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
         .multi-line-cell div { padding: 4px 0; border-bottom: 1px solid rgba(75, 85, 99, 0.4); }
         .multi-line-cell div:last-child { border-bottom: none; }
-        /* Style cho Dropdown Menu */
         .dropdown:hover .dropdown-menu { display: block; }
     </style>
 </head>
@@ -25,39 +24,35 @@
         <div class="container mx-auto flex justify-between items-center">
             
             <div class="relative dropdown group z-50">
-                <div class="flex items-center gap-3 cursor-pointer py-2">
+                <div class="flex items-center gap-3 cursor-pointer py-2 hover:opacity-80 transition">
                     <i class="fas fa-industry text-2xl text-yellow-500"></i>
-                    <h1 class="text-xl font-bold text-white uppercase flex items-center gap-2">
+                    <h1 class="text-xl font-bold text-white uppercase flex items-center gap-2 select-none">
                         {{ current_table.name }}
                         <i class="fas fa-chevron-down text-sm text-gray-400"></i>
                     </h1>
                 </div>
                 
-                <div class="dropdown-menu hidden absolute top-full left-0 bg-gray-800 border border-gray-600 rounded shadow-xl w-72 pt-2">
+                <div class="dropdown-menu hidden absolute top-full left-0 bg-gray-800 border border-gray-600 rounded shadow-xl w-80 pt-2 z-50">
                     <div class="max-h-[60vh] overflow-y-auto">
                         {% for table in all_tables %}
-                        <div class="flex items-center justify-between hover:bg-gray-700 px-4 py-3 border-b border-gray-700/50 group/item">
+                        <div class="flex items-center justify-between hover:bg-gray-700 px-4 py-3 border-b border-gray-700/50 group/item transition">
                             <a href="/table/{{ table.id }}" class="flex-1 font-bold {{ 'text-yellow-500' if table.id == current_table.id else 'text-white' }}">
                                 {{ table.name }}
                             </a>
-                            
                             {% if current_user.role == 'admin' %}
-                            <div class="flex gap-2 opacity-0 group-hover/item:opacity-100 transition">
-                                <button onclick="openEditTableModal('{{ table.id }}', '{{ table.name }}')" class="text-blue-400 hover:text-white" title="Đổi tên"><i class="fas fa-pen"></i></button>
+                            <div class="flex gap-3 opacity-0 group-hover/item:opacity-100 transition duration-200">
+                                <button type="button" data-id="{{ table.id }}" data-name="{{ table.name }}" onclick="openEditTableModal(this)" class="text-blue-400 hover:text-white" title="Đổi tên"><i class="fas fa-pen"></i></button>
                                 {% if all_tables|length > 1 %}
-                                <a href="/admin/delete_table/{{ table.id }}" onclick="return confirm('CẢNH BÁO: Xóa mục này sẽ MẤT HẾT DỮ LIỆU của TẤT CẢ TÀI KHOẢN trong mục này. Chắc chưa?')" class="text-red-500 hover:text-white" title="Xóa"><i class="fas fa-trash"></i></a>
+                                <a href="/admin/delete_table/{{ table.id }}" onclick="return confirm('CẢNH BÁO: Mất hết dữ liệu trong mục này. Chắc chưa?')" class="text-red-500 hover:text-red-300" title="Xóa"><i class="fas fa-trash"></i></a>
                                 {% endif %}
                             </div>
                             {% endif %}
                         </div>
                         {% endfor %}
                     </div>
-
                     {% if current_user.role == 'admin' %}
                     <div class="p-2 bg-gray-900 border-t border-gray-600">
-                        <button onclick="openModal('add-table-modal')" class="w-full bg-green-700 hover:bg-green-600 text-white py-2 rounded font-bold text-sm">
-                            <i class="fas fa-plus"></i> THÊM MỤC MỚI
-                        </button>
+                        <button onclick="openModal('add-table-modal')" class="w-full bg-green-700 hover:bg-green-600 text-white py-2 rounded font-bold text-sm transition"><i class="fas fa-plus mr-2"></i> THÊM MỤC MỚI</button>
                     </div>
                     {% endif %}
                 </div>
@@ -68,7 +63,7 @@
                     <i class="fas fa-cog text-xl {{ 'text-red-500 animate-spin-slow' if current_user.role == 'admin' }}"></i>
                     {% if current_user.role == 'admin' %} <span class="text-xs font-bold text-red-400 uppercase">Admin</span> {% endif %}
                 </button>
-                <span class="text-sm font-bold text-yellow-500">Hi, {{ current_user.username }}</span>
+                <span class="text-sm font-bold text-yellow-500 select-none">Hi, {{ current_user.username }}</span>
                 <a href="/logout" class="text-red-400 hover:text-red-300 transition" title="Đăng xuất"><i class="fas fa-sign-out-alt text-xl"></i></a>
             </div>
         </div>
@@ -81,7 +76,7 @@
                 {% for category, message in messages %}
                 <div class="flash-msg p-3 mb-4 rounded shadow-lg flex justify-between items-center {{ 'bg-green-600 text-white' if category=='success' else 'bg-red-600 text-white' }}">
                     <span>{{ message }}</span>
-                    <button onclick="this.parentElement.remove()" class="text-white hover:text-gray-200">&times;</button>
+                    <button onclick="this.parentElement.remove()" class="text-white hover:text-gray-200 text-xl font-bold">&times;</button>
                 </div>
                 {% endfor %}
             {% endif %}
@@ -89,27 +84,30 @@
         </div>
 
         <div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
-            <div class="relative w-full md:w-1/3">
+            <div class="relative w-full md:w-1/3 z-10">
                 <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                <input type="text" id="search-box" onkeyup="filterTable()" 
-                       class="w-full bg-gray-800 border border-gray-600 rounded-full py-2 pl-10 pr-4 text-white focus:ring-blue-500 outline-none" 
-                       placeholder="Tìm trong {{ current_table.name }}...">
+                <input type="text" id="search-box" onkeyup="filterTable()"
+                       class="w-full bg-gray-800 border border-gray-600 rounded-full py-2 pl-10 pr-4 text-white focus:ring-blue-500 outline-none shadow-sm" 
+                       placeholder="Tìm nhanh trong bảng này...">
             </div>
 
-            <div class="flex gap-2">
+            <div class="flex gap-2 flex-wrap justify-end z-10">
+                <a href="/export_excel/{{ current_table.id }}" class="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded shadow transition flex items-center gap-2 font-bold">
+                    <i class="fas fa-file-excel"></i> <span class="hidden sm:inline">Xuất Excel</span>
+                </a>
                 <button onclick="openSortModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded shadow transition flex items-center gap-2">
-                    <i class="fas fa-tasks"></i> Quản lý Cột
+                    <i class="fas fa-tasks"></i> <span class="hidden sm:inline">Cột</span>
                 </button>
                 <button onclick="openModal('col-modal')" class="bg-purple-700 hover:bg-purple-600 text-white px-4 py-2 rounded shadow transition flex items-center gap-2">
-                    <i class="fas fa-columns"></i> + Cột
+                    <i class="fas fa-columns"></i> +Cột
                 </button>
                 <button onclick="openEditModal()" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded shadow font-bold transition flex items-center gap-2">
-                    <i class="fas fa-plus"></i> THÊM DỮ LIỆU
+                    <i class="fas fa-plus"></i> DATA
                 </button>
             </div>
         </div>
 
-        <div class="flex flex-row border border-gray-700 rounded-lg overflow-hidden bg-gray-800 shadow-2xl">
+        <div class="flex flex-row border border-gray-700 rounded-lg overflow-hidden bg-gray-800 shadow-2xl relative z-0">
             <div class="flex-1 overflow-x-auto relative">
                 <table class="w-full text-left border-collapse">
                     <thead class="bg-gray-700 text-gray-300 text-sm uppercase sticky top-0 z-10">
@@ -132,7 +130,7 @@
                             {% endfor %}
                         </tr>
                         {% else %}
-                        <tr class="h-14"><td colspan="100%" class="p-4 text-center text-gray-500">Chưa có dữ liệu trong mục này.</td></tr>
+                        <tr class="h-14"><td colspan="100%" class="p-4 text-center text-gray-500 italic">Chưa có dữ liệu.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -147,9 +145,9 @@
                         {% for row in rows %}
                         <tr id="action-row-{{ row.id }}" class="hover:bg-gray-700/50 transition border-b border-gray-700/50 bg-gray-800">
                             <td class="p-3 flex justify-center items-center gap-3 h-full">
-                                <button class="btn-edit text-blue-400 hover:text-blue-200 transition transform hover:scale-125" data-id="{{ row.id }}" title="Sửa"><i class="fas fa-pen"></i></button>
-                                <a href="/print_row/{{ row.id }}" target="_blank" class="text-purple-400 hover:text-purple-200 transition transform hover:scale-125" title="In phiếu"><i class="fas fa-print"></i></a>
-                                <a href="/delete_row/{{ row.id }}" onclick="return confirm('Xóa dòng này?')" class="text-gray-500 hover:text-red-500 transition transform hover:scale-125" title="Xóa"><i class="fas fa-trash"></i></a>
+                                <button class="btn-edit text-blue-400 hover:text-blue-200 transition transform hover:scale-110" data-id="{{ row.id }}" title="Sửa"><i class="fas fa-pen"></i></button>
+                                <a href="/print_row/{{ row.id }}" target="_blank" class="text-purple-400 hover:text-purple-200 transition transform hover:scale-110" title="In phiếu"><i class="fas fa-print"></i></a>
+                                <a href="/delete_row/{{ row.id }}" onclick="return confirm('Xóa dòng này?')" class="text-gray-500 hover:text-red-500 transition transform hover:scale-110" title="Xóa"><i class="fas fa-trash"></i></a>
                             </td>
                         </tr>
                         {% else %}
@@ -159,21 +157,17 @@
                 </table>
             </div>
         </div>
-    </div>
-
-    <script id="server-data-script" type="text/plain">
-        {{ data_map | tojson | safe }}
-    </script>
+        </div>
 
     <div id="col-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
         <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600 shadow-2xl">
-            <h3 class="text-xl font-bold mb-4 text-purple-400">Thêm Cột Cho "{{ current_table.name }}"</h3>
+            <h3 class="text-xl font-bold mb-4 text-purple-400">Thêm Cột Mới</h3>
             <form action="/add_column" method="POST">
                 <input type="hidden" name="table_id" value="{{ current_table.id }}">
                 <input type="text" name="col_name" required class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white mb-4" placeholder="Tên cột...">
                 <div class="flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('col-modal')" class="text-gray-400 px-3">Hủy</button>
-                    <button type="submit" class="bg-purple-600 px-4 py-2 rounded text-white">Lưu</button>
+                    <button type="button" onclick="closeModal('col-modal')" class="text-gray-400 px-3 hover:text-white">Hủy</button>
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded text-white font-bold transition">Lưu</button>
                 </div>
             </form>
         </div>
@@ -194,10 +188,68 @@
                     {% endfor %}
                 </div>
                 <div class="flex justify-end gap-3 mt-6 border-t border-gray-700 pt-4">
-                    <button type="button" onclick="closeModal('row-modal')" class="text-gray-400 px-3">Hủy</button>
-                    <button type="submit" class="bg-green-600 px-6 py-2 rounded font-bold text-white">Lưu Dữ Liệu</button>
+                    <button type="button" onclick="closeModal('row-modal')" class="text-gray-400 px-3 hover:text-white">Hủy</button>
+                    <button type="submit" class="bg-green-600 hover:bg-green-500 px-6 py-2 rounded font-bold text-white transition">Lưu Dữ Liệu</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div id="sort-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-6 rounded-lg w-[500px] border border-gray-600 shadow-2xl">
+            <h3 class="text-xl font-bold mb-2 text-blue-400">Quản Lý Cột</h3>
+            <ul id="sortable-list" class="space-y-2 mb-6 max-h-[60vh] overflow-y-auto pr-2">
+                {% for col in columns %}
+                <li data-id="{{ col.id }}" class="bg-gray-700 p-2 rounded cursor-move flex items-center border border-gray-600 hover:bg-gray-600 group gap-3">
+                    <i class="fas fa-grip-vertical text-gray-500 cursor-move py-2 px-1"></i>
+                    <input type="text" value="{{ col.name }}" class="col-name-input w-full bg-gray-900 border border-gray-500 rounded px-3 py-1 text-white focus:border-blue-500 outline-none">
+                    <a href="/delete_column/{{ col.id }}" onclick="return confirm('Xóa là mất hết dữ liệu cột này nha. Chắc chưa?')" class="text-gray-500 hover:text-red-500 p-2"><i class="fas fa-trash-alt"></i></a>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="flex justify-end gap-2 border-t border-gray-700 pt-4">
+                <button type="button" onclick="closeModal('sort-modal')" class="text-gray-400 px-3 hover:text-white">Hủy</button>
+                <button type="button" onclick="saveBatch()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded text-white font-bold transition">Lưu Thay Đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="setting-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-6 rounded-lg border border-gray-600 shadow-2xl relative {{ 'w-[900px]' if current_user.role == 'admin' else 'w-96' }} max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('setting-modal')" class="absolute top-2 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+            <h2 class="text-xl font-bold mb-6 text-white border-b border-gray-700 pb-2 flex items-center gap-2"><i class="fas fa-cog"></i> Cài đặt tài khoản</h2>
+            <form action="/change_password" method="POST" class="mb-8">
+                <label class="block text-sm text-gray-400 mb-1">Đổi mật khẩu mới</label>
+                <div class="flex gap-2">
+                    <input type="password" name="new_password" required class="flex-1 bg-gray-900 border border-gray-600 p-2 rounded text-white" placeholder="Mật khẩu mới...">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 rounded transition">Lưu</button>
+                </div>
+            </form>
+            {% if current_user.role == 'admin' %}
+            <div class="border-t border-gray-600 pt-6">
+                <h3 class="text-lg font-bold text-red-400 mb-4 uppercase flex items-center gap-2"><i class="fas fa-user-shield"></i> Quản Trị Viên</h3>
+                <div class="overflow-x-auto rounded border border-gray-700">
+                    <table class="w-full text-left bg-gray-900">
+                        <thead class="bg-gray-700 text-gray-300 text-xs uppercase"><tr><th class="p-3">User</th><th class="p-3">Role</th><th class="p-3 text-center">Action</th></tr></thead>
+                        <tbody class="divide-y divide-gray-700">
+                            {% for user in all_users %}
+                            <tr class="hover:bg-gray-800">
+                                <td class="p-3 font-bold {{ 'text-red-400' if user.role=='admin' else 'text-white' }}">{{ user.username }}</td>
+                                <td class="p-3 text-xs">{{ user.role.upper() }}</td>
+                                <td class="p-3 flex justify-center gap-2">
+                                    {% if user.id != current_user.id %}
+                                    <a href="/admin/toggle_role/{{ user.id }}" class="text-xs px-2 py-1 rounded font-bold border border-gray-600 {{ 'bg-red-900 text-red-200' if user.role=='user' else 'bg-gray-600 text-gray-300' }}">{{ 'Make Admin' if user.role=='user' else 'Demote' }}</a>
+                                    <form action="/admin/reset_password/{{ user.id }}" method="POST" onsubmit="return confirm('Reset pass?')" class="inline"><button class="text-yellow-500 px-2"><i class="fas fa-key"></i></button></form>
+                                    <a href="/admin/delete_user/{{ user.id }}" onclick="return confirm('Xóa user?')" class="text-red-500 px-2"><i class="fas fa-trash"></i></a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -205,11 +257,11 @@
         <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600 shadow-2xl">
             <h3 class="text-xl font-bold mb-4 text-green-400">Tạo Mục Mới</h3>
             <form action="/admin/add_table" method="POST">
-                <label class="block text-sm text-gray-400 mb-1">Tên mục (Ví dụ: Kho A, Nhân sự...)</label>
+                <label class="block text-sm text-gray-400 mb-1">Tên mục</label>
                 <input type="text" name="table_name" required class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white mb-4">
                 <div class="flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('add-table-modal')" class="text-gray-400 px-3">Hủy</button>
-                    <button type="submit" class="bg-green-600 px-4 py-2 rounded text-white font-bold">Tạo ngay</button>
+                    <button type="button" onclick="closeModal('add-table-modal')" class="text-gray-400 px-3 hover:text-white">Hủy</button>
+                    <button type="submit" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-white font-bold transition">Tạo ngay</button>
                 </div>
             </form>
         </div>
@@ -223,88 +275,51 @@
                 <label class="block text-sm text-gray-400 mb-1">Tên mới</label>
                 <input type="text" name="new_name" id="edit-table-name" required class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white mb-4">
                 <div class="flex justify-end gap-2">
-                    <button type="button" onclick="closeModal('edit-table-modal')" class="text-gray-400 px-3">Hủy</button>
-                    <button type="submit" class="bg-blue-600 px-4 py-2 rounded text-white font-bold">Lưu</button>
+                    <button type="button" onclick="closeModal('edit-table-modal')" class="text-gray-400 px-3 hover:text-white">Hủy</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-white font-bold transition">Lưu</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <div id="setting-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
-        <div class="bg-gray-800 p-6 rounded-lg border border-gray-600 shadow-2xl relative {{ 'w-[900px]' if current_user.role == 'admin' else 'w-96' }} max-h-[90vh] overflow-y-auto">
-            <button onclick="closeModal('setting-modal')" class="absolute top-2 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
-            <h2 class="text-xl font-bold mb-6 text-white border-b border-gray-700 pb-2">Cài đặt tài khoản</h2>
-            <form action="/change_password" method="POST" class="mb-8">
-                <label class="block text-sm text-gray-400 mb-1">Đổi mật khẩu mới</label>
-                <div class="flex gap-2">
-                    <input type="password" name="new_password" required class="flex-1 bg-gray-900 border border-gray-600 p-2 rounded text-white" placeholder="Mật khẩu mới...">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 rounded">Lưu</button>
-                </div>
-            </form>
-            {% if current_user.role == 'admin' %}
-            <div class="border-t border-gray-600 pt-6">
-                <h3 class="text-lg font-bold text-red-400 mb-4 uppercase"><i class="fas fa-user-shield"></i> Quản Trị Hệ Thống</h3>
-                <table class="w-full text-left bg-gray-900 rounded overflow-hidden">
-                    <thead class="bg-gray-700 text-gray-300 text-xs uppercase"><tr><th class="p-3">User</th><th class="p-3">Role</th><th class="p-3 text-center">Action</th></tr></thead>
-                    <tbody class="divide-y divide-gray-700">
-                        {% for user in all_users %}
-                        <tr class="hover:bg-gray-800">
-                            <td class="p-3 font-bold {{ 'text-red-400' if user.role=='admin' else 'text-white' }}">{{ user.username }}</td>
-                            <td class="p-3 text-xs">{{ user.role.upper() }}</td>
-                            <td class="p-3 flex justify-center gap-3">
-                                {% if user.id != current_user.id %}
-                                <a href="/admin/toggle_role/{{ user.id }}" class="text-xs px-2 py-1 rounded font-bold {{ 'bg-red-900 text-red-200' if user.role=='user' else 'bg-gray-600 text-gray-300' }}">{{ 'Make Admin' if user.role=='user' else 'Demote' }}</a>
-                                <form action="/admin/reset_password/{{ user.id }}" method="POST" onsubmit="return confirm('Reset pass?')"><button class="text-yellow-500"><i class="fas fa-key"></i></button></form>
-                                <a href="/admin/delete_user/{{ user.id }}" onclick="return confirm('Xóa user này?')" class="text-red-500"><i class="fas fa-trash"></i></a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <div id="sort-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
-        <div class="bg-gray-800 p-6 rounded-lg w-[500px] border border-gray-600 shadow-2xl">
-            <h3 class="text-xl font-bold mb-2 text-blue-400">Quản Lý Cột ({{ current_table.name }})</h3>
-            <ul id="sortable-list" class="space-y-2 mb-6 max-h-[60vh] overflow-y-auto pr-2">
-                {% for col in columns %}
-                <li data-id="{{ col.id }}" class="bg-gray-700 p-2 rounded cursor-move flex items-center border border-gray-600 hover:bg-gray-600 group gap-3">
-                    <i class="fas fa-grip-vertical text-gray-500 cursor-move"></i>
-                    <input type="text" value="{{ col.name }}" class="col-name-input w-full bg-gray-900 border border-gray-500 rounded px-3 py-1 text-white">
-                    <a href="/delete_column/{{ col.id }}" onclick="return confirm('Xóa cột?')" class="text-gray-500 hover:text-red-500 p-2"><i class="fas fa-trash-alt"></i></a>
-                </li>
-                {% endfor %}
-            </ul>
-            <div class="flex justify-end gap-2 border-t border-gray-700 pt-4">
-                <button type="button" onclick="closeModal('sort-modal')" class="text-gray-400 px-3">Hủy</button>
-                <button type="button" onclick="saveBatch()" class="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded text-white font-bold">Lưu Thay Đổi</button>
-            </div>
         </div>
     </div>
 
     <script>
+        // --- DATA LOAD ---
+        let ROW_DATA_MAP = {};
+        try { 
+            const scriptTag = document.getElementById('server-data-script');
+            if(scriptTag) ROW_DATA_MAP = JSON.parse(scriptTag.textContent); 
+        } catch (e) { }
+
+        // --- FILTER FUNCTION (Tèo đã khôi phục lại hàm này) ---
+        function filterTable() {
+            const filter = document.getElementById("search-box").value.toLowerCase();
+            document.querySelectorAll('.data-row').forEach(row => {
+                const id = row.getAttribute('data-id');
+                const actionRow = document.getElementById(`action-row-${id}`);
+                const isMatch = row.innerText.toLowerCase().includes(filter);
+                
+                if (isMatch) {
+                    row.classList.remove('hidden');
+                    if (actionRow) actionRow.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                    if (actionRow) actionRow.classList.add('hidden');
+                }
+            });
+            // Đồng bộ lại chiều cao dòng ngay sau khi lọc
+            setTimeout(syncRowHeights, 50);
+        }
+
+        // --- CÁC HÀM KHÁC GIỮ NGUYÊN ---
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        
-        function openEditTableModal(id, name) {
-            document.getElementById('edit-table-id').value = id;
-            document.getElementById('edit-table-name').value = name;
+        function openEditTableModal(btn) {
+            document.getElementById('edit-table-id').value = btn.getAttribute('data-id');
+            document.getElementById('edit-table-name').value = btn.getAttribute('data-name');
             openModal('edit-table-modal');
         }
 
-        setTimeout(function() {
-            document.querySelectorAll('.flash-msg').forEach(alert => {
-                alert.classList.add('fade-out');
-                setTimeout(() => alert.remove(), 500);
-            });
-        }, 3000);
-
-        let ROW_DATA_MAP = {};
-        try { ROW_DATA_MAP = JSON.parse(document.getElementById('server-data-script').textContent); } catch (e) {}
+        setTimeout(function() { document.querySelectorAll('.flash-msg').forEach(alert => { alert.classList.add('fade-out'); setTimeout(() => alert.remove(), 500); }); }, 3000);
 
         function handleEdit(id) {
             const content = ROW_DATA_MAP[id];
@@ -327,7 +342,7 @@
                 document.getElementById('modal-title').innerText = "Thêm Dữ Liệu Mới";
                 idInput.value = "";
             }
-            modal.classList.remove('hidden');
+            openModal('row-modal');
         }
 
         function openSortModal() { openModal('sort-modal'); }
@@ -350,20 +365,7 @@
                 });
                 const data = await res.json();
                 if(data.status === 'success') window.location.reload();
-                else alert('Lỗi: ' + data.message);
             } catch(e) { alert('Lỗi mạng!'); }
-        }
-
-        function filterTable() {
-            const filter = document.getElementById("search-box").value.toLowerCase();
-            document.querySelectorAll('.data-row').forEach(row => {
-                const id = row.getAttribute('data-id');
-                const actionRow = document.getElementById(`action-row-${id}`);
-                const isMatch = row.innerText.toLowerCase().includes(filter);
-                row.classList.toggle('hidden', !isMatch);
-                if(actionRow) actionRow.classList.toggle('hidden', !isMatch);
-            });
-            setTimeout(syncRowHeights, 50);
         }
 
         function syncRowHeights() {
@@ -373,8 +375,16 @@
                 if (actionRow && !row.classList.contains('hidden')) actionRow.style.height = row.offsetHeight + 'px';
             });
         }
+        function syncHover(id, isHover) {
+            const actionRow = document.getElementById(`action-row-${id}`);
+            if (actionRow) isHover ? actionRow.classList.add('bg-gray-700') : actionRow.classList.remove('bg-gray-700');
+        }
 
         document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll('.data-row').forEach(row => {
+                row.addEventListener('mouseenter', function() { syncHover(this.getAttribute('data-id'), true); });
+                row.addEventListener('mouseleave', function() { syncHover(this.getAttribute('data-id'), false); });
+            });
             document.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', function() { handleEdit(this.getAttribute('data-id')); }));
             syncRowHeights();
         });
