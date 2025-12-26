@@ -157,7 +157,7 @@
                 </table>
             </div>
         </div>
-        </div>
+    </div>
 
     <div id="col-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
         <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600 shadow-2xl">
@@ -215,9 +215,12 @@
     </div>
 
     <div id="setting-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
-        <div class="bg-gray-800 p-6 rounded-lg border border-gray-600 shadow-2xl relative {{ 'w-[900px]' if current_user.role == 'admin' else 'w-96' }} max-h-[90vh] overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-lg border border-gray-600 shadow-2xl relative {{ 'w-[900px]' if current_user.role == 'admin' else 'w-[500px]' }} max-h-[90vh] overflow-y-auto">
             <button onclick="closeModal('setting-modal')" class="absolute top-2 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
-            <h2 class="text-xl font-bold mb-6 text-white border-b border-gray-700 pb-2 flex items-center gap-2"><i class="fas fa-cog"></i> Cài đặt tài khoản</h2>
+            <h2 class="text-xl font-bold mb-6 text-white border-b border-gray-700 pb-2 flex items-center gap-2">
+                <i class="fas fa-cog"></i> Cài đặt & Sao lưu
+            </h2>
+            
             <form action="/change_password" method="POST" class="mb-8">
                 <label class="block text-sm text-gray-400 mb-1">Đổi mật khẩu mới</label>
                 <div class="flex gap-2">
@@ -225,6 +228,26 @@
                     <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 rounded transition">Lưu</button>
                 </div>
             </form>
+
+            <div class="border-t border-gray-600 pt-6 mb-8">
+                <h3 class="text-lg font-bold text-green-400 mb-4 uppercase flex items-center gap-2">
+                    <i class="fas fa-database"></i> Sao lưu dữ liệu (JSON)
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-700 p-4 rounded border border-gray-600">
+                        <p class="text-sm text-gray-300 mb-3">Tải toàn bộ dữ liệu về máy.</p>
+                        <a href="/backup_json" class="block w-full text-center bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded transition"><i class="fas fa-download mr-2"></i> Tải Backup (.json)</a>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded border border-gray-600">
+                        <p class="text-sm text-gray-300 mb-3">Nạp lại dữ liệu (Thêm mới).</p>
+                        <form action="/restore_json" method="POST" enctype="multipart/form-data" class="flex flex-col gap-2">
+                            <input type="file" name="file" accept=".json" required class="text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-gray-600 file:text-white hover:file:bg-gray-500">
+                            <button type="submit" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 rounded transition"><i class="fas fa-upload mr-2"></i> Khôi phục</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
             {% if current_user.role == 'admin' %}
             <div class="border-t border-gray-600 pt-6">
                 <h3 class="text-lg font-bold text-red-400 mb-4 uppercase flex items-center gap-2"><i class="fas fa-user-shield"></i> Quản Trị Viên</h3>
@@ -283,21 +306,20 @@
     </div>
 
     <script>
-        // --- DATA LOAD ---
+        // Data Load
         let ROW_DATA_MAP = {};
         try { 
             const scriptTag = document.getElementById('server-data-script');
             if(scriptTag) ROW_DATA_MAP = JSON.parse(scriptTag.textContent); 
         } catch (e) { }
 
-        // --- FILTER FUNCTION (Tèo đã khôi phục lại hàm này) ---
+        // Filter Function (Tại chỗ)
         function filterTable() {
             const filter = document.getElementById("search-box").value.toLowerCase();
             document.querySelectorAll('.data-row').forEach(row => {
                 const id = row.getAttribute('data-id');
                 const actionRow = document.getElementById(`action-row-${id}`);
                 const isMatch = row.innerText.toLowerCase().includes(filter);
-                
                 if (isMatch) {
                     row.classList.remove('hidden');
                     if (actionRow) actionRow.classList.remove('hidden');
@@ -306,11 +328,10 @@
                     if (actionRow) actionRow.classList.add('hidden');
                 }
             });
-            // Đồng bộ lại chiều cao dòng ngay sau khi lọc
             setTimeout(syncRowHeights, 50);
         }
 
-        // --- CÁC HÀM KHÁC GIỮ NGUYÊN ---
+        // Modal Logic
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         function openEditTableModal(btn) {
@@ -319,8 +340,10 @@
             openModal('edit-table-modal');
         }
 
+        // Flash msg
         setTimeout(function() { document.querySelectorAll('.flash-msg').forEach(alert => { alert.classList.add('fade-out'); setTimeout(() => alert.remove(), 500); }); }, 3000);
 
+        // Edit Row
         function handleEdit(id) {
             const content = ROW_DATA_MAP[id];
             if (content) openEditModal(id, content);
@@ -345,6 +368,7 @@
             openModal('row-modal');
         }
 
+        // Sort Column
         function openSortModal() { openModal('sort-modal'); }
         const list = document.getElementById('sortable-list');
         if (list) { new Sortable(list, { animation: 150, ghostClass: 'sortable-ghost', handle: '.cursor-move' }); }
@@ -368,6 +392,7 @@
             } catch(e) { alert('Lỗi mạng!'); }
         }
 
+        // Sync Height
         function syncRowHeights() {
             document.querySelectorAll('.data-row').forEach(row => {
                 const id = row.getAttribute('data-id');
@@ -389,6 +414,10 @@
             syncRowHeights();
         });
         window.addEventListener('resize', syncRowHeights);
+    </script>
+    
+    <script id="server-data-script" type="text/plain">
+        {{ data_map | tojson | safe }}
     </script>
 </body>
 </html>
