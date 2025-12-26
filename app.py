@@ -250,6 +250,15 @@ def login():
 def logout(): logout_user(); return redirect(url_for('login'))
 
 with app.app_context(): db.create_all()
-
+# --- ROUTE DÀNH RIÊNG CHO UPTIME ROBOT ---
+@app.route('/ping_db')
+def ping_db():
+    try:
+        # Truy vấn nhẹ một cái để Supabase biết DB đang hoạt động
+        # Đếm số lượng user (lệnh này siêu nhẹ)
+        count = User.query.count()
+        return f"Hello Robot! Database is awake. Users: {count}", 200
+    except Exception as e:
+        return f"Error: {str(e)}", 500
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
