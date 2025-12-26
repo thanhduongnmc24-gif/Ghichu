@@ -334,15 +334,21 @@
         </div>
     </div>
 
+    <script id="server-data-script" type="text/plain">
+        {{ data_map | tojson | safe }}
+    </script>
+
     <script>
         // --- DATA LOAD ---
         let ROW_DATA_MAP = {};
         try { 
             const scriptTag = document.getElementById('server-data-script');
-            if(scriptTag) ROW_DATA_MAP = JSON.parse(scriptTag.textContent); 
+            if(scriptTag && scriptTag.textContent.trim()) {
+                ROW_DATA_MAP = JSON.parse(scriptTag.textContent); 
+            }
         } catch (e) { console.error("Lỗi parse data:", e); }
 
-        // --- FILTER FUNCTION (Client-Side Instant Search) ---
+        // --- FILTER FUNCTION ---
         function filterTable() {
             const filter = document.getElementById("search-box").value.toLowerCase();
             document.querySelectorAll('.data-row').forEach(row => {
@@ -371,28 +377,22 @@
             if(el) el.classList.add('hidden');
         }
         
-        // Mở Modal Sửa Tên Bảng
         function openEditTableModal(btn) {
-            const id = btn.getAttribute('data-id');
-            const name = btn.getAttribute('data-name');
-            document.getElementById('edit-table-id').value = id;
-            document.getElementById('edit-table-name').value = name;
+            document.getElementById('edit-table-id').value = btn.getAttribute('data-id');
+            document.getElementById('edit-table-name').value = btn.getAttribute('data-name');
             openModal('edit-table-modal');
         }
 
-        // --- FLASH MESSAGE ---
-        setTimeout(function() {
-            document.querySelectorAll('.flash-msg').forEach(alert => {
-                alert.classList.add('fade-out');
-                setTimeout(() => alert.remove(), 500);
-            });
-        }, 3000);
-
         // --- EDIT ROW ---
         function handleEdit(id) {
-            const content = ROW_DATA_MAP[id];
-            if (content) openEditModal(id, content);
-            else alert('Dữ liệu không tìm thấy!');
+            const strId = String(id);
+            const content = ROW_DATA_MAP[strId];
+            
+            if (content) {
+                openEditModal(id, content);
+            } else {
+                alert('Dữ liệu không tìm thấy! Vui lòng tải lại trang.');
+            }
         }
 
         function openEditModal(rowId = null, rowContent = null) {
@@ -420,14 +420,12 @@
         const list = document.getElementById('sortable-list');
         if (list) { new Sortable(list, { animation: 150, ghostClass: 'sortable-ghost', handle: '.cursor-move' }); }
         
-        // Hàm xóa giao diện (Mới)
         function removeColItem(btn) {
             if (confirm('Xóa cột này? (Bấm LƯU mới chính thức xóa)')) {
                 btn.closest('li').remove();
             }
         }
 
-        // Hàm Lưu Batch (Gửi table_id)
         async function saveBatch() {
             const listItems = document.querySelectorAll('#sortable-list li');
             const batchData = [];
@@ -467,6 +465,13 @@
             const actionRow = document.getElementById(`action-row-${id}`);
             if (actionRow) isHover ? actionRow.classList.add('bg-gray-700') : actionRow.classList.remove('bg-gray-700');
         }
+        
+        setTimeout(function() {
+            document.querySelectorAll('.flash-msg').forEach(alert => {
+                alert.classList.add('fade-out');
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 3000);
 
         document.addEventListener("DOMContentLoaded", function() {
             document.querySelectorAll('.data-row').forEach(row => {
