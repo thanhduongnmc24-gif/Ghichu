@@ -3,154 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phiếu In - #{{ row.id }}</title>
+    <title>In Phiếu {{ today }}</title>
     <style>
-        /* Cấu hình chung */
-        body {
-            font-family: 'Arial', sans-serif;
-            background: #e5e5e5;
-            margin: 0;
-            padding: 20px;
+        /* Cấu hình trang in */
+        @page { 
+            size: auto; 
+            margin: 0; 
         }
 
-        /* KHUNG PHIẾU (14cm - Góc trái) */
-        .ticket-container {
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #fff;
-            width: 140mm; /* Rộng 14cm */
-            border: 2px dashed #000; /* Viền cắt */
-            padding: 10px;
+            font-size: 11px;
+            color: #000;
+        }
+
+        .ticket-box {
+            /* Căn trái, căn trên: Cách lề trái 5mm, lề trên 5mm */
+            margin-left: 5mm; 
+            margin-top: 5mm;
+            
+            /* 2/3 khổ A4 (khoảng 140mm) */
+            width: 140mm; 
+            
+            border: 2px dashed #333;
+            padding: 15px; 
             box-sizing: border-box;
             position: relative;
+            background-color: white;
         }
 
-        .cut-icon {
-            position: absolute;
-            top: -12px; right: -10px;
-            background: #fff; font-size: 16px;
-        }
-
-        .header {
-            text-align: center; /* Tiêu đề phiếu thì vẫn nên giữa cho đẹp */
+        h3 { 
+            text-align: center; 
+            text-transform: uppercase; 
+            margin: 0 0 15px 0; 
+            font-size: 18px; 
+            font-weight: 900; /* Tiêu đề lớn siêu đậm */
             border-bottom: 2px solid #000;
-            padding-bottom: 5px; margin-bottom: 10px;
+            padding-bottom: 8px;
+            grid-column: span 3; 
         }
-        .header h2 { margin: 0; font-size: 18px; text-transform: uppercase; }
-        .header p { margin: 2px 0 0; font-size: 11px; color: #333; }
 
-        /* LƯỚI 3 CỘT */
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 cột chia đều không gian */
-            gap: 5px; /* Khoảng cách giữa các ô */
-            
-            /* QUAN TRỌNG: Dòng này giúp ô ngắn không bị kéo dài theo ô cao */
+            grid-template-columns: 1fr 1fr 1fr; /* 3 cột */
+            column-gap: 15px; 
+            row-gap: 15px;    
             align-items: start; 
         }
 
-        .item-box {
-            border: 1px solid #ccc;
-            padding: 5px;
-            background: #fff;
-            break-inside: avoid;
-            
-            /* CĂN CHỈNH TUYỆT ĐỐI VỀ GÓC TRÁI TRÊN */
-            display: block; /* Dùng block thông thường để tuân thủ dòng chảy văn bản */
-            text-align: left; /* Căn trái */
-            height: auto; /* Chiều cao tự động theo dữ liệu */
+        .info-item { 
+            display: flex; 
+            flex-direction: column; /* Tiêu đề trên - Dữ liệu dưới */
+            border-bottom: 1px dotted #ccc; 
+            padding-bottom: 5px;
+            height: 100%;
         }
 
-        .label {
-            display: block;
-            width: 100%;
-            font-size: 9px;
-            font-weight: bold;
-            color: #555;
-            text-transform: uppercase;
-            border-bottom: 1px solid #eee; 
-            margin-bottom: 4px;
-            padding-bottom: 2px;
-            text-align: left; /* Chắc chắn tiêu đề cũng căn trái */
+        .label { 
+            /* YÊU CẦU: TIÊU ĐỀ IN ĐẬM */
+            font-weight: bold; 
+            color: #000; /* Màu đen rõ ràng */
+            text-transform: uppercase; 
+            font-size: 10px; 
+            margin-bottom: 3px; 
         }
 
-        .value {
-            display: block;
-            font-size: 11px;
-            font-weight: bold;
-            color: #000;
+        .value { 
+            /* YÊU CẦU: DỮ LIỆU BÌNH THƯỜNG */
+            font-weight: normal; 
+            width: 100%; 
+            font-size: 12px; 
+            word-wrap: break-word;
             line-height: 1.3;
-            width: 100%;
-            text-align: left; /* Chắc chắn dữ liệu căn trái */
-
-            /* TỰ ĐỘNG XUỐNG DÒNG */
-            white-space: pre-wrap; 
-            word-wrap: break-word; 
-            overflow-wrap: break-word;
+            color: #000;
         }
 
-        .footer {
-            margin-top: 15px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 10px;
-            font-style: italic;
-        }
+        .line-item { display: block; }
 
-        /* Nút bấm */
-        .control-panel { margin-bottom: 20px; }
-        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 10px; }
-        .btn-print { background: #2563eb; color: white; }
-        .btn-close { background: #6b7280; color: white; }
+        /* Nút in */
+        .btn-print { 
+            position: fixed; top: 20px; right: 20px;
+            padding: 10px 20px; background: #6b21a8; color: white; 
+            border: none; cursor: pointer; font-size: 14px; 
+            border-radius: 4px; font-weight: bold;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            z-index: 9999;
+        }
 
         @media print {
-            @page { size: A4; margin: 5mm; }
-            body { background: white; padding: 0; margin: 0; }
-            .control-panel { display: none; }
-            .ticket-container { border: 2px dashed #000; }
+            .btn-print { display: none; }
+            body { 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+            }
+            .ticket-box { border: 2px solid #000; } 
         }
     </style>
 </head>
 <body>
+    
+    <button onclick="window.print()" class="btn-print">🖨️ IN PHIẾU (LABEL ĐẬM)</button>
 
-    <div class="control-panel">
-        <button onclick="window.print()" class="btn btn-print">🖨️ IN NGAY</button>
-        <button onclick="window.close()" class="btn btn-close">ĐÓNG</button>
-    </div>
-
-    <div class="ticket-container">
-        <div class="cut-icon">✂️</div>
+    <div class="ticket-box">
+        <h3>PHIẾU DỮ LIỆU - {{ today }}</h3>
         
-        <div class="header">
-            <h2>PHIẾU THÔNG TIN</h2>
-            <p>ID: <b>#{{ row.id }}</b> | {{ today }}</p>
-        </div>
-
         <div class="grid-container">
             {% for col in columns %}
-            <div class="item-box">
-                <span class="label">{{ col.name }}</span>
+            <div class="info-item">
+                <div class="label">{{ col.name }}</div>
                 <div class="value">
-                    {% set val = row.content.get(col.name, '') %}
-                    {% if val is iterable and val is not string %}
-                        {{ val | join('<br>') | safe }}
+                    {% set cell_data = row.content.get(col.name, '') %}
+                    {% if cell_data is iterable and cell_data is not string %}
+                        {% for line in cell_data %}
+                            <div class="line-item">- {{ line }}</div>
+                        {% endfor %}
                     {% else %}
-                        {{ val }}
+                        {{ cell_data | replace('\n', '<br>') | safe }}
                     {% endif %}
                 </div>
             </div>
             {% endfor %}
         </div>
-
-        <div class="footer">
-            <div>NV: {{ current_user.username }}</div>
-            <div>Xác nhận: ....................</div>
-        </div>
     </div>
 
     <script>
-        window.onload = function() {
-            setTimeout(function() { window.print(); }, 500);
+        window.onload = function() { 
+            setTimeout(function() {
+                window.print(); 
+            }, 500);
         }
     </script>
-
 </body>
 </html>
