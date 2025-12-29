@@ -3,85 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>In Phiếu {{ today }}</title>
+    <title>Phiếu In - #{{ row.id }}</title>
     <style>
-        body { 
-            margin: 0; padding: 0; 
-            font-family: Arial, Helvetica, sans-serif; 
-            background: #fff;
-            font-size: 11px;
+        /* Cấu hình chung */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #e5e5e5;
+            margin: 0;
+            padding: 20px;
         }
-        .ticket-box {
-            width: 140mm; 
-            margin-left: 5mm; margin-top: 5mm;
-            border: 2px dashed #000;
+
+        /* KHUNG PHIẾU (14cm - Góc trái) */
+        .ticket-container {
+            background: #fff;
+            width: 140mm; /* Rộng 14cm */
+            border: 2px dashed #000; /* Viền cắt */
             padding: 10px;
             box-sizing: border-box;
+            position: relative;
         }
-        h3 { 
-            text-align: center; 
-            text-transform: uppercase; 
-            margin: 0 0 10px 0; 
-            font-size: 14px; 
+
+        .cut-icon {
+            position: absolute;
+            top: -12px; right: -10px;
+            background: #fff; font-size: 16px;
+        }
+
+        .header {
+            text-align: center; /* Tiêu đề phiếu thì vẫn nên giữa cho đẹp */
             border-bottom: 2px solid #000;
-            padding-bottom: 5px;
-            grid-column: span 2; 
+            padding-bottom: 5px; margin-bottom: 10px;
         }
+        .header h2 { margin: 0; font-size: 18px; text-transform: uppercase; }
+        .header p { margin: 2px 0 0; font-size: 11px; color: #333; }
+
+        /* LƯỚI 3 CỘT */
         .grid-container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            column-gap: 15px; row-gap: 5px;
+            grid-template-columns: repeat(3, 1fr); /* 3 cột chia đều không gian */
+            gap: 5px; /* Khoảng cách giữa các ô */
+            
+            /* QUAN TRỌNG: Dòng này giúp ô ngắn không bị kéo dài theo ô cao */
+            align-items: start; 
         }
-        .info-item { 
-            display: flex; align-items: flex-start;
-            border-bottom: 1px dotted #ccc; 
+
+        .item-box {
+            border: 1px solid #ccc;
+            padding: 5px;
+            background: #fff;
+            break-inside: avoid;
+            
+            /* CĂN CHỈNH TUYỆT ĐỐI VỀ GÓC TRÁI TRÊN */
+            display: block; /* Dùng block thông thường để tuân thủ dòng chảy văn bản */
+            text-align: left; /* Căn trái */
+            height: auto; /* Chiều cao tự động theo dữ liệu */
+        }
+
+        .label {
+            display: block;
+            width: 100%;
+            font-size: 9px;
+            font-weight: bold;
+            color: #555;
+            text-transform: uppercase;
+            border-bottom: 1px solid #eee; 
+            margin-bottom: 4px;
             padding-bottom: 2px;
+            text-align: left; /* Chắc chắn tiêu đề cũng căn trái */
         }
-        .label { 
-            font-weight: bold; width: 40%; 
-            text-transform: uppercase; 
-            padding-right: 5px; flex-shrink: 0; 
+
+        .value {
+            display: block;
+            font-size: 11px;
+            font-weight: bold;
+            color: #000;
+            line-height: 1.3;
+            width: 100%;
+            text-align: left; /* Chắc chắn dữ liệu căn trái */
+
+            /* TỰ ĐỘNG XUỐNG DÒNG */
+            white-space: pre-wrap; 
+            word-wrap: break-word; 
+            overflow-wrap: break-word;
         }
-        .value { width: 60%; font-weight: 500; word-wrap: break-word; }
-        .line-item { display: block; }
-        .btn-print { 
-            position: fixed; top: 20px; left: 150mm;
-            padding: 10px 20px; background: #6b21a8; color: white; 
-            border: none; cursor: pointer; font-size: 14px; 
-            border-radius: 4px; font-weight: bold;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+
+        .footer {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            font-style: italic;
         }
+
+        /* Nút bấm */
+        .control-panel { margin-bottom: 20px; }
+        .btn { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 10px; }
+        .btn-print { background: #2563eb; color: white; }
+        .btn-close { background: #6b7280; color: white; }
+
         @media print {
-            .btn-print { display: none; }
-            body { margin: 0; padding: 0; }
-            .ticket-box { margin-left: 5mm; margin-top: 5mm; border: 2px solid #000; }
-            @page { margin: 0; size: auto; }
+            @page { size: A4; margin: 5mm; }
+            body { background: white; padding: 0; margin: 0; }
+            .control-panel { display: none; }
+            .ticket-container { border: 2px dashed #000; }
         }
     </style>
 </head>
 <body>
-    <div class="ticket-box">
-        <h3>PHIẾU DỮ LIỆU - {{ today }}</h3>
+
+    <div class="control-panel">
+        <button onclick="window.print()" class="btn btn-print">🖨️ IN NGAY</button>
+        <button onclick="window.close()" class="btn btn-close">ĐÓNG</button>
+    </div>
+
+    <div class="ticket-container">
+        <div class="cut-icon">✂️</div>
         
+        <div class="header">
+            <h2>PHIẾU THÔNG TIN</h2>
+            <p>ID: <b>#{{ row.id }}</b> | {{ today }}</p>
+        </div>
+
         <div class="grid-container">
             {% for col in columns %}
-            <div class="info-item">
-                <div class="label">{{ col.name }}</div>
+            <div class="item-box">
+                <span class="label">{{ col.name }}</span>
                 <div class="value">
-                    {% set cell_data = row.content.get(col.name, '') %}
-                    {% if cell_data is iterable and cell_data is not string %}
-                        {% for line in cell_data %}
-                            <div class="line-item">- {{ line }}</div>
-                        {% endfor %}
+                    {% set val = row.content.get(col.name, '') %}
+                    {% if val is iterable and val is not string %}
+                        {{ val | join('<br>') | safe }}
                     {% else %}
-                        {{ cell_data | replace('\n', '<br>') | safe }}
+                        {{ val }}
                     {% endif %}
                 </div>
             </div>
             {% endfor %}
         </div>
+
+        <div class="footer">
+            <div>NV: {{ current_user.username }}</div>
+            <div>Xác nhận: ....................</div>
+        </div>
     </div>
-    <button onclick="window.print()" class="btn-print">🖨️ IN NGAY</button>
-    <script>window.onload = function() { window.print(); }</script>
+
+    <script>
+        window.onload = function() {
+            setTimeout(function() { window.print(); }, 500);
+        }
+    </script>
+
 </body>
 </html>
