@@ -9,10 +9,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
     <style>
         .fade-out { opacity: 0; transition: opacity 0.5s ease-out; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        
+        /* Tùy chỉnh thanh cuộn */
+        ::-webkit-scrollbar { width: 8px; height: 10px; }
         ::-webkit-scrollbar-track { background: #1f2937; }
         ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        
+        /* Ẩn thanh cuộn dọc cho cột Action */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
         .multi-line-cell div { padding: 4px 0; border-bottom: 1px solid rgba(75, 85, 99, 0.4); }
         .multi-line-cell div:last-child { border-bottom: none; }
         .dropdown:hover .dropdown-menu { display: block; }
@@ -72,6 +79,11 @@
             </div>
 
             <div class="flex gap-4 items-center">
+                <button onclick="openModal('report-modal')" class="bg-yellow-600 hover:bg-yellow-500 text-white px-3 py-1 rounded shadow flex items-center gap-2 transition" title="Làm báo cáo nhanh">
+                    <i class="fas fa-file-alt"></i> 
+                    <span class="hidden md:inline font-bold text-sm">BÁO CÁO</span>
+                </button>
+
                 <button onclick="openModal('setting-modal')" class="flex items-center gap-2 text-gray-400 hover:text-white transition bg-gray-700 px-3 py-1 rounded" title="Cài đặt">
                     <i class="fas fa-cog text-xl {{ 'text-red-500 animate-spin-slow' if current_user.role == 'admin' }}"></i>
                     {% if current_user.role == 'admin' %} <span class="text-xs font-bold text-red-400 uppercase">Admin</span> {% endif %}
@@ -84,7 +96,7 @@
         </div>
     </nav>
 
-    <div class="container mx-auto p-4 flex-1">
+    <div class="w-full px-6 flex-1 flex flex-col h-full overflow-hidden">
         <div id="flash-container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -98,7 +110,7 @@
         {% endwith %}
         </div>
 
-        <div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-6">
+        <div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-4 shrink-0">
             <div class="relative w-full md:w-1/3 z-10">
                 <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
                 <input type="text" id="search-box" onkeyup="filterTable()"
@@ -123,13 +135,14 @@
             </div>
         </div>
 
-        <div class="flex flex-row border border-gray-700 rounded-lg overflow-hidden bg-gray-800 shadow-2xl relative z-0">
-            <div class="flex-1 overflow-x-auto relative">
+        <div class="flex flex-row border border-gray-700 rounded-lg overflow-hidden bg-gray-800 shadow-2xl relative z-0 flex-1 min-h-0">
+            
+            <div id="data-scroll-area" class="flex-1 overflow-auto relative max-h-[80vh] border-r border-gray-700">
                 <table class="w-full text-left border-collapse">
-                    <thead class="bg-gray-700 text-gray-300 text-sm uppercase sticky top-0 z-10">
+                    <thead class="bg-gray-700 text-gray-300 text-sm uppercase sticky top-0 z-10 shadow-md">
                         <tr class="h-12">
                             {% for col in columns %}
-                            <th class="p-3 border-b border-r border-gray-600 whitespace-nowrap min-w-[150px]">{{ col.name }}</th>
+                            <th class="p-3 border-b border-r border-gray-600 whitespace-nowrap min-w-[150px] bg-gray-700">{{ col.name }}</th>
                             {% endfor %}
                         </tr>
                     </thead>
@@ -154,30 +167,19 @@
                 </table>
             </div>
 
-            <div class="w-36 shrink-0 border-l-2 border-gray-600 bg-gray-800 z-20 shadow-[-5px_0_15px_rgba(0,0,0,0.5)]">
+            <div id="action-scroll-area" class="w-36 shrink-0 bg-gray-800 z-20 shadow-[-5px_0_15px_rgba(0,0,0,0.5)] overflow-hidden max-h-[80vh]">
                 <table class="w-full">
-                    <thead class="bg-gray-700 text-gray-300 sticky top-0 z-10">
-                        <tr class="h-12"><th class="p-3 border-b border-gray-600 text-center">Tác vụ</th></tr>
+                    <thead class="bg-gray-700 text-gray-300 sticky top-0 z-10 shadow-md">
+                        <tr class="h-12"><th class="p-3 border-b border-gray-600 text-center bg-gray-700">Tác vụ</th></tr>
                     </thead>
                     <tbody id="action-table-body">
                         {% for row in rows %}
                         <tr id="action-row-{{ row.id }}" class="hover:bg-gray-700/50 transition border-b border-gray-700/50 bg-gray-800">
-                            <td class="p-3 flex justify-center items-center gap-2 h-full">
-                                <button class="btn-edit text-blue-400 hover:text-blue-200 transition transform hover:scale-110 p-1" data-id="{{ row.id }}" title="Sửa">
-                                    <i class="fas fa-pen"></i>
-                                </button>
-                                
-                                <a href="/duplicate_row/{{ row.id }}" class="text-yellow-400 hover:text-yellow-200 transition transform hover:scale-110 p-1" title="Sao chép dòng này">
-                                    <i class="fas fa-copy"></i>
-                                </a>
-
-                                <a href="/print_row/{{ row.id }}" target="_blank" class="text-purple-400 hover:text-purple-200 transition transform hover:scale-110 p-1" title="In phiếu">
-                                    <i class="fas fa-print"></i>
-                                </a>
-                                
-                                <a href="/delete_row/{{ row.id }}" onclick="return confirm('Xóa dòng này?')" class="text-gray-500 hover:text-red-500 transition transform hover:scale-110 p-1" title="Xóa">
-                                    <i class="fas fa-trash"></i>
-                                </a>
+                            <td class="p-3 flex justify-center items-center gap-3 h-full">
+                                <button class="btn-copy text-yellow-500 hover:text-yellow-300 transition transform hover:scale-110" data-id="{{ row.id }}" title="Sao chép dòng này"><i class="fas fa-copy"></i></button>
+                                <button class="btn-edit text-blue-400 hover:text-blue-200 transition transform hover:scale-110" data-id="{{ row.id }}" title="Sửa"><i class="fas fa-pen"></i></button>
+                                <a href="/print_row/{{ row.id }}" target="_blank" class="text-purple-400 hover:text-purple-200 transition transform hover:scale-110" title="In phiếu"><i class="fas fa-print"></i></a>
+                                <a href="/delete_row/{{ row.id }}" onclick="return confirm('Xóa dòng này?')" class="text-gray-500 hover:text-red-500 transition transform hover:scale-110" title="Xóa"><i class="fas fa-trash"></i></a>
                             </td>
                         </tr>
                         {% else %}
@@ -186,6 +188,51 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+        
+        <div class="text-xs text-gray-500 italic mt-2 text-right px-1">
+            * Kéo ngang để xem thêm cột.
+        </div>
+    </div>
+
+    <div id="report-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600 shadow-2xl">
+            <h3 class="text-xl font-bold mb-4 text-yellow-500 flex items-center gap-2">
+                <i class="fas fa-clipboard-check"></i> NHẬP SỐ LIỆU BÁO CÁO
+            </h3>
+            
+            <form action="/generate_report" method="POST">
+                <div class="space-y-3 mb-6">
+                    <div>
+                        <label class="text-xs text-gray-400 uppercase">Ngày báo cáo</label>
+                        <input type="date" name="report_date" required class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white focus:border-yellow-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 uppercase">Ca trực / Người phụ trách</label>
+                        <input type="text" name="supervisor" placeholder="Ví dụ: Ca 1 - A.Tèo" class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white focus:border-yellow-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 uppercase">Tổng sản lượng (Tấn)</label>
+                        <input type="number" name="total_output" step="0.01" class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white focus:border-yellow-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 uppercase">Ghi chú sự cố / Vấn đề</label>
+                        <textarea name="notes" rows="3" class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white focus:border-yellow-500 outline-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModal('report-modal')" class="flex-1 text-gray-400 hover:text-white py-2">Hủy</button>
+                    
+                    <button type="submit" name="action_type" value="excel" class="flex-1 bg-green-700 hover:bg-green-600 text-white font-bold py-2 rounded flex items-center justify-center gap-2 transition">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </button>
+                    
+                    <button type="submit" name="action_type" value="pdf" class="flex-1 bg-red-700 hover:bg-red-600 text-white font-bold py-2 rounded flex items-center justify-center gap-2 transition">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -360,6 +407,20 @@
             }
         } catch (e) { console.error("Lỗi parse data:", e); }
 
+        // --- SCROLL SYNC LOGIC ---
+        const dataScrollArea = document.getElementById('data-scroll-area');
+        const actionScrollArea = document.getElementById('action-scroll-area');
+        
+        if (dataScrollArea && actionScrollArea) {
+            dataScrollArea.addEventListener('scroll', function() {
+                actionScrollArea.scrollTop = dataScrollArea.scrollTop;
+            });
+            actionScrollArea.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                dataScrollArea.scrollTop += e.deltaY;
+            });
+        }
+
         // --- FILTER FUNCTION ---
         function filterTable() {
             const filter = document.getElementById("search-box").value.toLowerCase();
@@ -406,26 +467,44 @@
                 alert('Dữ liệu không tìm thấy! Vui lòng tải lại trang.');
             }
         }
-
-        function openEditModal(rowId = null, rowContent = null) {
-            const modal = document.getElementById('row-modal');
-            const idInput = document.getElementById('row_id_input');
-            const form = document.getElementById('row-form');
-            form.reset();
-            
-            if (rowId) {
-                document.getElementById('modal-title').innerText = "Sửa Dữ Liệu";
-                idInput.value = rowId;
-                for (const [key, value] of Object.entries(rowContent)) {
-                    let input = document.getElementById(`input_col_${key}`);
-                    if (input) input.value = Array.isArray(value) ? value.join('\n') : value;
-                }
-            } else {
-                document.getElementById('modal-title').innerText = "Thêm Dữ Liệu Mới";
-                idInput.value = "";
-            }
-            openModal('row-modal');
+        function handleCopy(id) {
+            const strId = String(id);
+            const content = ROW_DATA_MAP[strId];
+            if (content) openEditModal(null, content, true); // null ID = Tạo mới, true = Chế độ Copy
+            else alert('Lỗi rồi anh hai ơi!');
         }
+        function openEditModal(rowId = null, rowContent = null, isCopy = false) {
+        const modal = document.getElementById('row-modal');
+        const idInput = document.getElementById('row_id_input');
+        const form = document.getElementById('row-form');
+        form.reset();
+        
+        if (rowContent) {
+            // Đổ dữ liệu vào các ô
+            for (const [key, value] of Object.entries(rowContent)) {
+                let input = document.getElementById(`input_col_${key}`);
+                if (input) input.value = Array.isArray(value) ? value.join('\n') : value;
+            }
+        }
+
+        if (rowId && !isCopy) {
+            // Chế độ SỬA: Lưu ID lại để update
+            document.getElementById('modal-title').innerText = "Sửa Dữ Liệu";
+            document.getElementById('modal-title').className = "text-xl font-bold mb-2 text-blue-400"; // Màu xanh
+            idInput.value = rowId;
+        } else if (isCopy) {
+            // Chế độ COPY: Xóa ID để tạo dòng mới
+            document.getElementById('modal-title').innerText = "Sao Chép Dữ Liệu (Tạo dòng mới)";
+            document.getElementById('modal-title').className = "text-xl font-bold mb-2 text-yellow-500"; // Màu vàng
+            idInput.value = ""; // Quan trọng: Để trống ID thì Server mới tạo mới
+        } else {
+            // Chế độ THÊM MỚI tinh
+            document.getElementById('modal-title').innerText = "Thêm Dữ Liệu Mới";
+            document.getElementById('modal-title').className = "text-xl font-bold mb-2 text-green-400"; // Màu xanh lá
+            idInput.value = "";
+        }
+        openModal('row-modal');
+    }
 
         // --- SORT & DELETE COLUMNS ---
         function openSortModal() { openModal('sort-modal'); }
@@ -491,6 +570,9 @@
                 row.addEventListener('mouseleave', function() { syncHover(this.getAttribute('data-id'), false); });
             });
             document.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', function() { handleEdit(this.getAttribute('data-id')); }));
+            document.querySelectorAll('.btn-copy').forEach(btn => btn.addEventListener('click', function() { 
+            handleCopy(this.getAttribute('data-id')); 
+        }));
             syncRowHeights();
         });
         window.addEventListener('resize', syncRowHeights);

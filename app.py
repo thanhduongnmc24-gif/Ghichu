@@ -8,7 +8,9 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from functools import wraps
-import openpyxl 
+import openpyxl
+from openpyxl import load_workbook
+from xhtml2pdf import pisa 
 
 app = Flask(__name__)
 app.secret_key = 'bi_mat_cua_teo_v7_final' 
@@ -71,6 +73,7 @@ def admin_required(f):
 def index(table_id=None):
     all_tables = AppTable.query.order_by(AppTable.id).all()
     
+    # Tự tạo bảng mặc định nếu chưa có
     if not all_tables:
         default_table = AppTable(name="DATA XƯỞNG THÉP")
         db.session.add(default_table)
@@ -84,9 +87,10 @@ def index(table_id=None):
         current_table = all_tables[0]
         return redirect(url_for('index', table_id=current_table.id))
 
-    # Lấy cột (Đã sắp xếp theo thứ tự người dùng chỉnh)
+    # Lấy cột
     columns = TableColumn.query.filter_by(user_id=current_user.id, table_id=current_table.id).order_by(TableColumn.order_index).all()
     
+    # Tạo cột mẫu nếu bảng trống
     if not columns:
         defaults = ["Sản phẩm", "Mác thép", "Bộ gap", "Nhiệt lò nung", "Cơ tính"]
         for idx, name in enumerate(defaults):
@@ -94,20 +98,37 @@ def index(table_id=None):
         db.session.commit()
         return redirect(url_for('index', table_id=current_table.id))
 
-    # Lấy dữ liệu
+  # 1. Lấy dữ liệu thô từ Database về trước
     rows = DataRow.query.filter_by(created_by=current_user.id, table_id=current_table.id).all()
-    
-    # --- LOGIC SẮP XẾP ĐA TẦNG (N CỘT) ---
+
+    # 2. Xử lý sắp xếp A-Z (Ưu tiên cột 1 -> cột 2 -> cột 3...)
     if columns and rows:
-        # Lấy danh sách tên của TẤT CẢ các cột (N cột)
+        # Lấy danh sách tên các cột theo đúng thứ tự hiển thị
         col_names = [col.name for col in columns]
         
-        # Sắp xếp dựa trên tuple chứa giá trị của TẤT CẢ các cột
-        # Python sẽ tự động so sánh phần tử 1, nếu bằng nhau thì so phần tử 2, v.v... đến hết N cột
-        rows.sort(key=lambda x: tuple(str(x.content.get(name, '')).strip().lower() for name in col_names))
+        # Hàm tạo "chìa khóa" để sắp xếp
+        def sort_key(row):
+            sort_values = []
+            for name in col_names:
+                # Lấy nội dung của ô, nếu không có thì để chuỗi rỗng
+                val = row.content.get(name, '')
+                
+                # Nếu dữ liệu là danh sách (nhiều dòng), gộp lại thành 1 chuỗi để so sánh
+                if isinstance(val, list):
+                    val = " ".join(val)
+                
+                # Chuyển về chữ thường (lower) để so sánh A-Z chuẩn xác (không phân biệt hoa thường)
+                sort_values.append(str(val).lower().strip())
+            
+            return tuple(sort_values)
 
+        # Tiến hành sắp xếp danh sách rows
+        rows.sort(key=sort_key)
+
+    # 3. Tạo map dữ liệu (như cũ)
     data_map = {row.id: row.content for row in rows}
 
+    # Lấy user cho Admin Panel
     all_users = []
     if current_user.role == 'admin':
         all_users = User.query.order_by(User.role, User.id).all()
@@ -120,44 +141,23 @@ def index(table_id=None):
                            all_tables=all_tables,
                            current_table=current_table)
 
-# --- ROUTE SAO CHÉP DÒNG ---
-@app.route('/duplicate_row/<int:row_id>')
-@login_required
-def duplicate_row(row_id):
-    original_row = DataRow.query.get(row_id)
-    if original_row and original_row.created_by == current_user.id:
-        new_content = original_row.content.copy() 
-        new_row = DataRow(
-            content=new_content,
-            created_by=current_user.id,
-            table_id=original_row.table_id,
-            created_at=datetime.utcnow()
-        )
-        db.session.add(new_row)
-        db.session.commit()
-        flash('Đã sao chép dòng!', 'success')
-        return redirect(url_for('index', table_id=original_row.table_id))
-    return redirect(url_for('index'))
-
-# --- XUẤT EXCEL (Sắp xếp N cột y hệt màn hình) ---
+# --- XUẤT EXCEL (DATA BẢNG) ---
 @app.route('/export_excel/<int:table_id>')
 @login_required
 def export_excel(table_id):
     table = AppTable.query.get_or_404(table_id)
     columns = TableColumn.query.filter_by(user_id=current_user.id, table_id=table.id).order_by(TableColumn.order_index).all()
-    rows = DataRow.query.filter_by(created_by=current_user.id, table_id=table.id).all()
-    
-    # Sắp xếp N cột
-    if columns and rows:
-        col_names = [col.name for col in columns]
-        rows.sort(key=lambda x: tuple(str(x.content.get(name, '')).strip().lower() for name in col_names))
+    rows = DataRow.query.filter_by(created_by=current_user.id, table_id=table.id).order_by(DataRow.id.desc()).all()
 
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Du Lieu"
+    
+    # Header
     headers = ["ID", "Ngày tạo"] + [col.name for col in columns]
     ws.append(headers)
 
+    # Data
     for row in rows:
         vn_time = row.created_at + timedelta(hours=7) if row.created_at else datetime.now()
         row_data = [row.id, vn_time.strftime('%d/%m/%Y %H:%M')]
@@ -171,55 +171,83 @@ def export_excel(table_id):
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
+    
     filename = f"{table.name}_{datetime.now().strftime('%Y%m%d')}.xlsx"
     return send_file(output, download_name=filename, as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-# --- BACKUP JSON (TOÀN BỘ CÁC BẢNG) ---
+# --- TÍNH NĂNG BACKUP JSON (TOÀN BỘ CÁC BẢNG) ---
 @app.route('/backup_json')
 @login_required
 def backup_json():
+    # 1. Tạo vỏ bọc cho file backup
     backup_data = {
-        "version": "2.0",
+        "version": "2.0", # Nâng version lên chơi
         "timestamp": datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
         "user": current_user.username,
-        "tables": []
+        "tables": [] # Chỗ này sẽ chứa danh sách các bảng
     }
+
+    # 2. Lấy danh sách TẤT CẢ các mục (Menu) đang có trong hệ thống
     all_system_tables = AppTable.query.all()
     
+    # 3. Duyệt qua từng bảng để gom dữ liệu của User
     for table in all_system_tables:
-        cols = TableColumn.query.filter_by(user_id=current_user.id, table_id=table.id).order_by(TableColumn.order_index).all()
-        rows = DataRow.query.filter_by(created_by=current_user.id, table_id=table.id).all()
+        # A. Lấy Cột của user trong bảng này
+        cols = TableColumn.query.filter_by(
+            user_id=current_user.id, 
+            table_id=table.id
+        ).order_by(TableColumn.order_index).all()
         
+        # B. Lấy Dòng dữ liệu của user trong bảng này
+        rows = DataRow.query.filter_by(
+            created_by=current_user.id, 
+            table_id=table.id
+        ).order_by(DataRow.id).all()
+        
+        # C. Chỉ backup nếu bảng này user CÓ DỮ LIỆU (Có cột hoặc có dòng)
         if cols or rows:
             table_data = {
-                "name": table.name,
+                "name": table.name, # Tên bảng (VD: Xưởng Thép, Kho A...)
                 "columns": [{"name": c.name, "order": c.order_index} for c in cols],
                 "rows": []
             }
+            
             for r in rows:
                 table_data["rows"].append({
                     "content": r.content,
                     "created_at": r.created_at.strftime('%Y-%m-%d %H:%M:%S') if r.created_at else None
                 })
+            
+            # Đẩy dữ liệu bảng này vào danh sách tổng
             backup_data["tables"].append(table_data)
 
+    # 4. Xuất file JSON
     json_str = json.dumps(backup_data, indent=4, ensure_ascii=False)
     output = io.BytesIO()
     output.write(json_str.encode('utf-8'))
     output.seek(0)
-    filename = f"backup_FULL_{current_user.username}_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
-    return send_file(output, download_name=filename, as_attachment=True, mimetype='application/json')
+    
+    # Đặt tên file: backup_tenuser_ngay_gio.json
+    filename = f"backup_{current_user.username}_FULL_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
+    
+    return send_file(
+        output, 
+        download_name=filename, 
+        as_attachment=True, 
+        mimetype='application/json'
+    )
 
-# --- RESTORE JSON ---
+# --- TÍNH NĂNG RESTORE JSON ---
 @app.route('/restore_json', methods=['POST'])
 @login_required
 def restore_json():
     if 'file' not in request.files:
-        flash('Chưa chọn file!', 'error')
+        flash('Chưa chọn file anh hai ơi!', 'error')
         return redirect(url_for('index'))
+    
     file = request.files['file']
     if file.filename == '':
-        flash('Tên file lỗi!', 'error')
+        flash('Tên file trống trơn à!', 'error')
         return redirect(url_for('index'))
 
     if file:
@@ -229,42 +257,53 @@ def restore_json():
             skipped_count = 0
             
             for tbl_data in data.get('tables', []):
+                # 1. Tìm bảng trong hệ thống
                 sys_table = AppTable.query.filter_by(name=tbl_data['name']).first()
                 if not sys_table: continue 
 
-                # Khôi phục Cột
+                # 2. Khôi phục Cột (Giữ nguyên)
                 for col_data in tbl_data['columns']:
                     exists = TableColumn.query.filter_by(user_id=current_user.id, table_id=sys_table.id, name=col_data['name']).first()
                     if not exists:
                         db.session.add(TableColumn(name=col_data['name'], order_index=col_data['order'], user_id=current_user.id, table_id=sys_table.id))
 
-                # Khôi phục Dòng
+                # 3. Khôi phục Dòng (Chỉ thêm mới nếu chưa có)
                 current_rows = DataRow.query.filter_by(table_id=sys_table.id, created_by=current_user.id).all()
                 existing_contents = [row.content for row in current_rows]
 
                 for row_data in tbl_data['rows']:
                     content_to_check = row_data['content']
+                    
                     if content_to_check in existing_contents:
                         skipped_count += 1
-                        continue
+                        continue 
 
                     c_at = datetime.utcnow()
                     if row_data.get('created_at'):
                         try: c_at = datetime.strptime(row_data['created_at'], '%Y-%m-%d %H:%M:%S')
                         except: pass
                     
-                    new_row = DataRow(content=content_to_check, created_by=current_user.id, table_id=sys_table.id, created_at=c_at)
+                    new_row = DataRow(
+                        content=content_to_check, 
+                        created_by=current_user.id, 
+                        table_id=sys_table.id, 
+                        created_at=c_at
+                    )
                     db.session.add(new_row)
+                    
                     existing_contents.append(content_to_check)
                     added_count += 1
             
             db.session.commit()
-            flash(f'Xong! Thêm {added_count} dòng. Bỏ qua {skipped_count} dòng trùng.', 'success')
+            flash(f'Xong! Đã thêm {added_count} dòng. Bỏ qua {skipped_count} dòng trùng lặp.', 'success')
+            
         except Exception as e:
-            flash(f'Lỗi: {str(e)}', 'error')
+            print(f"Lỗi restore: {e}")
+            flash(f'Lỗi khi đọc file: {str(e)}', 'error')
+
     return redirect(url_for('index'))
 
-# --- QUẢN LÝ BẢNG & CỘT & USER ---
+# --- QUẢN LÝ BẢNG (ADMIN) ---
 @app.route('/admin/add_table', methods=['POST'])
 @login_required
 @admin_required
@@ -306,6 +345,7 @@ def delete_table(table_id):
         flash('Đã xóa bảng!', 'success')
     return redirect(url_for('index'))
 
+# --- CÁC ROUTE DATA ---
 @app.route('/add_column', methods=['POST'])
 @login_required
 def add_column():
@@ -364,38 +404,55 @@ def batch_update_columns():
     try:
         req_data = request.json
         columns_data = req_data.get('columns', [])
-        table_id = req_data.get('table_id')
+        table_id = req_data.get('table_id') 
 
-        if not table_id: return jsonify({'status': 'error', 'message': 'Thiếu ID bảng!'})
+        if not table_id:
+             return jsonify({'status': 'error', 'message': 'Thiếu ID bảng!'})
 
-        current_db_columns = TableColumn.query.filter_by(user_id=current_user.id, table_id=table_id).all()
+        # 1. Lấy tất cả cột hiện có
+        current_db_columns = TableColumn.query.filter_by(
+            user_id=current_user.id, 
+            table_id=table_id
+        ).all()
+
         submitted_ids = [int(item['id']) for item in columns_data]
+
+        # 2. XÓA CỘT không có trong list gửi lên
         for db_col in current_db_columns:
             if db_col.id not in submitted_ids:
                 db.session.delete(db_col)
 
+        # 3. CẬP NHẬT Tên và Thứ tự
         my_rows = DataRow.query.filter_by(created_by=current_user.id, table_id=table_id).all()
+        
         for item in columns_data:
             col_id = int(item.get('id'))
             new_name = item.get('name')
             new_order = item.get('order')
+
             col = TableColumn.query.get(col_id)
             if col and col.user_id == current_user.id:
                 if col.name != new_name:
                     existing = TableColumn.query.filter_by(name=new_name, user_id=current_user.id, table_id=table_id).filter(TableColumn.id != col_id).first()
                     if existing: return jsonify({'status': 'error', 'message': f'Tên "{new_name}" bị trùng!'})
+                    
                     old_name = col.name
                     col.name = new_name
+                    # Cập nhật key trong JSON
                     for row in my_rows:
                         if row.content and old_name in row.content:
                             updated = dict(row.content)
                             updated[new_name] = updated.pop(old_name)
                             row.content = updated
+                
                 col.order_index = new_order
+
         db.session.commit()
         return jsonify({'status': 'success'})
-    except Exception as e: return jsonify({'status': 'error', 'message': str(e)})
 
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+    
 @app.route('/delete_row/<int:id>')
 @login_required
 def delete_row(id):
@@ -490,6 +547,94 @@ def ping_db():
         count = User.query.count()
         return f"Hello Robot! {count}", 200
     except: return "Error", 500
+
+# --- TÍNH NĂNG TẠO BÁO CÁO (EXCEL & PDF) ---
+@app.route('/generate_report', methods=['POST'])
+@login_required
+def generate_report():
+    # 1. Lấy dữ liệu từ Form
+    r_date = request.form.get('report_date')
+    supervisor = request.form.get('supervisor')
+    output_val = request.form.get('total_output')
+    notes = request.form.get('notes')
+    action = request.form.get('action_type') 
+
+    # 2. Xử lý xuất EXCEL 
+    if action == 'excel':
+        try:
+            filename = 'mau_bao_cao.xlsx'
+            if not os.path.exists(filename):
+                flash('Không tìm thấy file mẫu Excel!', 'error')
+                return redirect(url_for('index'))
+
+            wb = load_workbook(filename)
+            ws = wb.active
+
+            # --- CẤU HÌNH ĐIỀN DỮ LIỆU ---
+            ws['C3'] = r_date          
+            ws['C4'] = supervisor      
+            ws['C5'] = output_val      
+            ws['B8'] = notes           
+            # -----------------------------
+
+            out = io.BytesIO()
+            wb.save(out)
+            out.seek(0)
+            
+            return send_file(out, download_name=f"BaoCao_{r_date}.xlsx", as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        except Exception as e:
+            flash(f'Lỗi tạo Excel: {str(e)}', 'error')
+            return redirect(url_for('index'))
+
+    # 3. Xử lý xuất PDF 
+    elif action == 'pdf':
+        try:
+            html_content = f"""
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial; padding: 20px; }}
+                    h1 {{ text-align: center; color: #333; border-bottom: 2px solid #000; padding-bottom: 10px; }}
+                    .info-box {{ margin-top: 20px; font-size: 14px; line-height: 1.6; }}
+                    .label {{ font-weight: bold; width: 150px; display: inline-block; }}
+                    .note-box {{ margin-top: 20px; border: 1px dashed #666; padding: 10px; height: 100px; }}
+                </style>
+            </head>
+            <body>
+                <h1>BÁO CÁO SẢN XUẤT NGÀY</h1>
+                <div class="info-box">
+                    <div><span class="label">Ngày báo cáo:</span> {r_date}</div>
+                    <div><span class="label">Người phụ trách:</span> {supervisor}</div>
+                    <div><span class="label">Tổng sản lượng:</span> {output_val} (Tấn)</div>
+                </div>
+                <h3>Ghi chú / Sự cố:</h3>
+                <div class="note-box">
+                    {notes.replace(chr(10), '<br>')}
+                </div>
+                <div style="margin-top: 50px; text-align: right;">
+                    <p>Người lập báo cáo</p>
+                    <br><br>
+                    <p><b>{supervisor}</b></p>
+                </div>
+            </body>
+            </html>
+            """
+            
+            pdf_out = io.BytesIO()
+            pisa_status = pisa.CreatePDF(io.StringIO(html_content), dest=pdf_out)
+            
+            if pisa_status.err:
+                flash('Lỗi khi tạo PDF!', 'error')
+                return redirect(url_for('index'))
+                
+            pdf_out.seek(0)
+            return send_file(pdf_out, download_name=f"BaoCao_{r_date}.pdf", as_attachment=True, mimetype='application/pdf')
+
+        except Exception as e:
+            flash(f'Lỗi PDF: {str(e)}', 'error')
+            return redirect(url_for('index'))
+
+    return redirect(url_for('index'))
 
 with app.app_context(): db.create_all()
 

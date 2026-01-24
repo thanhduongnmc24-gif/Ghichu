@@ -5,3 +5,4 @@ psycopg2-binary
 werkzeug
 gunicorn
 openpyxl
+xhtml2pdf
