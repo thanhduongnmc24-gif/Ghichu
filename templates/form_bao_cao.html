@@ -1,0 +1,43 @@
+<div id="report-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-50">
+    <div class="bg-gray-800 p-6 rounded-lg w-96 border border-gray-600 shadow-2xl">
+        <h3 class="text-xl font-bold mb-4 text-yellow-500 flex items-center gap-2">
+            <i class="fas fa-clipboard-check"></i> NHẬP SỐ LIỆU BÁO CÁO
+        </h3>
+        
+        <form action="/generate_report" method="POST">
+            <div class="space-y-3 mb-6">
+                <div>
+                    <label class="text-xs text-gray-400 uppercase">Ngày báo cáo</label>
+                    <input type="date" name="report_date" required class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white focus:border-yellow-500 outline-none">
+                </div>
+                
+                <div>
+                    <label class="text-xs text-gray-400 uppercase">Ca trực / Người phụ trách</label>
+                    <input type="text" name="supervisor" placeholder="Ví dụ: Ca 1 - A.Tèo" class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white focus:border-yellow-500 outline-none">
+                </div>
+                
+                <div>
+                    <label class="text-xs text-gray-400 uppercase">Tổng sản lượng (Tấn)</label>
+                    <input type="number" name="total_output" step="0.01" class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white focus:border-yellow-500 outline-none">
+                </div>
+                
+                <div>
+                    <label class="text-xs text-gray-400 uppercase">Ghi chú sự cố / Vấn đề</label>
+                    <textarea name="notes" rows="3" class="w-full bg-gray-900 border border-gray-600 p-2 rounded text-white focus:border-yellow-500 outline-none"></textarea>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="button" onclick="closeModal('report-modal')" class="flex-1 text-gray-400 hover:text-white py-2">Hủy</button>
+                
+                <button type="submit" name="action_type" value="excel" class="flex-1 bg-green-700 hover:bg-green-600 text-white font-bold py-2 rounded flex items-center justify-center gap-2 transition">
+                    <i class="fas fa-file-excel"></i> Excel
+                </button>
+
+                <button type="submit" name="action_type" value="pdf" class="flex-1 bg-red-700 hover:bg-red-600 text-white font-bold py-2 rounded flex items-center justify-center gap-2 transition">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

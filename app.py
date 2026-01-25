@@ -1,6 +1,7 @@
 import os
 import json
 import io
+from excel_utils import create_excel_report, create_pdf_report
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
@@ -552,90 +553,30 @@ def ping_db():
 @app.route('/generate_report', methods=['POST'])
 @login_required
 def generate_report():
-    # 1. Lấy dữ liệu từ Form
+    # Lấy dữ liệu form
     r_date = request.form.get('report_date')
     supervisor = request.form.get('supervisor')
     output_val = request.form.get('total_output')
     notes = request.form.get('notes')
     action = request.form.get('action_type') 
 
-    # 2. Xử lý xuất EXCEL 
+    # 1. XỬ LÝ EXCEL
     if action == 'excel':
-        try:
-            filename = 'mau_bao_cao.xlsx'
-            if not os.path.exists(filename):
-                flash('Không tìm thấy file mẫu Excel!', 'error')
-                return redirect(url_for('index'))
-
-            wb = load_workbook(filename)
-            ws = wb.active
-
-            # --- CẤU HÌNH ĐIỀN DỮ LIỆU ---
-            ws['C3'] = r_date          
-            ws['C4'] = supervisor      
-            ws['C5'] = output_val      
-            ws['B8'] = notes           
-            # -----------------------------
-
-            out = io.BytesIO()
-            wb.save(out)
-            out.seek(0)
-            
-            return send_file(out, download_name=f"BaoCao_{r_date}.xlsx", as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        except Exception as e:
-            flash(f'Lỗi tạo Excel: {str(e)}', 'error')
+        file_stream, err = create_excel_report(r_date, supervisor, output_val, notes)
+        if err:
+            flash(err, 'error')
             return redirect(url_for('index'))
+        return send_file(file_stream, download_name=f"BaoCao_{r_date}.xlsx", as_attachment=True, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-    # 3. Xử lý xuất PDF 
+    # 2. XỬ LÝ PDF (ĐÃ KHÔI PHỤC)
     elif action == 'pdf':
-        try:
-            html_content = f"""
-            <html>
-            <head>
-                <style>
-                    body {{ font-family: Arial; padding: 20px; }}
-                    h1 {{ text-align: center; color: #333; border-bottom: 2px solid #000; padding-bottom: 10px; }}
-                    .info-box {{ margin-top: 20px; font-size: 14px; line-height: 1.6; }}
-                    .label {{ font-weight: bold; width: 150px; display: inline-block; }}
-                    .note-box {{ margin-top: 20px; border: 1px dashed #666; padding: 10px; height: 100px; }}
-                </style>
-            </head>
-            <body>
-                <h1>BÁO CÁO SẢN XUẤT NGÀY</h1>
-                <div class="info-box">
-                    <div><span class="label">Ngày báo cáo:</span> {r_date}</div>
-                    <div><span class="label">Người phụ trách:</span> {supervisor}</div>
-                    <div><span class="label">Tổng sản lượng:</span> {output_val} (Tấn)</div>
-                </div>
-                <h3>Ghi chú / Sự cố:</h3>
-                <div class="note-box">
-                    {notes.replace(chr(10), '<br>')}
-                </div>
-                <div style="margin-top: 50px; text-align: right;">
-                    <p>Người lập báo cáo</p>
-                    <br><br>
-                    <p><b>{supervisor}</b></p>
-                </div>
-            </body>
-            </html>
-            """
-            
-            pdf_out = io.BytesIO()
-            pisa_status = pisa.CreatePDF(io.StringIO(html_content), dest=pdf_out)
-            
-            if pisa_status.err:
-                flash('Lỗi khi tạo PDF!', 'error')
-                return redirect(url_for('index'))
-                
-            pdf_out.seek(0)
-            return send_file(pdf_out, download_name=f"BaoCao_{r_date}.pdf", as_attachment=True, mimetype='application/pdf')
-
-        except Exception as e:
-            flash(f'Lỗi PDF: {str(e)}', 'error')
+        file_stream, err = create_pdf_report(r_date, supervisor, output_val, notes)
+        if err:
+            flash(err, 'error') # Báo lỗi nếu thiếu thư viện
             return redirect(url_for('index'))
+        return send_file(file_stream, download_name=f"BaoCao_{r_date}.pdf", as_attachment=True, mimetype='application/pdf')
 
     return redirect(url_for('index'))
-
 with app.app_context(): db.create_all()
 
 if __name__ == '__main__':
