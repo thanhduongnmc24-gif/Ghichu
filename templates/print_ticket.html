@@ -7,8 +7,8 @@
     <style>
         /* Cấu hình trang in */
         @page { 
-            size: auto; 
-            margin: 0; 
+            size: A4 portrait; /* Mặc định khổ A4 dọc */
+            margin: 10mm; /* Lề an toàn 10mm cho máy in */
         }
 
         body { 
@@ -16,72 +16,72 @@
             padding: 0; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #fff;
-            font-size: 11px;
             color: #000;
+            /* Chống trình duyệt tự động chỉnh màu/co thu nhỏ */
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
         .ticket-box {
-            /* Căn trái, căn trên: Cách lề trái 5mm, lề trên 5mm */
-            margin-left: 5mm; 
-            margin-top: 5mm;
-            
-            /* 2/3 khổ A4 (khoảng 140mm) */
-            width: 140mm; 
-            
+            margin: 0 auto; 
+            /* QUAN TRỌNG: Dùng 100% để chống lỗi shrink-to-fit của trình duyệt */
+            width: 100%; 
             border: 2px dashed #333;
-            padding: 15px; 
+            padding: 25px; 
             box-sizing: border-box;
-            position: relative;
             background-color: white;
         }
 
         h3 { 
             text-align: center; 
             text-transform: uppercase; 
-            margin: 0 0 15px 0; 
-            font-size: 18px; 
-            font-weight: 900; /* Tiêu đề lớn siêu đậm */
-            border-bottom: 2px solid #000;
-            padding-bottom: 8px;
-            grid-column: span 3; 
+            margin: 0 0 25px 0; 
+            font-size: 18px; /* Tiêu đề bự chà bá */
+            font-weight: 900; 
+            border-bottom: 3px solid #000;
+            padding-bottom: 12px;
+            /* Phải cho tiêu đề vắt ngang qua cả 4 cột */
+            grid-column: span 4; 
         }
 
         .grid-container {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr; /* 3 cột */
-            column-gap: 15px; 
-            row-gap: 15px;    
+            /* ĐÂY LÀ CHỖ CHIA 4 CỘT BẰNG NHAU NÈ ANH HAI */
+            grid-template-columns: repeat(4, 1fr); 
+            column-gap: 20px; /* Thu hẹp lại xíu so với 3 cột để đỡ chật */
+            row-gap: 25px;    
             align-items: start; 
         }
 
         .info-item { 
             display: flex; 
-            flex-direction: column; /* Tiêu đề trên - Dữ liệu dưới */
+            flex-direction: column;
             border-bottom: 1px dotted #ccc; 
-            padding-bottom: 5px;
+            padding-bottom: 8px;
             height: 100%;
         }
 
         .label { 
-            /* YÊU CẦU: TIÊU ĐỀ IN ĐẬM */
             font-weight: bold; 
-            color: #000; /* Màu đen rõ ràng */
+            color: #000; 
             text-transform: uppercase; 
-            font-size: 10px; 
-            margin-bottom: 3px; 
+            font-size: 14px; /* Nhãn to và rõ hơn */
+            margin-bottom: 6px; 
         }
 
         .value { 
-            /* YÊU CẦU: DỮ LIỆU BÌNH THƯỜNG */
             font-weight: normal; 
             width: 100%; 
-            font-size: 12px; 
+            font-size: 12px; /* Dữ liệu điền vào to, dễ đọc */
             word-wrap: break-word;
-            line-height: 1.3;
+            line-height: 1.5;
             color: #000;
         }
 
-        .line-item { display: block; }
+        .line-item { 
+            display: block; 
+            margin-bottom: 5px;
+        }
 
         /* Nút in */
         .btn-print { 
@@ -95,17 +95,13 @@
 
         @media print {
             .btn-print { display: none; }
-            body { 
-                -webkit-print-color-adjust: exact; 
-                print-color-adjust: exact; 
-            }
             .ticket-box { border: 2px solid #000; } 
         }
     </style>
 </head>
 <body>
     
-    <button onclick="window.print()" class="btn-print">🖨️ IN PHIẾU (LABEL ĐẬM)</button>
+    <button onclick="window.print()" class="btn-print">🖨️ IN PHIẾU (4 CỘT)</button>
 
     <div class="ticket-box">
         <h3>PHIẾU DỮ LIỆU - {{ today }}</h3>
