@@ -542,7 +542,18 @@ def generate_report():
 
     return redirect(url_for('index'))
 
-with app.app_context(): db.create_all()
+# Đoạn code sửa lỗi "tiêm" cột width an toàn
+with app.app_context():
+    try:
+        from sqlalchemy import text
+        # Thử chèn cột width, nếu có rồi sẽ văng lỗi nhảy xuống except
+        db.session.execute(text("ALTER TABLE table_column ADD COLUMN width VARCHAR(20) DEFAULT '150px';"))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+    
+    # Đảm bảo các bảng khác được tạo
+    db.create_all()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
