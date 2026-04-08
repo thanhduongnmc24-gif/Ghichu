@@ -1,6 +1,9 @@
 import os
 import json
 import io
+import threading
+import time
+import urllib.request
 from excel_utils import create_excel_report, create_pdf_report
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_file
@@ -542,18 +545,33 @@ def generate_report():
 
     return redirect(url_for('index'))
 
-# Đoạn code sửa lỗi "tiêm" cột width an toàn
+# --- HÀM BÁO THỨC CHỐNG NGỦ ĐÔNG ---
+def keep_alive():
+    url = 'https://duongnt.io.vn'
+    while True:
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'UptimeRobot'})
+            urllib.request.urlopen(req)
+            print("[Báo thức] Đã chọt server Render thành công!")
+        except Exception as e:
+            print(f"[Báo thức] Chọt xịt rồi: {e}")
+        time.sleep(14 * 60) # Ngủ 14 phút rồi dậy chọt tiếp
+
 with app.app_context():
     try:
         from sqlalchemy import text
-        # Thử chèn cột width, nếu có rồi sẽ văng lỗi nhảy xuống except
         db.session.execute(text("ALTER TABLE table_column ADD COLUMN width VARCHAR(20) DEFAULT '150px';"))
         db.session.commit()
     except Exception as e:
         db.session.rollback()
     
-    # Đảm bảo các bảng khác được tạo
     db.create_all()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Bật công tắc cho luồng báo thức chạy ngầm
+    bg_thread = threading.Thread(target=keep_alive, daemon=True)
+    bg_thread.start()
+    
+    # Render tự động gán Port qua biến môi trường, không có thì xài tạm 5000
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
